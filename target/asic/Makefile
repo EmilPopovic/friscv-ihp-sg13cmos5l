@@ -3,8 +3,9 @@ sources.f: ../../Bender.yml ../../Bender.lock
 
 .PHONY: area
 area: sources.f
-	yosys -m slang -c synth.tcl
+	rm -f area.rpt synth.log
+	set -o pipefail; yosys -m slang -c synth.tcl 2>&1 | tee synth.log
 
 .PHONY: clean
 clean:
-	rm -f sources.f area.rpt
+	rm -f sources.f area.rpt synth.log
