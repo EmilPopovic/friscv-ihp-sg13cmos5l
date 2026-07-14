@@ -13,6 +13,8 @@
  * Reset default is AF0 for all pads. Data paths are combinatorial, no synchronization.
  */
 
+`timescale 1ns/1ps
+
 module friscv_pinmux #(
     parameter int unsigned NumPads = 8,
     parameter int unsigned NumAfs  = 4,
