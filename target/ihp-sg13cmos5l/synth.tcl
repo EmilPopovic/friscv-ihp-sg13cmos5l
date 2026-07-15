@@ -6,8 +6,8 @@ yosys read_slang --top friscv_soc --keep-hierarchy --timescale 1ns/1ps \
     -Wno-duplicate-definition --ignore-initial --ignore-timing \
     -f $here/sources.f
 
-# Exclude the SRAM macro from area report
-yosys blackbox tc_sram*
+# Exclude the SRAM hard macro from the area report
+yosys blackbox RM_IHPSG13_1P_1024x32_c2_bm_bist
 
 # Coarse synth
 yosys hierarchy -top friscv_soc
