@@ -1,6 +1,4 @@
 // Zero-delay stub for the hyperbus tech-dependent delay line.
-// target/sim sets HyperClockDelayed=0 to use the controller's internal clock generator.
-// TODO Replace with an IHP delay-cell chain for tapeout.
 module configurable_delay #(
     parameter int unsigned NUM_STEPS = 16,
     localparam int unsigned DELAY_SEL_WIDTH = $clog2(NUM_STEPS)

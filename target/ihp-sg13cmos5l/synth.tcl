@@ -1,14 +1,11 @@
-set here    [file dirname [file normalize [info script]]]
-set liberty $::env(LIBERTY)
+set here         [file dirname [file normalize [info script]]]
+set liberty      $::env(LIBERTY)
 set sram_liberty $::env(SRAM_LIBERTY)
 
 # Elaborate all bender sources through slang
 yosys read_slang --top friscv_soc --keep-hierarchy --timescale 1ns/1ps \
     -Wno-duplicate-definition --ignore-initial --ignore-timing \
     -f $here/sources.f
-
-# Exclude the SRAM hard macro from the area report
-yosys blackbox RM_IHPSG13_1P_1024x32_c2_bm_bist
 
 # Coarse synth
 yosys hierarchy -top friscv_soc
