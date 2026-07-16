@@ -1,5 +1,5 @@
 // Zero-delay stub for the hyperbus tech-dependent delay line.
-// Sim runs from SRAM only, the 90-degree phase shift is irrelevant here.
+// target/sim sets HyperClockDelayed=0 to use the controller's internal clock generator.
 // TODO Replace with an IHP delay-cell chain for tapeout.
 module configurable_delay #(
     parameter int unsigned NUM_STEPS = 16,
