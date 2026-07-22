@@ -91,7 +91,7 @@ module tc_sram #(
 
     for (genvar c = 0; c < NumCuts; ++c) begin : gen_cuts
       logic men;
-      assign men = req_i[0] & (sel_d == SelWidth'(c));
+      assign men = req_i[0] & (sel_d == c);
 
       RM_IHPSG13_1P_1024x32_c2_bm_bist i_cut (
        .A_CLK   ( clk_i                       ),

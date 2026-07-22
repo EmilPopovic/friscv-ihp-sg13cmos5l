@@ -2,10 +2,11 @@ sources.f: ../../Bender.yml ../../Bender.lock $(wildcard src/*.sv)
 	bender script flist-plus -t rtl -t synthesis > $@
 	sed -i '\|/tech_cells_generic-[^/]*/src/rtl/tc_sram\.sv$$|d' $@
 	sed -i '\|/tech_cells_generic-[^/]*/src/rtl/tc_clk\.sv$$|d' $@
-	echo "$(CURDIR)/src/RM_IHPSG13_1P_1024x32_c2_bm_bist.sv" >> $@
-	echo "$(CURDIR)/src/sg13cmos5l_stdcell_stubs.sv" >> $@
+	echo "$(CURDIR)/src/stubs/RM_IHPSG13_1P_1024x32_c2_bm_bist.sv" >> $@
+	echo "$(CURDIR)/src/stubs/sg13cmos5l_stdcell_stubs.sv" >> $@
+	echo "$(CURDIR)/src/stubs/sg13cmos5l_io_stubs.v" >> $@
 	echo "$(CURDIR)/src/tc_sram.sv" >> $@
-	echo "$(CURDIR)/src/tc_clk.sv" >> $@
+	echo "$(CURDIR)/src/stubs/tc_clk.sv" >> $@
 
 .PHONY: area
 area: sources.f
