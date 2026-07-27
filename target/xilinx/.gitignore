@@ -1,0 +1,7 @@
+build*/
+.Xil/
+__pycache__/
+
+# Dropped in the working directory by place_design / route_design
+clockInfo.txt
+tight_setup_hold_pins.txt
