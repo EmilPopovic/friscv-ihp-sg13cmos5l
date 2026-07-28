@@ -4,28 +4,16 @@ meta:
   version: 3
   flow: Chip
   substituting_steps:
-
-    #Magic.*: null
-    #Netgen.*: null
-
     # Magic reports some overlaps which can be ignored
     Checker.IllegalOverlap: null
 
-    # Disable KLayout DRC
-    #KLayout.DRC: null
-    #Checker.KLayoutDRC: null
-
     # Disable magic DRC
-    # Magic.DRC: null
-    #Checker.MagicDRC: null
+    Magic.DRC: null
+    Checker.MagicDRC: null
 
     # Disable KLayout antenna check
     KLayout.Antenna: null
     Checker.KLayoutAntenna: null
-
-    # Disable KLayout density check
-    #KLayout.Density: null
-    #Checker.KLayoutDensity: null
     
     # Save time
     OpenROAD.IRDropReport: null
@@ -36,71 +24,79 @@ meta:
 DESIGN_NAME: friscv_soc_top
 VERILOG_FILES:
 - dir::../src/friscv_soc_top.sv
-- dir::../src/friscv_soc_core.sv
 
 VERILOG_DEFINES: [FUNCTIONAL]
 
 # Enable plugin for better SystemVerilog support
 USE_SLANG: True
-SLANG_ARGUMENTS: ['--keep-hierarchy']
+SLANG_ARGUMENTS: ['--keep-hierarchy', '-F', 'ref::$DESIGN_DIR/../sources.f']
+
+RUN_LINTER: False
+
+ERROR_ON_SYNTH_CHECKS: False
 
 # Slightly smaller file sizes
 PRIMARY_GDSII_STREAMOUT_TOOL: klayout
 
 # Specify the pad instances for the padring
 PAD_SOUTH: [
-    clk_pad,
-    rst_n_pad,
-
-    "bidirs\\[0\\].bidir_pad",
-    "bidirs\\[1\\].bidir_pad",
-    "bidirs\\[2\\].bidir_pad",
-    "bidirs\\[3\\].bidir_pad",
-    "bidirs\\[4\\].bidir_pad",
-    "bidirs\\[5\\].bidir_pad",
-    "bidirs\\[6\\].bidir_pad",
-    "bidirs\\[7\\].bidir_pad"
+    "bidirs\\[13\\].bidir_pad",     #  1  PA13  HB_DQ0  / DBG_D0
+    "bidirs\\[14\\].bidir_pad",     #  2  PA14  HB_DQ1  / DBG_D1
+    "bidirs\\[15\\].bidir_pad",     #  3  PA15  HB_DQ2  / DBG_D2
+    "bidirs\\[16\\].bidir_pad",     #  4  PA16  HB_DQ3  / DBG_D3
+    "iovdd_pads\\[0\\].iovdd_pad",  #  5  IOVDD
+    "bidirs\\[17\\].bidir_pad",     #  6  PA17  HB_DQ4  / DBG_D4
+    "bidirs\\[18\\].bidir_pad",     #  7  PA18  HB_DQ5  / DBG_D5
+    "bidirs\\[19\\].bidir_pad",     #  8  PA19  HB_DQ6  / DBG_D6
+    "bidirs\\[20\\].bidir_pad",     #  9  PA20  HB_DQ7  / DBG_D7
+    "bidirs\\[21\\].bidir_pad",     # 10  PA21  HB_RWDS / DBG_SEL0
+    "bidirs\\[22\\].bidir_pad",     # 11  PA22  HB_CK   / DBG_SEL1
+    "iovss_pads\\[0\\].iovss_pad"   # 12  IOVSS
 ]
 
 PAD_EAST: [
-    "analogs\\[0\\].analog_pad",
-    "analogs\\[1\\].analog_pad",
-    "analogs\\[2\\].analog_pad",
-    "analogs\\[3\\].analog_pad",
-    "analogs\\[4\\].analog_pad",
-    "analogs\\[5\\].analog_pad",
-    "analogs\\[6\\].analog_pad",
-    "analogs\\[7\\].analog_pad",
-    
-    "vdd_pads\\[0\\].vdd_pad",
-    "vss_pads\\[0\\].vss_pad"
+    "bidirs\\[23\\].bidir_pad",     # 13  PA23  HB_CS0_N / DBG_SEL2
+    "bidirs\\[24\\].bidir_pad",     # 14  PA24  HB_RST_N / DBG_SEL3
+    "vss_pads\\[0\\].vss_pad",      # 15  VSS
+    "outputs\\[0\\].output_pad",    # 16  CLK_OUT
+    "vdd_pads\\[0\\].vdd_pad",      # 17  VDD
+    "bidirs\\[0\\].bidir_pad",      # 18  PA0
+    "bidirs\\[1\\].bidir_pad",      # 19  PA1  (irq)
+    "bidirs\\[2\\].bidir_pad",      # 20  PA2  (irq)
+    "iovss_pads\\[1\\].iovss_pad",  # 21  IOVSS
+    "iovdd_pads\\[1\\].iovdd_pad",  # 22  IOVDD
+    "bidirs\\[3\\].bidir_pad",      # 23  PA3  (irq)
+    "bidirs\\[4\\].bidir_pad"       # 24  PA4  (irq)
 ]
 
 PAD_NORTH: [
-    "outputs\\[7\\].output_pad",
-    "outputs\\[6\\].output_pad",
-    "outputs\\[5\\].output_pad",
-    "outputs\\[4\\].output_pad",
-    "outputs\\[3\\].output_pad",
-    "outputs\\[2\\].output_pad",
-    "outputs\\[1\\].output_pad",
-    "outputs\\[0\\].output_pad",
-    
-    "iovdd_pads\\[0\\].iovdd_pad",
-    "iovss_pads\\[0\\].iovss_pad"
+    "bidirs\\[12\\].bidir_pad",     # 36  PA12  QSPI0_CS2
+    "bidirs\\[11\\].bidir_pad",     # 35  PA11  QSPI0_CS1
+    "bidirs\\[10\\].bidir_pad",     # 34  PA10  QSPI0_CS0
+    "vdd_pads\\[1\\].vdd_pad",      # 33  VDD
+    "vss_pads\\[1\\].vss_pad",      # 32  VSS
+    "bidirs\\[9\\].bidir_pad",      # 31  PA9   QSPI0_SCK
+    "iovdd_pads\\[2\\].iovdd_pad",  # 30  IOVDD
+    "iovss_pads\\[2\\].iovss_pad",  # 29  IOVSS
+    "bidirs\\[8\\].bidir_pad",      # 28  PA8   QSPI0_IO3 (strap)
+    "bidirs\\[7\\].bidir_pad",      # 27  PA7   QSPI0_IO2 (strap)
+    "bidirs\\[6\\].bidir_pad",      # 26  PA6   QSPI0_IO1
+    "bidirs\\[5\\].bidir_pad"       # 25  PA5   QSPI0_IO0
 ]
 
 PAD_WEST: [
-    "inputs\\[9\\].input_pad",
-    "inputs\\[8\\].input_pad",
-    "inputs\\[7\\].input_pad",
-    "inputs\\[6\\].input_pad",
-    "inputs\\[5\\].input_pad",
-    "inputs\\[4\\].input_pad",
-    "inputs\\[3\\].input_pad",
-    "inputs\\[2\\].input_pad",
-    "inputs\\[1\\].input_pad",
-    "inputs\\[0\\].input_pad"
+    "iovdd_pads\\[3\\].iovdd_pad",  # 48  IOVDD
+    clk_pad,                        # 47  CLK
+    "iovss_pads\\[3\\].iovss_pad",  # 46  IOVSS
+    rst_n_pad,                      # 45  RST_N
+    "inputs\\[3\\].input_pad",      # 44  UART0_RX
+    "outputs\\[2\\].output_pad",    # 43  UART0_TX
+    "vdd_pads\\[2\\].vdd_pad",      # 42  VDD
+    "vss_pads\\[2\\].vss_pad",      # 41  VSS
+    "outputs\\[1\\].output_pad",    # 40  TDO
+    "inputs\\[2\\].input_pad",      # 39  TDI
+    "inputs\\[1\\].input_pad",      # 38  TMS
+    "inputs\\[0\\].input_pad"       # 37  TCK
 ]
 
 # SDC files
@@ -128,8 +124,15 @@ CORE_AREA: [365, 365, 2365, 2365]
 
 # Increase for more logic
 # on your die
-PL_TARGET_DENSITY_PCT: 80
-GRT_ALLOW_CONGESTION: true
+PL_TARGET_DENSITY_PCT: 45
+GRT_ALLOW_CONGESTION: false
+
+SETUP_VIOLATION_CORNERS: ["*"]
+
+RUN_POST_GRT_DESIGN_REPAIR: true
+RUN_POST_GRT_RESIZER_TIMING: true
+
+CTS_APPLY_NDR: none
 
 # PDN
 PDN_CORE_RING: True
@@ -177,18 +180,21 @@ MACROS:
       "*_slow_1p08V_125C":
         - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_1024x32_c2_bm_bist_slow_1p08V_125C.lib
     instances:
-      # Make sure to specify the SRAMs in pdn_cfg.tcl
-      i_chip_core.sram_0:
-        location: [390, 400]
+      friscv_soc_inst.friscv_mem_hub.sram.gen_1024x32.gen_cuts[0].i_cut:
+        location: [437, 2015]
         orientation: N
-      i_chip_core.sram_1:
-        location: [860, 400]
-        orientation: E
+      friscv_soc_inst.friscv_mem_hub.sram.gen_1024x32.gen_cuts[1].i_cut:
+        location: [917, 2015]
+        orientation: N
+      friscv_soc_inst.friscv_mem_hub.sram.gen_1024x32.gen_cuts[2].i_cut:
+        location: [1397, 2015]
+        orientation: N
+      friscv_soc_inst.friscv_mem_hub.sram.gen_1024x32.gen_cuts[3].i_cut:
+        location: [1877, 2015]
+        orientation: N
 
 # This is an alternative method compared to
 # specifying the power connections in the RTL
 PDN_MACRO_CONNECTIONS:
-- "i_chip_core.sram_0 VDD VSS VDDARRAY! VSS!"
-- "i_chip_core.sram_0 VDD VSS VDD! VSS!"
-- "i_chip_core.sram_1 VDD VSS VDDARRAY! VSS!"
-- "i_chip_core.sram_1 VDD VSS VDD! VSS!"
+- ".*gen_1024x32.gen_cuts.*i_cut VDD VSS VDDARRAY! VSS!"
+- ".*gen_1024x32.gen_cuts.*i_cut VDD VSS VDD! VSS!"

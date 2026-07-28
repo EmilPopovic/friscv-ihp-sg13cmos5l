@@ -72,8 +72,11 @@ set cap_load [expr $::env(OUTPUT_CAP_LOAD) / 1000.0]
 puts "\[INFO] Setting load to: $cap_load"
 set_load $cap_load [all_outputs]
 
-puts "\[INFO] Setting clock uncertainty to: $::env(CLOCK_UNCERTAINTY_CONSTRAINT)"
-set_clock_uncertainty $::env(CLOCK_UNCERTAINTY_CONSTRAINT) $clocks
+puts "\[INFO] Setting clock setup uncertainty to: $::env(CLOCK_UNCERTAINTY_CONSTRAINT)"
+set_clock_uncertainty -setup $::env(CLOCK_UNCERTAINTY_CONSTRAINT) $clocks
+
+puts "\[INFO] Setting clock hold uncertainty to: 0.05"
+set_clock_uncertainty -hold 0.05 $clocks
 
 puts "\[INFO] Setting clock transition to: $::env(CLOCK_TRANSITION_CONSTRAINT)"
 set_clock_transition $::env(CLOCK_TRANSITION_CONSTRAINT) $clocks

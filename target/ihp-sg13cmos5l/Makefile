@@ -1,3 +1,5 @@
+TOP = friscv_soc_top
+
 sources.f: ../../Bender.yml ../../Bender.lock $(wildcard src/*.sv)
 	bender script flist-plus -t rtl -t synthesis > $@
 	sed -i '\|/tech_cells_generic-[^/]*/src/rtl/tc_sram\.sv$$|d' $@
@@ -13,6 +15,22 @@ sources.f: ../../Bender.yml ../../Bender.lock $(wildcard src/*.sv)
 area: sources.f
 	rm -f area.rpt synth.log
 	set -o pipefail; yosys -m slang -c synth.tcl 2>&1 | tee synth.log
+
+.PHONY: librelane
+librelane: sources.f
+	librelane librelane/config.yaml --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk
+
+.PHONY: librelane-nodrc
+librelane-nodrc:
+	librelane librelane/config.yaml --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk --skip KLayout.DRC --skip Magic.DRC
+
+.PHONY: librelane-openroad
+librelane-openroad:
+	librelane librelane/config.yaml --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk --last-run --flow OpenInOpenRoad
+
+.PHONY: librelane-klayout
+librelane-klayout:
+	librelane librelane/config.yaml --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk --last-run --flow OpenInKLayout
 
 .PHONY: clean
 clean:
