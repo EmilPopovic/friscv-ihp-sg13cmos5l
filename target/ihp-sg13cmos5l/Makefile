@@ -20,10 +20,6 @@ area: sources.f
 librelane: sources.f
 	librelane librelane/config.yaml --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk
 
-.PHONY: librelane-nodrc
-librelane-nodrc:
-	librelane librelane/config.yaml --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk --skip KLayout.DRC --skip Magic.DRC
-
 .PHONY: librelane-openroad
 librelane-openroad:
 	librelane librelane/config.yaml --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk --last-run --flow OpenInOpenRoad

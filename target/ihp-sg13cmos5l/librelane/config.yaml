@@ -6,20 +6,12 @@ meta:
   substituting_steps:
     # Magic reports some overlaps which can be ignored
     Checker.IllegalOverlap: null
-
     # Disable magic DRC
     Magic.DRC: null
     Checker.MagicDRC: null
-
     # Disable KLayout antenna check
     KLayout.Antenna: null
     Checker.KLayoutAntenna: null
-    
-    # Save time
-    OpenROAD.IRDropReport: null
-    #KLayout.XOR: null
-    #Netgen.LVS: null
-    #Checker.LVS: null
 
 DESIGN_NAME: friscv_soc_top
 VERILOG_FILES:
@@ -28,12 +20,12 @@ VERILOG_FILES:
 VERILOG_DEFINES: [FUNCTIONAL]
 
 # Enable plugin for better SystemVerilog support
-USE_SLANG: True
+USE_SLANG: true
 SLANG_ARGUMENTS: ['--keep-hierarchy', '-F', 'ref::$DESIGN_DIR/../sources.f']
 
-RUN_LINTER: False
+RUN_LINTER: false
 
-ERROR_ON_SYNTH_CHECKS: False
+ERROR_ON_SYNTH_CHECKS: false
 
 # Slightly smaller file sizes
 PRIMARY_GDSII_STREAMOUT_TOOL: klayout
@@ -118,13 +110,10 @@ CLOCK_PERIOD: 20
 
 # Floorplanning
 FP_SIZING: absolute
-# for the sealring on all sides
-DIE_AREA: [0, 0, 2730, 2730]
-CORE_AREA: [365, 365, 2365, 2365]
+DIE_AREA: [0, 0, 2100, 2100]
+CORE_AREA: [365, 365, 1735, 1735]
 
-# Increase for more logic
-# on your die
-PL_TARGET_DENSITY_PCT: 45
+PL_TARGET_DENSITY_PCT: 85
 GRT_ALLOW_CONGESTION: false
 
 SETUP_VIOLATION_CORNERS: ["*"]
@@ -157,8 +146,8 @@ PDN_CORE_RING_HWIDTH: 15
 PDN_CORE_RING_VSPACING: 5
 PDN_CORE_RING_HSPACING: 5
 
-PDN_CORE_RING_CONNECT_TO_PADS: True
-PDN_ENABLE_PINS: False
+PDN_CORE_RING_CONNECT_TO_PADS: true
+PDN_ENABLE_PINS: false
 
 # Because we have multiple power pads for one power domain
 MAGIC_EXT_UNIQUE: notopports
@@ -181,16 +170,16 @@ MACROS:
         - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_1024x32_c2_bm_bist_slow_1p08V_125C.lib
     instances:
       friscv_soc_inst.friscv_mem_hub.sram.gen_1024x32.gen_cuts[0].i_cut:
-        location: [437, 2015]
-        orientation: N
+        location: [613, 375]
+        orientation: FS
       friscv_soc_inst.friscv_mem_hub.sram.gen_1024x32.gen_cuts[1].i_cut:
-        location: [917, 2015]
-        orientation: N
+        location: [1070, 375]
+        orientation: FS
       friscv_soc_inst.friscv_mem_hub.sram.gen_1024x32.gen_cuts[2].i_cut:
-        location: [1397, 2015]
+        location: [613, 1388]
         orientation: N
       friscv_soc_inst.friscv_mem_hub.sram.gen_1024x32.gen_cuts[3].i_cut:
-        location: [1877, 2015]
+        location: [1070, 1388]
         orientation: N
 
 # This is an alternative method compared to
