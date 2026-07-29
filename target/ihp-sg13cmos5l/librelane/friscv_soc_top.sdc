@@ -43,43 +43,78 @@ if { [info exists ::env(MAX_CAPACITANCE_CONSTRAINT)] } {
 
 set clocks [get_clocks $clock_port]
 
+# ============================================================
+# Secondary clock domains
+# ============================================================
+
+# JTAG TCK, 10 MHz
+set jtag_period 100
+create_clock -name jtag_tck -period $jtag_period [get_ports {input_PAD[0]}]
+
+# HyperBus RWDS
+create_clock -name hb_rwds -period $::env(CLOCK_PERIOD) [get_ports {bidir_PAD[21]}]
+
+# Set domains as asynchronous to each other
+set_clock_groups -asynchronous \
+    -group [get_clocks $clock_port] \
+    -group [get_clocks jtag_tck] \
+    -group [get_clocks hb_rwds]
+
+set all_clocks [all_clocks]
+
+# ============================================================
+# I/O delays
+# ============================================================
+
+set jtag_in_ports  [get_ports {input_PAD[1] input_PAD[2]}]
+set jtag_out_ports [get_ports {output_PAD[1]}]
+
 # Input-only pads
-set clk_core_input_ports [get_ports { 
-  rst_n_PAD
-	input_PAD[*]
-}] 
+set clk_core_input_ports [get_ports {rst_n_PAD input_PAD[3]}]
 
 set_input_delay -min 0 -clock $clocks $clk_core_input_ports
 set_input_delay -max $input_delay_value -clock $clocks $clk_core_input_ports
 
 # Output-only pads
-set clk_core_output_ports [get_ports { 
-	output_PAD[*]
-}] 
+# [0]=CLK_OUT, [2]=UART0_TX. [1]=TDO is in the TCK domain
+set clk_core_output_ports [get_ports {output_PAD[0] output_PAD[2]}]
 
 set_output_delay $output_delay_value -clock $clocks $clk_core_output_ports
 
-# Bidirectional pads
-set clk_core_inout_ports [get_ports { 
-	bidir_PAD[*]
-}] 
+# Bidirectional pads, all except PA21 (bidir_PAD[21] = HB RWDS, a clock source)
+set core_inout_names {}
+for {set i 0} {$i < 25} {incr i} {
+	if { $i == 21 } { continue }
+	lappend core_inout_names "bidir_PAD\[$i\]"
+}
+set clk_core_inout_ports [get_ports $core_inout_names]
 
 set_input_delay -min 0 -clock $clocks $clk_core_inout_ports
 set_input_delay -max $input_delay_value -clock $clocks $clk_core_inout_ports
 set_output_delay $output_delay_value -clock $clocks $clk_core_inout_ports
+
+# JTAG data pins timed against TCK
+set jtag_io_delay  [expr $jtag_period * $::env(IO_DELAY_CONSTRAINT) / 100]
+set jtag_min_delay [expr $jtag_period / 4.0]
+set_input_delay  -min $jtag_min_delay -clock jtag_tck $jtag_in_ports
+set_input_delay  -max $jtag_io_delay  -clock jtag_tck $jtag_in_ports
+set_output_delay $jtag_io_delay       -clock jtag_tck $jtag_out_ports
+
+# Asynchronous pad inputs, no hold
+set_false_path -hold -from [get_ports {bidir_PAD[0] bidir_PAD[1] bidir_PAD[2] bidir_PAD[3] bidir_PAD[4]}]
 
 set cap_load [expr $::env(OUTPUT_CAP_LOAD) / 1000.0]
 puts "\[INFO] Setting load to: $cap_load"
 set_load $cap_load [all_outputs]
 
 puts "\[INFO] Setting clock setup uncertainty to: $::env(CLOCK_UNCERTAINTY_CONSTRAINT)"
-set_clock_uncertainty -setup $::env(CLOCK_UNCERTAINTY_CONSTRAINT) $clocks
+set_clock_uncertainty -setup $::env(CLOCK_UNCERTAINTY_CONSTRAINT) $all_clocks
 
 puts "\[INFO] Setting clock hold uncertainty to: 0.05"
-set_clock_uncertainty -hold 0.05 $clocks
+set_clock_uncertainty -hold 0.05 $all_clocks
 
 puts "\[INFO] Setting clock transition to: $::env(CLOCK_TRANSITION_CONSTRAINT)"
-set_clock_transition $::env(CLOCK_TRANSITION_CONSTRAINT) $clocks
+set_clock_transition $::env(CLOCK_TRANSITION_CONSTRAINT) $all_clocks
 
 puts "\[INFO] Setting timing derate to: $::env(TIME_DERATING_CONSTRAINT)%"
 set_timing_derate -early [expr 1-[expr $::env(TIME_DERATING_CONSTRAINT) / 100]]
