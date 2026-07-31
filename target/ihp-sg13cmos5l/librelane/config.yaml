@@ -174,17 +174,38 @@ MACROS:
       "*_slow_1p08V_125C":
         - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_1024x32_c2_bm_bist_slow_1p08V_125C.lib
     instances:
-      friscv_soc_inst.friscv_mem_hub.sram.gen_1024x32.gen_cuts[0].i_cut:
+      friscv_soc_inst.friscv_mem_hub.ocm_llc.gen_ways[0].way_sram.gen_1024x32.gen_cuts[0].i_cut:
         location: [613, 375]
         orientation: FS
-      friscv_soc_inst.friscv_mem_hub.sram.gen_1024x32.gen_cuts[1].i_cut:
+      friscv_soc_inst.friscv_mem_hub.ocm_llc.gen_ways[1].way_sram.gen_1024x32.gen_cuts[0].i_cut:
         location: [1070, 375]
         orientation: FS
-      friscv_soc_inst.friscv_mem_hub.sram.gen_1024x32.gen_cuts[2].i_cut:
+      friscv_soc_inst.friscv_mem_hub.ocm_llc.gen_ways[2].way_sram.gen_1024x32.gen_cuts[0].i_cut:
         location: [613, 1388]
         orientation: N
-      friscv_soc_inst.friscv_mem_hub.sram.gen_1024x32.gen_cuts[3].i_cut:
+      friscv_soc_inst.friscv_mem_hub.ocm_llc.gen_ways[3].way_sram.gen_1024x32.gen_cuts[0].i_cut:
         location: [1070, 1388]
+        orientation: N
+
+  # Only instantiated when the LLC is built with SRAM_TAGS
+  RM_IHPSG13_1P_64x64_c2_bm_bist:
+    gds:
+      - pdk_dir::libs.ref/sg13cmos5l_sram/gds/RM_IHPSG13_1P_64x64_c2_bm_bist.gds
+    lef:
+      - pdk_dir::libs.ref/sg13cmos5l_sram/lef/RM_IHPSG13_1P_64x64_c2_bm_bist.lef
+    vh:
+      - pdk_dir::libs.ref/sg13cmos5l_sram/verilog/RM_IHPSG13_1P_64x64_c2_bm_bist.v
+      - pdk_dir::libs.ref/sg13cmos5l_sram/verilog/RM_IHPSG13_1P_core_behavioral_bm_bist.v
+    lib:
+      "*_typ_1p20V_25C":
+        - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_64x64_c2_bm_bist_typ_1p20V_25C.lib
+      "*_fast_1p32V_m40C":
+        - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_64x64_c2_bm_bist_fast_1p32V_m55C.lib
+      "*_slow_1p08V_125C":
+        - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_64x64_c2_bm_bist_slow_1p08V_125C.lib
+    instances:
+      friscv_soc_inst.friscv_mem_hub.ocm_llc.gen_tag_sram.tag_sram.gen_64x64.i_cut:
+        location: [613, 800]
         orientation: N
 
 # This is an alternative method compared to
@@ -192,3 +213,5 @@ MACROS:
 PDN_MACRO_CONNECTIONS:
 - ".*gen_1024x32.gen_cuts.*i_cut VDD VSS VDDARRAY! VSS!"
 - ".*gen_1024x32.gen_cuts.*i_cut VDD VSS VDD! VSS!"
+- ".*gen_64x64.i_cut VDD VSS VDDARRAY! VSS!"
+- ".*gen_64x64.i_cut VDD VSS VDD! VSS!"

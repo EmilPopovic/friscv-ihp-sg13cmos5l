@@ -42,6 +42,17 @@ endmodule
     .A_BIST_EN    (  1'b0 ), \
     .A_DLY        (  1'b0 )
 
+`define IHP13_TC_SRAM_64x64_TIEOFF \
+    .A_BIST_CLK   (  1'b0 ), \
+    .A_BIST_ADDR  (  6'd0 ), \
+    .A_BIST_DIN   ( 64'd0 ), \
+    .A_BIST_BM    ( 64'd0 ), \
+    .A_BIST_MEN   (  1'b0 ), \
+    .A_BIST_WEN   (  1'b0 ), \
+    .A_BIST_REN   (  1'b0 ), \
+    .A_BIST_EN    (  1'b0 ), \
+    .A_DLY        (  1'b0 )
+
 module tc_sram #(
   parameter int unsigned NumWords     = 32'd1024,
   parameter int unsigned DataWidth    = 32'd128,
@@ -154,6 +165,23 @@ module tc_sram #(
        `IHP13_TC_SRAM_512x32_TIEOFF
       );
     end
+
+  end else if (NumWords == 64 && DataWidth <= 64 && P1L1) begin: gen_64x64
+    logic [63:0] cut_dout;
+
+    RM_IHPSG13_1P_64x64_c2_bm_bist i_cut (
+     .A_CLK   ( clk_i             ),
+     .A_ADDR  ( addr_i[0]         ),
+     .A_BM    ( 64'(bm[0])        ),
+     .A_MEN   ( req_i[0]          ),
+     .A_WEN   ( we_i[0]           ),
+     .A_REN   ( ~we_i[0]          ),
+     .A_DIN   ( 64'(wdata_i[0])   ),
+     .A_DOUT  ( cut_dout          ),
+     `IHP13_TC_SRAM_64x64_TIEOFF
+    );
+
+    assign rdata_o[0] = cut_dout[DataWidth-1:0];
 
   end else begin : gen_blackbox
 

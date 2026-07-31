@@ -7,6 +7,7 @@ sources.f: ../../Bender.yml ../../Bender.lock $(wildcard src/*.sv)
 	sed -i '\|/opentitan_peripherals-[^/]*/src/spi_host/rtl/|d' $@
 	echo "$(CURDIR)/src/stubs/RM_IHPSG13_1P_1024x32_c2_bm_bist.sv" >> $@
 	echo "$(CURDIR)/src/stubs/RM_IHPSG13_1P_512x32_c2_bm_bist.sv" >> $@
+	echo "$(CURDIR)/src/stubs/RM_IHPSG13_1P_64x64_c2_bm_bist.sv" >> $@
 	echo "$(CURDIR)/src/stubs/sg13cmos5l_stdcell_stubs.sv" >> $@
 	echo "$(CURDIR)/src/stubs/sg13cmos5l_io_stubs.v" >> $@
 	echo "$(CURDIR)/src/tc_sram.sv" >> $@
