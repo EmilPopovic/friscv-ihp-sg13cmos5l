@@ -108,23 +108,37 @@ CLOCK_NET: clk_pad/p2c
 
 CLOCK_PERIOD: 20
 
+SYNTH_STRATEGY: "DELAY 0"
+SYNTH_ABC_BUFFERING: true
+PL_TIMING_DRIVEN: true
+
 # Floorplanning
 FP_SIZING: absolute
-DIE_AREA: [0, 0, 2000, 2000]
-CORE_AREA: [336, 336, 1664, 1664]
+DIE_AREA: [0, 0, 2100, 2100]
+CORE_AREA: [336, 336, 1764, 1764]
 
 FP_MACRO_HORIZONTAL_HALO: 5
 FP_MACRO_VERTICAL_HALO: 5
 
 PL_TARGET_DENSITY_PCT: 85
-GRT_ALLOW_CONGESTION: false
+GRT_ALLOW_CONGESTION: true
 
 GRT_ADJUSTMENT: 0.22
 
 SETUP_VIOLATION_CORNERS: ["*"]
 
-GRT_DESIGN_REPAIR_MAX_CAP_PCT: 0
-GRT_DESIGN_REPAIR_MAX_SLEW_PCT: 0
+GRT_DESIGN_REPAIR_MAX_CAP_PCT: 10
+GRT_DESIGN_REPAIR_MAX_SLEW_PCT: 10
+
+MAX_TRANSITION_CONSTRAINT: 0.75
+
+LAYERS_RC:
+  "nom_*":
+    Metal1:    {res: 0.00084375,   cap: 0.000137568}
+    Metal2:    {res: 0.000515,     cap: 0.000186040}
+    Metal3:    {res: 0.000515,     cap: 0.000184000}
+    Metal4:    {res: 0.000515,     cap: 0.000183576}
+    TopMetal1: {res: 0.0000128049, cap: 0.000221699}
 
 MAX_CAP_VIOLATION_CORNERS: ["*"]
 
@@ -178,16 +192,16 @@ MACROS:
         - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_512x32_c2_bm_bist_slow_1p08V_125C.lib
     instances:
       friscv_soc_inst.friscv_mem_hub.ocm_llc.gen_ways[0].way_sram.gen_512x32.gen_cuts[0].i_cut:
-        location: [336.0, 803]
+        location: [336.0, 852.28]
         orientation: N
       friscv_soc_inst.friscv_mem_hub.ocm_llc.gen_ways[1].way_sram.gen_512x32.gen_cuts[0].i_cut:
-        location: [1247.04, 803]
+        location: [1347.36, 852.28]
         orientation: N
       friscv_soc_inst.friscv_mem_hub.ocm_llc.gen_ways[2].way_sram.gen_512x32.gen_cuts[0].i_cut:
-        location: [336.0, 1005]
+        location: [336.0, 1054.28]
         orientation: FS
       friscv_soc_inst.friscv_mem_hub.ocm_llc.gen_ways[3].way_sram.gen_512x32.gen_cuts[0].i_cut:
-        location: [1247.04, 1005]
+        location: [1347.36, 1054.28]
         orientation: FS
   RM_IHPSG13_1P_64x64_c2_bm_bist:
     gds:
@@ -206,7 +220,7 @@ MACROS:
         - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_64x64_c2_bm_bist_slow_1p08V_125C.lib
     instances:
       friscv_soc_inst.friscv_mem_hub.ocm_llc.gen_tag_sram.tag_sram.gen_64x64.i_cut:
-        location: [608, 1541.5]
+        location: [657.76, 1697.12]
         orientation: N
 
 # This is an alternative method compared to
