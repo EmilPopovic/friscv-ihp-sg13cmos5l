@@ -166,12 +166,12 @@ module tc_sram #(
       );
     end
 
-  end else if (NumWords == 64 && DataWidth <= 64 && P1L1) begin: gen_64x64
+  end else if (NumWords <= 64 && DataWidth <= 64 && P1L1) begin: gen_64x64
     logic [63:0] cut_dout;
 
     RM_IHPSG13_1P_64x64_c2_bm_bist i_cut (
      .A_CLK   ( clk_i             ),
-     .A_ADDR  ( addr_i[0]         ),
+     .A_ADDR  ( 6'(addr_i[0])     ),
      .A_BM    ( 64'(bm[0])        ),
      .A_MEN   ( req_i[0]          ),
      .A_WEN   ( we_i[0]           ),

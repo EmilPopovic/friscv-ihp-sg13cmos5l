@@ -110,16 +110,21 @@ CLOCK_PERIOD: 20
 
 # Floorplanning
 FP_SIZING: absolute
-DIE_AREA: [0, 0, 2100, 2100]
-CORE_AREA: [365, 365, 1735, 1735]
+DIE_AREA: [0, 0, 2000, 2000]
+CORE_AREA: [336, 336, 1664, 1664]
+
+FP_MACRO_HORIZONTAL_HALO: 5
+FP_MACRO_VERTICAL_HALO: 5
 
 PL_TARGET_DENSITY_PCT: 85
 GRT_ALLOW_CONGESTION: false
 
+GRT_ADJUSTMENT: 0.22
+
 SETUP_VIOLATION_CORNERS: ["*"]
 
-GRT_DESIGN_REPAIR_MAX_CAP_PCT: 30
-GRT_DESIGN_REPAIR_MAX_SLEW_PCT: 30
+GRT_DESIGN_REPAIR_MAX_CAP_PCT: 0
+GRT_DESIGN_REPAIR_MAX_SLEW_PCT: 0
 
 MAX_CAP_VIOLATION_CORNERS: ["*"]
 
@@ -144,12 +149,10 @@ EXTRA_LEFS:
 IGNORE_DISCONNECTED_MODULES:
 - bondpad_70x70_5L
 
-# Maximum metal width without slotting: 30um
-PDN_CORE_RING_VWIDTH: 15
-PDN_CORE_RING_HWIDTH: 15
-# Ensure minimum spacing for long metals
-PDN_CORE_RING_VSPACING: 5
-PDN_CORE_RING_HSPACING: 5
+PDN_CORE_RING_VWIDTH: 5
+PDN_CORE_RING_HWIDTH: 5
+PDN_CORE_RING_VSPACING: 2
+PDN_CORE_RING_HSPACING: 2
 
 PDN_CORE_RING_CONNECT_TO_PADS: true
 PDN_ENABLE_PINS: false
@@ -158,36 +161,34 @@ PDN_ENABLE_PINS: false
 MAGIC_EXT_UNIQUE: notopports
 
 MACROS:
-  RM_IHPSG13_1P_1024x32_c2_bm_bist:
+  RM_IHPSG13_1P_512x32_c2_bm_bist:
     gds:
-      - pdk_dir::libs.ref/sg13cmos5l_sram/gds/RM_IHPSG13_1P_1024x32_c2_bm_bist.gds
+      - pdk_dir::libs.ref/sg13cmos5l_sram/gds/RM_IHPSG13_1P_512x32_c2_bm_bist.gds
     lef:
-      - pdk_dir::libs.ref/sg13cmos5l_sram/lef/RM_IHPSG13_1P_1024x32_c2_bm_bist.lef
+      - pdk_dir::libs.ref/sg13cmos5l_sram/lef/RM_IHPSG13_1P_512x32_c2_bm_bist.lef
     vh:
-      - pdk_dir::libs.ref/sg13cmos5l_sram/verilog/RM_IHPSG13_1P_1024x32_c2_bm_bist.v
+      - pdk_dir::libs.ref/sg13cmos5l_sram/verilog/RM_IHPSG13_1P_512x32_c2_bm_bist.v
       - pdk_dir::libs.ref/sg13cmos5l_sram/verilog/RM_IHPSG13_1P_core_behavioral_bm_bist.v
     lib:
       "*_typ_1p20V_25C":
-        - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_1024x32_c2_bm_bist_typ_1p20V_25C.lib
+        - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_512x32_c2_bm_bist_typ_1p20V_25C.lib
       "*_fast_1p32V_m40C":
-        - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_1024x32_c2_bm_bist_fast_1p32V_m55C.lib
+        - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_512x32_c2_bm_bist_fast_1p32V_m55C.lib
       "*_slow_1p08V_125C":
-        - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_1024x32_c2_bm_bist_slow_1p08V_125C.lib
+        - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_512x32_c2_bm_bist_slow_1p08V_125C.lib
     instances:
-      friscv_soc_inst.friscv_mem_hub.ocm_llc.gen_ways[0].way_sram.gen_1024x32.gen_cuts[0].i_cut:
-        location: [613, 375]
-        orientation: FS
-      friscv_soc_inst.friscv_mem_hub.ocm_llc.gen_ways[1].way_sram.gen_1024x32.gen_cuts[0].i_cut:
-        location: [1070, 375]
-        orientation: FS
-      friscv_soc_inst.friscv_mem_hub.ocm_llc.gen_ways[2].way_sram.gen_1024x32.gen_cuts[0].i_cut:
-        location: [613, 1388]
+      friscv_soc_inst.friscv_mem_hub.ocm_llc.gen_ways[0].way_sram.gen_512x32.gen_cuts[0].i_cut:
+        location: [336.0, 803]
         orientation: N
-      friscv_soc_inst.friscv_mem_hub.ocm_llc.gen_ways[3].way_sram.gen_1024x32.gen_cuts[0].i_cut:
-        location: [1070, 1388]
+      friscv_soc_inst.friscv_mem_hub.ocm_llc.gen_ways[1].way_sram.gen_512x32.gen_cuts[0].i_cut:
+        location: [1247.04, 803]
         orientation: N
-
-  # Only instantiated when the LLC is built with SRAM_TAGS
+      friscv_soc_inst.friscv_mem_hub.ocm_llc.gen_ways[2].way_sram.gen_512x32.gen_cuts[0].i_cut:
+        location: [336.0, 1005]
+        orientation: FS
+      friscv_soc_inst.friscv_mem_hub.ocm_llc.gen_ways[3].way_sram.gen_512x32.gen_cuts[0].i_cut:
+        location: [1247.04, 1005]
+        orientation: FS
   RM_IHPSG13_1P_64x64_c2_bm_bist:
     gds:
       - pdk_dir::libs.ref/sg13cmos5l_sram/gds/RM_IHPSG13_1P_64x64_c2_bm_bist.gds
@@ -205,13 +206,13 @@ MACROS:
         - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_64x64_c2_bm_bist_slow_1p08V_125C.lib
     instances:
       friscv_soc_inst.friscv_mem_hub.ocm_llc.gen_tag_sram.tag_sram.gen_64x64.i_cut:
-        location: [613, 800]
+        location: [608, 1541.5]
         orientation: N
 
 # This is an alternative method compared to
 # specifying the power connections in the RTL
 PDN_MACRO_CONNECTIONS:
-- ".*gen_1024x32.gen_cuts.*i_cut VDD VSS VDDARRAY! VSS!"
-- ".*gen_1024x32.gen_cuts.*i_cut VDD VSS VDD! VSS!"
+- ".*gen_512x32.gen_cuts.*i_cut VDD VSS VDDARRAY! VSS!"
+- ".*gen_512x32.gen_cuts.*i_cut VDD VSS VDD! VSS!"
 - ".*gen_64x64.i_cut VDD VSS VDDARRAY! VSS!"
 - ".*gen_64x64.i_cut VDD VSS VDD! VSS!"
