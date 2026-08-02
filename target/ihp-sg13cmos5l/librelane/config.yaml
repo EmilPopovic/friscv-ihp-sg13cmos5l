@@ -1,3 +1,11 @@
+# Copyright 2026 FER, HPC Architecture and Application Research Center
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+#
+# Licensed under the Solderpad Hardware License v 2.1 (the "License");
+# you may not use this file except in compliance with the License, or,
+# at your option, the Apache License version 2.0.
+# You may obtain a copy of the License at https://solderpad.org/licenses/SHL-2.1/
+
 # Based on https://github.com/IHP-GmbH/ihp-sg13cmos5l-librelane-template/blob/main/librelane/config.yaml
 
 meta:
@@ -119,6 +127,25 @@ CORE_AREA: [336, 336, 1764, 1764]
 
 FP_MACRO_HORIZONTAL_HALO: 5
 FP_MACRO_VERTICAL_HALO: 5
+
+# Keep signal routing off the SRAM macro power stripes
+# Do not use GRT_MACRO_EXTENSION for this
+ROUTING_OBSTRUCTIONS:
+# gen_ways[0]  416.64 x 191.34 @ [336.00,  852.28]
+- ["Metal4",    336.00,  852.28,  752.64, 1043.62]
+- ["TopMetal1", 336.00,  852.28,  752.64, 1043.62]
+# gen_ways[1]  416.64 x 191.34 @ [1347.36, 852.28]
+- ["Metal4",   1347.36,  852.28, 1764.00, 1043.62]
+- ["TopMetal1",1347.36,  852.28, 1764.00, 1043.62]
+# gen_ways[2]  416.64 x 191.34 @ [336.00, 1054.28]
+- ["Metal4",    336.00, 1054.28,  752.64, 1245.62]
+- ["TopMetal1", 336.00, 1054.28,  752.64, 1245.62]
+# gen_ways[3]  416.64 x 191.34 @ [1347.36, 1054.28]
+- ["Metal4",   1347.36, 1054.28, 1764.00, 1245.62]
+- ["TopMetal1",1347.36, 1054.28, 1764.00, 1245.62]
+# gen_tag_sram 784.48 x  64.36 @ [657.76, 1697.12]
+- ["Metal4",    657.76, 1697.12, 1442.24, 1761.48]
+- ["TopMetal1", 657.76, 1697.12, 1442.24, 1761.48]
 
 PL_TARGET_DENSITY_PCT: 85
 GRT_ALLOW_CONGESTION: true

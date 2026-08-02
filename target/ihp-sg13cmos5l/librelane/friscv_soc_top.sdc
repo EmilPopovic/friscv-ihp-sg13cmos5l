@@ -103,6 +103,20 @@ set_output_delay $jtag_io_delay       -clock jtag_tck $jtag_out_ports
 # Asynchronous pad inputs, no hold
 set_false_path -hold -from [get_ports {bidir_PAD[0] bidir_PAD[1] bidir_PAD[2] bidir_PAD[3] bidir_PAD[4]}]
 
+# ============================================================
+# HyperBus DDR output muxes
+# ============================================================
+
+# TODO constrain properly
+set hyper_ddr_mux_sel [get_pins {*i_ddrmux.i_mux/S}]
+
+if { [llength $hyper_ddr_mux_sel] != 9 } {
+    puts "\[ERROR] Expected 9 HyperBus DDR mux select pins, found [llength $hyper_ddr_mux_sel]"
+}
+
+set_sense -type clock -stop_propagation $hyper_ddr_mux_sel
+set_false_path -through $hyper_ddr_mux_sel
+
 set cap_load [expr $::env(OUTPUT_CAP_LOAD) / 1000.0]
 puts "\[INFO] Setting load to: $cap_load"
 set_load $cap_load [all_outputs]
