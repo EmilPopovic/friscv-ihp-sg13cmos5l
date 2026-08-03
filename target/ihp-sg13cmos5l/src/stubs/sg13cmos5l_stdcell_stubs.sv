@@ -27,6 +27,13 @@ module sg13cmos5l_buf_1 (
 endmodule
 
 (* blackbox *)
+module sg13cmos5l_dlygate4sd3_1 (
+  input  logic A,
+  output logic X
+);
+endmodule
+
+(* blackbox *)
 module sg13cmos5l_and2_1 (
   input  logic A,
   input  logic B,

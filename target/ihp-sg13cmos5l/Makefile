@@ -5,13 +5,16 @@ sources.f: ../../Bender.yml ../../Bender.lock $(wildcard src/*.sv)
 	sed -i '\|/tech_cells_generic-[^/]*/src/rtl/tc_sram\.sv$$|d' $@
 	sed -i '\|/tech_cells_generic-[^/]*/src/rtl/tc_clk\.sv$$|d' $@
 	sed -i '\|/opentitan_peripherals-[^/]*/src/spi_host/rtl/|d' $@
+	sed -i '\|/rtl/soc/configurable_delay\.sv$$|d' $@
 	echo "$(CURDIR)/src/stubs/RM_IHPSG13_1P_1024x32_c2_bm_bist.sv" >> $@
 	echo "$(CURDIR)/src/stubs/RM_IHPSG13_1P_512x32_c2_bm_bist.sv" >> $@
 	echo "$(CURDIR)/src/stubs/RM_IHPSG13_1P_64x64_c2_bm_bist.sv" >> $@
+	echo "$(CURDIR)/src/stubs/delay_line_D4_O1_6P000.sv" >> $@
 	echo "$(CURDIR)/src/stubs/sg13cmos5l_stdcell_stubs.sv" >> $@
 	echo "$(CURDIR)/src/stubs/sg13cmos5l_io_stubs.v" >> $@
 	echo "$(CURDIR)/src/tc_sram.sv" >> $@
 	echo "$(CURDIR)/src/stubs/tc_clk.sv" >> $@
+	echo "$(CURDIR)/src/mc_delay.sv" >> $@
 
 .PHONY: area
 area: sources.f

@@ -1,0 +1,110 @@
+VERSION 5.8 ;
+BUSBITCHARS "[]" ;
+DIVIDERCHAR "/" ;
+UNITS
+    DATABASE MICRONS 1000 ;
+END UNITS
+
+MACRO delay_line_D4_O1_6P000
+  FOREIGN delay_line_D4_O1_6P000 0 0 ;
+  CLASS BLOCK ;
+  SIZE 42.24 BY 45.36 ;
+  PIN clk_i
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    PORT
+      LAYER Metal3 ;
+        RECT  0 39.8 0.72 40 ;
+    END
+  END clk_i
+  PIN clk_o[0]
+    DIRECTION OUTPUT ;
+    USE SIGNAL ;
+    PORT
+      LAYER Metal3 ;
+        RECT  41.52 20.48 42.24 20.68 ;
+    END
+  END clk_o[0]
+  PIN delay_i[0]
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    PORT
+      LAYER Metal3 ;
+        RECT  41.52 17.12 42.24 17.32 ;
+    END
+  END delay_i[0]
+  PIN delay_i[1]
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    PORT
+      LAYER Metal3 ;
+        RECT  41.52 21.32 42.24 21.52 ;
+    END
+  END delay_i[1]
+  PIN delay_i[2]
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    PORT
+      LAYER Metal3 ;
+        RECT  41.52 9.56 42.24 9.76 ;
+    END
+  END delay_i[2]
+  PIN delay_i[3]
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    PORT
+      LAYER Metal2 ;
+        RECT  10.94 0 11.14 0.72 ;
+    END
+  END delay_i[3]
+  OBS
+    LAYER Metal1 ;
+     RECT  0 -0.22 42.24 45.58 ;
+    LAYER Metal2 ;
+     RECT  11.42 0.32 12.1 0.42 ;
+     RECT  10.94 0.42 12.1 1.58 ;
+     RECT  6.14 1.58 27.46 2.37 ;
+     RECT  6.14 2.37 30.82 2.84 ;
+     RECT  6.14 2.84 34.66 6.2 ;
+     RECT  3.26 6.2 38.02 10.4 ;
+     RECT  3.26 10.4 39.94 13.34 ;
+     RECT  0.38 13.34 39.94 13.54 ;
+     RECT  1.82 13.54 39.94 16.7 ;
+     RECT  1.82 16.7 41.38 24.04 ;
+     RECT  4.7 24.04 41.38 24.46 ;
+     RECT  6.62 24.46 41.38 28.46 ;
+     RECT  6.62 28.46 41.86 34.76 ;
+     RECT  3.26 34.76 41.86 38.74 ;
+     RECT  3.26 38.74 38.5 39.58 ;
+     RECT  3.26 39.58 32.74 39.8 ;
+     RECT  1.82 39.8 32.74 42.52 ;
+     RECT  1.82 42.52 28.42 43.26 ;
+     RECT  1.82 43.26 3.46 43.36 ;
+     RECT  1.82 43.36 2.02 43.78 ;
+     RECT  15.26 43.26 28.42 43.78 ;
+    LAYER Metal3 ;
+     RECT  0.48 39.8 3.26 40 ;
+     RECT  3.26 34.76 6.62 43.36 ;
+     RECT  3.74 17.12 7.78 17.32 ;
+     RECT  6.62 31.82 8.06 43.36 ;
+     RECT  8.06 20.9 8.26 43.36 ;
+     RECT  8.26 34.76 8.74 43.36 ;
+     RECT  8.74 43.16 9.22 43.36 ;
+     RECT  3.74 6.2 11.42 6.4 ;
+     RECT  11.42 5.78 12.86 6.4 ;
+     RECT  8.26 20.9 15.46 24.88 ;
+     RECT  12.86 5.78 16.22 10.18 ;
+     RECT  15.46 24.26 17.18 24.88 ;
+     RECT  16.22 5.78 18.82 10.6 ;
+     RECT  17.18 24.26 19.3 27.82 ;
+     RECT  18.82 9.14 22.18 10.6 ;
+     RECT  22.18 10.4 24.38 10.6 ;
+     RECT  19.3 24.26 24.38 25.3 ;
+     RECT  24.38 10.4 27.46 25.3 ;
+     RECT  27.46 10.4 27.94 24.46 ;
+     RECT  27.94 10.4 30.62 21.52 ;
+     RECT  30.62 2.84 34.66 21.52 ;
+     RECT  34.66 9.56 41.76 21.52 ;
+  END
+END delay_line_D4_O1_6P000
+END LIBRARY

@@ -25,7 +25,8 @@ DESIGN_NAME: friscv_soc_top
 VERILOG_FILES:
 - dir::../src/friscv_soc_top.sv
 
-VERILOG_DEFINES: [FUNCTIONAL]
+# TARGET_ASIC swaps rtl/soc/configurable_delay.sv from a passthrough to the hardened delay_line_D4_O1_6P000 macro
+VERILOG_DEFINES: [FUNCTIONAL, TARGET_ASIC]
 
 # Enable plugin for better SystemVerilog support
 USE_SLANG: true
@@ -249,6 +250,22 @@ MACROS:
       friscv_soc_inst.friscv_mem_hub.ocm_llc.gen_tag_sram.tag_sram.gen_64x64.i_cut:
         location: [657.76, 1697.12]
         orientation: N
+  # HyperBus PHY delay line, 6 ns full scale at 0.375 ns/step
+  # Ported from cheshire-ihp130-o to CMOS5L
+  # Small so placer decides its location
+  # Only tt corner characterized, all point at it, similar to Basilisk
+  delay_line_D4_O1_6P000:
+    gds:
+      - dir::../src/mc_delay/views/delay_line_D4_O1_6P000.gds
+    lef:
+      - dir::../src/mc_delay/views/delay_line_D4_O1_6P000.lef
+    lib:
+      "*_typ_1p20V_25C":
+        - dir::../src/mc_delay/views/delay_line_D4_O1_6P000.lib
+      "*_fast_1p32V_m40C":
+        - dir::../src/mc_delay/views/delay_line_D4_O1_6P000.lib
+      "*_slow_1p08V_125C":
+        - dir::../src/mc_delay/views/delay_line_D4_O1_6P000.lib
 
 # This is an alternative method compared to
 # specifying the power connections in the RTL

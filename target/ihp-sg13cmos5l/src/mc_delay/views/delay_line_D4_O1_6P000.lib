@@ -1,0 +1,187 @@
+library (delay_line_D4_O1_6P000) {
+  comment                        : "";
+  delay_model                    : table_lookup;
+  simulation                     : false;
+  capacitive_load_unit (1,pF);
+  leakage_power_unit             : 1pW;
+  current_unit                   : "1uA";
+  pulling_resistance_unit        : "1kohm";
+  time_unit                      : "1ns";
+  voltage_unit                   : "1v";
+  library_features(report_delay_calculation);
+
+  input_threshold_pct_rise : 50;
+  input_threshold_pct_fall : 50;
+  output_threshold_pct_rise : 50;
+  output_threshold_pct_fall : 50;
+  slew_lower_threshold_pct_rise : 20;
+  slew_lower_threshold_pct_fall : 20;
+  slew_upper_threshold_pct_rise : 80;
+  slew_upper_threshold_pct_fall : 80;
+  slew_derate_from_library : 1.0;
+
+
+  nom_process                    : 1.0;
+  nom_temperature                : 25.0;
+  nom_voltage                    : 1.20;
+
+  lu_table_template(template_1) {
+    variable_1 : total_output_net_capacitance;
+    index_1("0.00100,  0.18720,  0.31200,  0.51840,  0.86400,  1.44000,  2.40000");
+  }
+  type ("clk_o") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 1;
+    bit_from : 0;
+    bit_to : 0;
+  }
+  type ("delay_i") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 4;
+    bit_from : 3;
+    bit_to : 0;
+  }
+
+  cell ("delay_line_D4_O1_6P000") {
+    area : 1916.007 
+    is_macro_cell : true;
+    pin("clk_i") {
+      direction : input;
+      capacitance : 0.0199;
+    }
+    bus("clk_o") {
+      bus_type : clk_o;
+      direction : output;
+      capacitance : 0.0000;
+    pin("clk_o[0]") {
+      direction : output;
+      capacitance : 0.0000;
+      timing() {
+        related_pin : "clk_i";
+        timing_sense : positive_unate;
+        timing_type : combinational;
+	cell_rise(template_1) {
+          index_1("0.00100,  0.18720,  0.31200,  0.51840,  0.86400,  1.44000,  2.40000");
+          values("5.64427,5.71746,5.76128,5.83318,5.95373,6.15397,6.48759");
+	}
+	rise_transition(template_1) {
+          index_1("0.00100,  0.18720,  0.31200,  0.51840,  0.86400,  1.44000,  2.40000");
+          values("0.01548,0.10469,0.16759,0.27171,0.44639,0.73759,1.22286");
+	}
+	cell_fall(template_1) {
+          index_1("0.00100,  0.18720,  0.31200,  0.51840,  0.86400,  1.44000,  2.40000");
+          values("5.98758,6.05355,6.08929,6.14747,6.24446,6.40590,6.67463");
+	}
+	fall_transition(template_1) {
+          index_1("0.00100,  0.18720,  0.31200,  0.51840,  0.86400,  1.44000,  2.40000");
+          values("0.01715,0.08449,0.13084,0.20879,0.33991,0.55881,0.92365");
+	}
+      }
+      timing() {
+        related_pin : "delay_i[3]";
+        timing_type : combinational;
+	cell_rise(template_1) {
+          index_1("0.00100,  0.18720,  0.31200,  0.51840,  0.86400,  1.44000,  2.40000");
+          values("5.55391,5.62710,5.67092,5.74282,5.86337,6.06361,6.39723");
+	}
+	rise_transition(template_1) {
+          index_1("0.00100,  0.18720,  0.31200,  0.51840,  0.86400,  1.44000,  2.40000");
+          values("0.01548,0.10469,0.16759,0.27171,0.44639,0.73759,1.22286");
+	}
+	cell_fall(template_1) {
+          index_1("0.00100,  0.18720,  0.31200,  0.51840,  0.86400,  1.44000,  2.40000");
+          values("5.88457,5.95054,5.98628,6.04446,6.14145,6.30289,6.57162");
+	}
+	fall_transition(template_1) {
+          index_1("0.00100,  0.18720,  0.31200,  0.51840,  0.86400,  1.44000,  2.40000");
+          values("0.01715,0.08449,0.13084,0.20879,0.33991,0.55881,0.92365");
+	}
+      }
+      timing() {
+        related_pin : "delay_i[2]";
+        timing_type : combinational;
+	cell_rise(template_1) {
+          index_1("0.00100,  0.18720,  0.31200,  0.51840,  0.86400,  1.44000,  2.40000");
+          values("2.95815,3.03134,3.07517,3.14706,3.26761,3.46786,3.80148");
+	}
+	rise_transition(template_1) {
+          index_1("0.00100,  0.18720,  0.31200,  0.51840,  0.86400,  1.44000,  2.40000");
+          values("0.01548,0.10469,0.16759,0.27171,0.44639,0.73759,1.22286");
+	}
+	cell_fall(template_1) {
+          index_1("0.00100,  0.18720,  0.31200,  0.51840,  0.86400,  1.44000,  2.40000");
+          values("3.15534,3.22131,3.25705,3.31522,3.41222,3.57366,3.84238");
+	}
+	fall_transition(template_1) {
+          index_1("0.00100,  0.18720,  0.31200,  0.51840,  0.86400,  1.44000,  2.40000");
+          values("0.01715,0.08449,0.13084,0.20879,0.33991,0.55881,0.92365");
+	}
+      }
+      timing() {
+        related_pin : "delay_i[1]";
+        timing_type : combinational;
+	cell_rise(template_1) {
+          index_1("0.00100,  0.18720,  0.31200,  0.51840,  0.86400,  1.44000,  2.40000");
+          values("1.06353,1.13672,1.18054,1.25244,1.37299,1.57324,1.90686");
+	}
+	rise_transition(template_1) {
+          index_1("0.00100,  0.18720,  0.31200,  0.51840,  0.86400,  1.44000,  2.40000");
+          values("0.01548,0.10469,0.16759,0.27171,0.44639,0.73759,1.22286");
+	}
+	cell_fall(template_1) {
+          index_1("0.00100,  0.18720,  0.31200,  0.51840,  0.86400,  1.44000,  2.40000");
+          values("1.15907,1.22504,1.26078,1.31896,1.41595,1.57740,1.84612");
+	}
+	fall_transition(template_1) {
+          index_1("0.00100,  0.18720,  0.31200,  0.51840,  0.86400,  1.44000,  2.40000");
+          values("0.01715,0.08449,0.13084,0.20879,0.33991,0.55881,0.92365");
+	}
+      }
+      timing() {
+        related_pin : "delay_i[0]";
+        timing_type : combinational;
+	cell_rise(template_1) {
+          index_1("0.00100,  0.18720,  0.31200,  0.51840,  0.86400,  1.44000,  2.40000");
+          values("0.25426,0.32745,0.37127,0.44317,0.56372,0.76396,1.09758");
+	}
+	rise_transition(template_1) {
+          index_1("0.00100,  0.18720,  0.31200,  0.51840,  0.86400,  1.44000,  2.40000");
+          values("0.01548,0.10469,0.16759,0.27171,0.44639,0.73759,1.22286");
+	}
+	cell_fall(template_1) {
+          index_1("0.00100,  0.18720,  0.31200,  0.51840,  0.86400,  1.44000,  2.40000");
+          values("0.29444,0.36041,0.39615,0.45433,0.55132,0.71276,0.98148");
+	}
+	fall_transition(template_1) {
+          index_1("0.00100,  0.18720,  0.31200,  0.51840,  0.86400,  1.44000,  2.40000");
+          values("0.01715,0.08449,0.13084,0.20879,0.33991,0.55881,0.92365");
+	}
+      }
+    }
+    }
+    bus("delay_i") {
+      bus_type : delay_i;
+      direction : input;
+      capacitance : 0.0000;
+    pin("delay_i[3]") {
+      direction : input;
+      capacitance : 0.0557;
+    }
+    pin("delay_i[2]") {
+      direction : input;
+      capacitance : 0.0289;
+    }
+    pin("delay_i[1]") {
+      direction : input;
+      capacitance : 0.0138;
+    }
+    pin("delay_i[0]") {
+      direction : input;
+      capacitance : 0.0070;
+    }
+    }
+  }
+
+}
