@@ -1,4 +1,6 @@
 library (delay_line_D4_O1_6P000) {
+  voltage_map (VDD, 1.20);
+  voltage_map (VSS, 0.0);
   comment                        : "";
   delay_model                    : table_lookup;
   simulation                     : false;
@@ -45,6 +47,14 @@ library (delay_line_D4_O1_6P000) {
   }
 
   cell ("delay_line_D4_O1_6P000") {
+    pg_pin (VDD) {
+      pg_type : primary_power;
+      voltage_name : VDD;
+    }
+    pg_pin (VSS) {
+      pg_type : primary_ground;
+      voltage_name : VSS;
+    }
     area : 1916.007 
     is_macro_cell : true;
     pin("clk_i") {

@@ -48,6 +48,7 @@ all: bitstream
 $(FLIST): $(REPO_ROOT)/Bender.yml $(REPO_ROOT)/Bender.lock $(wildcard src/*.sv)
 	bender script flist-plus -t rtl -t synthesis -t fpga -t xilinx > $@
 	sed -i '\|/opentitan_peripherals-[^/]*/src/spi_host/rtl/|d' $@
+	sed -i '\|/obi_peripherals-[^/]*/hw/obi_uart/|d' $@
 	sed -i '\|/tech_cells_generic-[^/]*/src/fpga/tc_sram_xilinx\.sv$$|d' $@
 	echo "$(CURDIR)/src/tc_sram.sv" >> $@
 	echo "$(CURDIR)/src/friscv_soc_pynq.sv" >> $@

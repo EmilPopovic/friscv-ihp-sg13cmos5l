@@ -9,22 +9,22 @@
 // Based on https://github.com/IHP-GmbH/ihp-sg13cmos5l-librelane-template/blob/main/src/chip_top.sv
 
 // ============================================================================
-//  Pin  Signal  Type / muxed function      | Pin  Signal    Type / function
+//  Pin  Signal  Type / function            | Pin  Signal    Type / function
 //  ---  ------  -------------------------- | ---  --------  -------------------
-//    1  PA13    bidir  HB_DQ0  / DBG_D0    |  25  PA5       bidir  QSPI0_IO0
-//    2  PA14    bidir  HB_DQ1  / DBG_D1    |  26  PA6       bidir  QSPI0_IO1
-//    3  PA15    bidir  HB_DQ2  / DBG_D2    |  27  PA7       bidir  QSPI0_IO2 (strap)
-//    4  PA16    bidir  HB_DQ3  / DBG_D3    |  28  PA8       bidir  QSPI0_IO3 (strap)
+//    1  PA13    bidir  HB_DQ0              |  25  PA5       bidir  QSPI0_IO0
+//    2  PA14    bidir  HB_DQ1              |  26  PA6       bidir  QSPI0_IO1
+//    3  PA15    bidir  HB_DQ2              |  27  PA7       bidir  QSPI0_IO2 (strap)
+//    4  PA16    bidir  HB_DQ3              |  28  PA8       bidir  QSPI0_IO3 (strap)
 //    5  IOVDD   power                      |  29  IOVSS     power
-//    6  PA17    bidir  HB_DQ4  / DBG_D4    |  30  IOVDD     power
-//    7  PA18    bidir  HB_DQ5  / DBG_D5    |  31  PA9       bidir  QSPI0_SCK
-//    8  PA19    bidir  HB_DQ6  / DBG_D6    |  32  VSS       power
-//    9  PA20    bidir  HB_DQ7  / DBG_D7    |  33  VDD       power
-//   10  PA21    bidir  HB_RWDS / DBG_SEL0  |  34  PA10      bidir  QSPI0_CS0
-//   11  PA22    bidir  HB_CK   / DBG_SEL1  |  35  PA11      bidir  QSPI0_CS1
+//    6  PA17    bidir  HB_DQ4              |  30  IOVDD     power
+//    7  PA18    bidir  HB_DQ5              |  31  PA9       bidir  QSPI0_SCK
+//    8  PA19    bidir  HB_DQ6              |  32  VSS       power
+//    9  PA20    bidir  HB_DQ7              |  33  VDD       power
+//   10  PA21    bidir  HB_RWDS             |  34  PA10      bidir  QSPI0_CS0
+//   11  PA22    output HB_CK               |  35  PA11      bidir  QSPI0_CS1
 //   12  IOVSS   power                      |  36  PA12      bidir  QSPI0_CS2
-//   13  PA23    bidir  HB_CS0_N/ DBG_SEL2  |  37  TCK       input
-//   14  PA24    bidir  HB_RST_N/ DBG_SEL3  |  38  TMS       input
+//   13  PA23    output HB_CS0_N            |  37  TCK       input
+//   14  PA24    output HB_RST_N            |  38  TMS       input
 //   15  VSS     power                      |  39  TDI       input
 //   16  CLK_OUT output                     |  40  TDO       output
 //   17  VDD     power                      |  41  VSS       power

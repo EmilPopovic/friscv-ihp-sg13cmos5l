@@ -107,6 +107,20 @@ global_placement -density $DENSITY -timing_driven -skip_io -overflow 0.00000001
 detailed_placement
 optimize_mirroring
 
+# Add power and ground connections to pins named VDD and VSS
+add_global_connection -net VDD -inst_pattern .* -pin_pattern VDD -power
+add_global_connection -net VSS -inst_pattern .* -pin_pattern VSS -ground
+global_connect
+
+set_voltage_domain -name CORE -power VDD -ground VSS
+
+# Create a PDN grid on Metal4
+define_pdn_grid -name macro_pdn -voltage_domains CORE -starts_with POWER -pins {Metal4}
+add_pdn_stripe -grid macro_pdn -layer Metal1 -width 0.44 -followpins
+add_pdn_stripe -grid macro_pdn -layer Metal4 -width 1.2 -pitch 14.0 -spacing 4.0 -offset 4.0 -starts_with POWER -extend_to_boundary
+add_pdn_connect -grid macro_pdn -layers {Metal1 Metal4}
+pdngen -verbose
+
 # move pins
 # cmos5l Metal2 is VERTICAL and Metal3 HORIZONTAL - the opposite of sg13g2, so
 # these two are swapped relative to upstream.

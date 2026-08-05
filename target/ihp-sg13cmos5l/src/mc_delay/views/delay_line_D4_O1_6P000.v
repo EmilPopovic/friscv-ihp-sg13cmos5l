@@ -1,9 +1,13 @@
 module delay_line_D4_O1_6P000 (clk_i,
     clk_o,
-    delay_i);
+    delay_i,
+    VSS,
+    VDD);
  input clk_i;
  output [0:0] clk_o;
  input [3:0] delay_i;
+ inout VSS;
+ inout VDD;
 
  wire clk_l1m0o0;
  wire clk_l1m1o0;
@@ -55,6 +59,7 @@ module delay_line_D4_O1_6P000 (clk_i,
  wire net5;
  wire net50;
  wire net52;
+ wire net51;
  wire net54;
  wire net55;
  wire net57;
@@ -67,7 +72,6 @@ module delay_line_D4_O1_6P000 (clk_i,
  wire net70;
  wire net74;
  wire net75;
- wire net51;
  wire net53;
  wire net26;
  wire net27;
