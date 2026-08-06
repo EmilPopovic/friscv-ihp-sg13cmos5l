@@ -46,13 +46,12 @@ localparam int unsigned MemBase = 32'h8000_0000;
 localparam int unsigned MemSize = 32'h0100_0000;
 
 // 25 MHz, not the ASIC's 50 MHz: the 512 KiB SRAM spans 128 cascaded block RAMs
-// and misses a 20 ns period by 5.5 ns. SocClkFreqHz must track these dividers.
+// and misses a 20 ns period by 5.5 ns. Software has to program the CLINT tick
+// generator for whatever these dividers end up producing.
 localparam real ClkInPeriodNs = 8.000;   // 125 MHz board clock
 localparam real MmcmMultF     = 8.000;   // VCO = 1000 MHz
 localparam int  MmcmDivClk    = 1;
 localparam real SocClkDivideF = 40.000;  // 25 MHz
-
-localparam int unsigned SocClkFreqHz = 25_000_000;
 
 wire mmcm_clk_fb;
 wire mmcm_clk_soc;
@@ -139,7 +138,6 @@ friscv_soc #(
     .HyperClockDelayed ( 1'b0                            ),
     .NumPads           ( NumPads                         ),
     .EnablePlic        ( 1'b1                            ),
-    .ClkFreqHz         ( SocClkFreqHz                    ),
     .ZsblRomSizeBytes  ( (ZsblRom != 0) ? 32'd64 : 32'd0 )
 ) i_friscv_soc (
     .i_clk      ( soc_clk    ),
