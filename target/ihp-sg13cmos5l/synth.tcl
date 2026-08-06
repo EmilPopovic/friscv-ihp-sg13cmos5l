@@ -11,6 +11,7 @@ set tag_sram_liberty \
 # Elaborate all bender sources through slang
 yosys read_slang --top friscv_soc --keep-hierarchy --timescale 1ns/1ps \
     -Wno-duplicate-definition --ignore-initial --ignore-timing \
+    -D FUNCTIONAL -D TARGET_ASIC \
     -f $here/sources.f
 
 # Coarse synth

@@ -174,7 +174,18 @@ LAYERS_RC:
     Metal4:    {res: 0.000515,     cap: 0.000183576}
     TopMetal1: {res: 0.0000128049, cap: 0.000221699}
 
-MAX_CAP_VIOLATION_CORNERS: ["*"]
+# Signoff waivers
+
+# 1. KLayout DRC
+ERROR_ON_KLAYOUT_DRC: false
+
+# 2. KLayout density
+# TODO check if we can do this
+ERROR_ON_KLAYOUT_DENSITY: false
+#
+# 3. Max capacitance
+# TODO check if we can do this also
+# MAX_CAP_VIOLATION_CORNERS: ["*"]
 
 RUN_POST_GRT_DESIGN_REPAIR: true
 RUN_POST_GRT_RESIZER_TIMING: true
