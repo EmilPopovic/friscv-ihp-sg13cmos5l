@@ -242,8 +242,7 @@ foreach dline [list $HYP_TX_DLINE $HYP_RX_DLINE] \
             } else {
                 set dly $tgt
             }
-            set_assigned_delay -cell -corner $cname -from # Based on https://github.com/IHP-GmbH/ihp-sg13cmos5l-librelane-template/blob/main/librelane/chip_top.sdc
-$dly_from -to $dly_to $dly
+            set_assigned_delay -cell -corner $cname -from $dly_from -to $dly_to $dly
         }
     }
 
