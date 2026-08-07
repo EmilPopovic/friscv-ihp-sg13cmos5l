@@ -36,8 +36,8 @@ if { $::env(CLOCK_PORT) == $::env(CLOCK_NET) } {
 puts "\[INFO] Using clock $clock_port…"
 create_clock {*}$port_args -name $clock_port -period $::env(CLOCK_PERIOD)
 
-set input_delay_value [expr $::env(CLOCK_PERIOD) * $::env(IO_DELAY_CONSTRAINT) / 100]
-set output_delay_value [expr $::env(CLOCK_PERIOD) * $::env(IO_DELAY_CONSTRAINT) / 100]
+set input_delay_value [expr {$::env(CLOCK_PERIOD) * $::env(IO_DELAY_CONSTRAINT) / 100.0}]
+set output_delay_value [expr {$::env(CLOCK_PERIOD) * $::env(IO_DELAY_CONSTRAINT) / 100.0}]
 puts "\[INFO] Setting output delay to: $output_delay_value"
 puts "\[INFO] Setting input delay to: $input_delay_value"
 
@@ -148,6 +148,7 @@ set_input_delay -max $input_delay_value -clock $clocks $clk_core_inout_ports
 
 set core_inout_out_names {}
 for {set i 0} {$i < 25} {incr i} {
+	if { $i >= 5  && $i <= 12 } { continue }
 	if { $i >= 13 && $i <= 22 } { continue }
 	lappend core_inout_out_names "bidir_PAD\[$i\]"
 }
@@ -163,6 +164,9 @@ set_output_delay $jtag_io_delay       -clock jtag_tck $jtag_out_ports
 # Asynchronous pad inputs, no hold
 set_false_path -hold -from [get_ports {input_PAD[3] bidir_PAD[0] bidir_PAD[1] bidir_PAD[2] bidir_PAD[3] bidir_PAD[4] bidir_PAD[5] bidir_PAD[6] bidir_PAD[7] bidir_PAD[8] bidir_PAD[9] bidir_PAD[10] bidir_PAD[11] bidir_PAD[12]}]
 
+# rst_n_PAD is a free-running asynchronous input
+set_false_path -from [get_ports rst_n_PAD]
+
 # ============================================================
 # HyperBus
 # ============================================================
@@ -172,9 +176,6 @@ set_false_path -hold -from [get_ports {input_PAD[3] bidir_PAD[0] bidir_PAD[1] bi
 
 # An edge that takes this long to resolve is not data
 set HYP_MAX_SLEW 0.75
-if { [info exists ::env(MAX_TRANSITION_CONSTRAINT)] } {
-    set HYP_MAX_SLEW $::env(MAX_TRANSITION_CONSTRAINT)
-}
 
 # Center-aligned DDR puts the CK edge in the middle of a T/2 bit, the data
 # transition belongs a quarter period ahead of it, and may wander by the slew
@@ -203,9 +204,23 @@ set HYP_OUT_DOEN [hyp_pad_pins $HYP_IO_IDX c2p_en]
 # until the eye is centred, so what STA models is the calibrated delay plus
 # the residual trim error.
 
-set HYP_DLY_STEP   0.375
-set HYP_TX_TGT_DLY 4.875
-set HYP_RX_TGT_DLY 4.125
+set HYP_DLY_STEP 0.375
+set HYP_DLY_FS   6.000  ;# full scale, 16 taps
+
+set HYP_RX_TREE_SKEW 1.0
+
+# Round a target delay onto the tap grid, clamped to the line's full scale
+proc hyp_tap {target step fs} {
+    set taps [expr {round(double($target) / $step)}]
+    if { $taps < 1 } { set taps 1 }
+    if { $taps * $step > $fs } { set taps [expr {int($fs / $step)}] }
+    return [expr {$taps * $step}]
+}
+
+set HYP_TX_TGT_DLY [hyp_tap [expr {$TCK_SYS / 4.0}]                     $HYP_DLY_STEP $HYP_DLY_FS]
+set HYP_RX_TGT_DLY [hyp_tap [expr {$TCK_SYS / 4.0 - $HYP_RX_TREE_SKEW}] $HYP_DLY_STEP $HYP_DLY_FS]
+
+puts "\[INFO] HyperBus delay-line targets: TX $HYP_TX_TGT_DLY ns, RX $HYP_RX_TGT_DLY ns (TCK_SYS $TCK_SYS)"
 
 set hyp_corners {}
 catch { foreach c [sta::corners] { lappend hyp_corners [$c name] } }
@@ -227,7 +242,8 @@ foreach dline [list $HYP_TX_DLINE $HYP_RX_DLINE] \
             } else {
                 set dly $tgt
             }
-            set_assigned_delay -cell -corner $cname -from $dly_from -to $dly_to $dly
+            set_assigned_delay -cell -corner $cname -from # Based on https://github.com/IHP-GmbH/ihp-sg13cmos5l-librelane-template/blob/main/librelane/chip_top.sdc
+$dly_from -to $dly_to $dly
         }
     }
 
@@ -291,6 +307,28 @@ if { [llength $hyper_ddr_mux_sel] != 9 } {
     error "HyperBus: expected 9 DDR mux select pins, found [llength $hyper_ddr_mux_sel]"
 }
 set_sense -type clock -stop_propagation $hyper_ddr_mux_sel
+
+# ============================================================
+# QSPI0 source-synchronous to SCK
+# ============================================================
+
+set QSPI_IO   [hyp_pad_ports {5 6 7 8}]    ;# IO0..IO3
+set QSPI_SCK  [hyp_pad_ports {9}]          ;# SCK pad
+set QSPI_CS   [hyp_pad_ports {10 11 12}]   ;# CS0..CS2
+set QSPI_DATA [concat $QSPI_IO $QSPI_CS]
+
+set QSPI_SCK_SRC [hyp_pad_pins {9} c2p]
+
+create_generated_clock -name qspi_sck -divide_by 2 -source [get_pins [lindex $::env(CLOCK_NET) 0]] $QSPI_SCK_SRC
+
+set QSPI_TSU  3.0
+set QSPI_TCSS 5.0
+
+set_output_delay -max $QSPI_TSU  -clock qspi_sck -reference_pin $QSPI_SCK -add_delay $QSPI_IO
+set_output_delay -max $QSPI_TCSS -clock qspi_sck -reference_pin $QSPI_SCK -add_delay $QSPI_CS
+
+set_false_path -hold -to $QSPI_DATA
+set_false_path -hold -to $QSPI_SCK
 
 set cap_load [expr $::env(OUTPUT_CAP_LOAD) / 1000.0]
 puts "\[INFO] Setting load to: $cap_load"
