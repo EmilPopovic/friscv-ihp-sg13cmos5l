@@ -1,8 +1,8 @@
 package:
   name: friscv-tapeout
   authors:
-    - "Emil Popović"
-    - "Matej Jurasić"
+    - "Emil Popović <mail@emilpopovic.me>"
+    - "Matej Jurasić <matej.jurasic@cappig.dev>"
 
 dependencies:
   axi:                   { git: "https://github.com/pulp-platform/axi.git",                   version: 0.39.1 }
