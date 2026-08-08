@@ -129,7 +129,7 @@ for (genvar i = 0; i < NumPads; i++) begin : gen_pads
 end
 
 // Core design
-friscv_soc #(
+friscv_chip_soc #(
     .SramBase          ( SramBase                        ),
     .SramSize          ( SramSize                        ),
     .MemBase           ( MemBase                         ),
@@ -138,7 +138,7 @@ friscv_soc #(
     .HyperClockDelayed ( 1'b0                            ),
     .NumPads           ( NumPads                         ),
     .EnablePlic        ( 1'b1                            ),
-    .ZsblRomSizeBytes  ( (ZsblRom != 0) ? 32'd64 : 32'd0 )
+    .ZsblRomSizeBytes  ( (ZsblRom != 0) ? 32'd144 : 32'd0 )
 ) i_friscv_soc (
     .i_clk      ( soc_clk    ),
     .i_rstn     ( soc_rstn   ),

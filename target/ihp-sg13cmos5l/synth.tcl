@@ -9,18 +9,18 @@ set tag_sram_liberty \
     $sram_lib_dir/RM_IHPSG13_1P_64x64_c2_bm_bist_typ_1p20V_25C.lib
 
 # Elaborate all bender sources through slang
-yosys read_slang --top friscv_soc --keep-hierarchy --timescale 1ns/1ps \
+yosys read_slang --top friscv_chip_soc --keep-hierarchy --timescale 1ns/1ps \
     -Wno-duplicate-definition --ignore-initial --ignore-timing \
     -D FUNCTIONAL -D TARGET_ASIC \
     -f $here/sources.f
 
 # Coarse synth
-yosys hierarchy -top friscv_soc
-yosys synth -top friscv_soc
+yosys hierarchy -top friscv_chip_soc
+yosys synth -top friscv_chip_soc
 yosys dfflibmap -liberty $liberty
 yosys abc -fast -liberty $liberty
 yosys opt_clean
 
 # Hierarchical area total across all submodules
 yosys tee -o $here/area.rpt stat -liberty $liberty -liberty $sram_liberty \
-    -liberty $way_sram_liberty -liberty $tag_sram_liberty -top friscv_soc
+    -liberty $way_sram_liberty -liberty $tag_sram_liberty -top friscv_chip_soc

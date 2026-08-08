@@ -227,7 +227,7 @@ endgenerate
 
 // Core design
 
-(* keep *) friscv_soc #(
+(* keep *) friscv_chip_soc #(
     .NumPads ( NUM_GPIO_PADS )
 ) friscv_soc_inst (
     .i_clk      ( clk_PAD2CORE   ),
