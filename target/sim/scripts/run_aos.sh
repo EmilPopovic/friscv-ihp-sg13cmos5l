@@ -36,7 +36,7 @@ make soc SOC_MEM_SIZE="$MEM_SIZE" SOC_DIR="$DIR" >/dev/null
 
 # boot through the ROM and the flash instead of the debug module
 if [ "${BOOT:-jtag}" = qspi ]; then
-    BOOT_SRC=$HERE/../../../sw/boot
+    BOOT_SRC=$(bender path friscv-soc)/sw/boot
 
     riscv64-unknown-elf-gcc -march=rv32ima_zicsr_zifencei -mabi=ilp32 \
         -nostdlib -nostartfiles -Wl,--no-warn-rwx-segments -Wl,-Ttext=0 \

@@ -3,6 +3,19 @@
 The first tapeout of the FRISC-V core, targeting IHP's open-source **SG13CMOS5L**
 130nm process.
 
+The SoC itself lives in [friscv-soc](https://github.com/EmilPopovic/friscv-soc)
+and is pulled in as a Bender dependency. This repository holds everything that
+is specific to the chip: `friscv_chip_soc` wraps `friscv_soc` with the HyperBus
+controller on its AXI4 master port, the pin mux on its external register ports
+and the pad map, and `friscv_soc_top` adds the pad ring.
+
+To develop both together, point Bender at a local checkout in `Bender.local`:
+
+```yaml
+overrides:
+  friscv-soc: { path: "../friscv-soc" }
+```
+
 ## Setup
 
 The toolchain is provided by **Nix**. This flow is inspired by
@@ -58,19 +71,22 @@ Synthesis and simulation: **Yosys**, **Icarus Verilog**, **Verilator**, **ngspic
 To change the tool set, edit the `packages` list in `flake.nix`, then
 `direnv reload`. Commit the updated `flake.lock`.
 
-## Documentation
+## Simulation
 
-- [Core-level simulation](docs/CORE_SIM.md) - the C++/Verilator testbench in
-  `target/sim/` that drives a bare FRISC-V CPU subsystem over a virtual bus.
-- [Architecture certification tests](docs/RISCV_ARCH_TEST.md) — running the
-  official `riscv-arch-test` suite against the core or full SoC.
+`make sim` builds a chip-level Verilator model of `friscv_chip_soc` with C++
+models for the HyperRAM, the QSPI flash and the UART.
+
+```bash
+make sim
+./target/sim/obj_dir_soc/friscv_soc test <program.elf>
+./target/sim/obj_dir_soc/friscv_soc qspiboot <image.bin>
+```
 
 ## Repository layout
 
-- `rtl/` - Core (`rtl/core/`) and SoC (`rtl/soc/`) SystemVerilog sources.
-- `target/asic/` - ASIC synthesis flow.
-- `target/sim/` - Core-level C++/Verilator simulation harness.
-- `target/xilinx/` - FPGA target (WIP).
-- `verif/` - Verification, including `riscv-arch-test`.
-- `sw/` - Software / test programs.
+- `hw/` - `friscv_chip_soc`, the pin mux, and the vendored PULP HyperBus.
+- `target/ihp-sg13cmos5l/` - synthesis, LibreLane flow, pad ring, PDK cells.
+- `target/sim/` - chip-level C++/Verilator simulation harness.
+- `target/xilinx/pynq-z2/` - FPGA counterpart of the chip.
+- `docs/` - design notes.
 - `flake.nix` - Nix toolchain definition.

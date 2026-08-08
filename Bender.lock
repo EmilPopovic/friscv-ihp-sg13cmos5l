@@ -39,6 +39,21 @@ packages:
     source:
       Git: https://github.com/pulp-platform/common_verification.git
     dependencies: []
+  friscv-soc:
+    revision: 6a71156004e1d64d20608c5c33581594dfd70518
+    version: 0.1.0
+    source:
+      Git: https://github.com/EmilPopovic/friscv-soc.git
+    dependencies:
+    - apb
+    - apb_uart
+    - axi
+    - common_cells
+    - opentitan_peripherals
+    - register_interface
+    - riscv-dbg
+    - riscv-frac-aclint
+    - tech_cells_generic
   obi:
     revision: 0155fc34e900c7c884e081c0a1114a247937ff69
     version: 0.1.7
@@ -74,8 +89,8 @@ packages:
     - axi
     - common_cells
   riscv-dbg:
-    revision: 1cd764a82d7d49c5e8679fbb70b540b2e274bab9
-    version: 0.10.0
+    revision: deed17e18c0d61ce8dc554300bb4dd5c39be2a13
+    version: 0.10.1
     source:
       Git: https://github.com/pulp-platform/riscv-dbg.git
     dependencies:

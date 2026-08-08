@@ -25,7 +25,7 @@ DESIGN_NAME: friscv_soc_top
 VERILOG_FILES:
 - dir::../src/friscv_soc_top.sv
 
-# TARGET_ASIC swaps rtl/soc/configurable_delay.sv from a passthrough to the hardened delay_line_D4_O1_6P000 macro
+# TARGET_ASIC swaps hw/configurable_delay.sv from a passthrough to the hardened delay_line_D4_O1_6P000 macro
 VERILOG_DEFINES: [FUNCTIONAL, TARGET_ASIC]
 
 # Enable plugin for better SystemVerilog support

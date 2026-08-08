@@ -1,17 +1,16 @@
 {
   "flags": "--top friscv_chip_soc --timescale 1ns/1ps -Wno-duplicate-definition",
-  "build": "sources.f",
+  "build": "target/ihp-sg13cmos5l/sources.f",
   "index": [
     {
       "dirs": [
-        "rtl",
-        "target/sim/rtl",
+        "hw",
         "target/ihp-sg13cmos5l/src/stubs",
         "target/ihp-sg13cmos5l/src",
-        "verif",
+        "target/xilinx/pynq-z2/src",
         ".bender/git/checkouts"
       ],
-      "excludeDirs": ["build", "node_modules", "obj_dir", "riscv-arch-test", ".bender"]
+      "excludeDirs": ["build", "node_modules", "obj_dir", ".bender"]
     }
   ]
 }

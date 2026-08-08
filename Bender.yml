@@ -5,132 +5,37 @@ package:
     - "Matej Jurasić <matej.jurasic@cappig.dev>"
 
 dependencies:
+  friscv-soc:            { git: "https://github.com/EmilPopovic/friscv-soc.git",            version: 0.1.0  }
   axi:                   { git: "https://github.com/pulp-platform/axi.git",                   version: 0.39.1 }
   register_interface:    { git: "https://github.com/pulp-platform/register_interface.git",    version: 0.3.9  }
-  apb:                   { git: "https://github.com/pulp-platform/apb.git",                   version: 0.2.4  }
-  apb_uart:              { git: "https://github.com/pulp-platform/apb_uart.git",              version: 0.2.1  }
   tech_cells_generic:    { git: "https://github.com/pulp-platform/tech_cells_generic.git",    version: 0.2.11 }
   common_cells:          { git: "https://github.com/pulp-platform/common_cells.git",          version: 1.32.0 }
-  riscv-dbg:             { git: "https://github.com/pulp-platform/riscv-dbg.git",             version: 0.10.0 }
-  opentitan_peripherals: { git: "https://github.com/pulp-platform/opentitan_peripherals.git", version: 0.4.0  }
-  riscv-frac-aclint:     { git: "https://github.com/EmilPopovic/riscv-frac-aclint.git",       version: 0.1.1  }
 
 vendor_package:
-  - name: rv_plic
-    target_dir: "rtl/vendored/pulp_rv_plic"
-    upstream:
-      git: "https://github.com/pulp-platform/rv_plic.git"
-      rev: "5b5c5a4c1c15c3d7bb833071d344b2c2bc5f599d"
-    patch_dir: "rtl/vendored/patches/pulp_rv_plic"
   - name: hyperbus
-    target_dir: "rtl/vendored/pulp_hyperbus"
+    target_dir: "hw/vendored/pulp_hyperbus"
     upstream:
       git: "https://github.com/pulp-platform/hyperbus.git"
       rev: "2a14bd8f9a985b488ee23d240764f52f129f7729"
-    patch_dir: "rtl/vendored/patches/pulp_hyperbus"
-  - name: obi_uart
-    target_dir: "rtl/vendored/pulp_obi_uart"
-    upstream:
-      git: "https://github.com/pulp-platform/obi_peripherals.git"
-      rev: "079894a6cbd4e544c477643d184a4c340bd4e391"
-    patch_dir: "rtl/vendored/patches/pulp_obi_uart"
-    mapping:
-      - {from: 'hw/obi_uart', to: 'rtl', patch_dir: 'rtl'}
-  - name: spi_host
-    target_dir: "rtl/vendored/opentitan_spi_host"
-    upstream:
-      git: "https://github.com/pulp-platform/opentitan_peripherals.git"
-      rev: "cd3153de2783abd3d03d0595e6c4b32413c62f14"
-    patch_dir: "rtl/vendored/patches/opentitan_spi_host"
-    mapping:
-      - {from: 'src/spi_host/rtl',  to: 'rtl', patch_dir: 'rtl'}
-      - {from: 'src/spi_host/data', to: 'data'}
+    patch_dir: "hw/vendored/patches/pulp_hyperbus"
 
 sources:
-  # PULP PLIC
-  - rtl/vendored/pulp_rv_plic/rtl/rv_plic_gateway.sv
-  - rtl/vendored/pulp_rv_plic/rtl/rv_plic_target.sv
-  - rtl/vendored/pulp_rv_plic/rtl/plic_regmap.sv
-  - rtl/vendored/pulp_rv_plic/rtl/plic_top.sv
   # PULP HyperBus
-  - rtl/vendored/pulp_hyperbus/src/hyperbus_pkg.sv
-  - rtl/vendored/pulp_hyperbus/src/hyperbus_delay.sv
-  - rtl/vendored/pulp_hyperbus/src/hyperbus_clock_diff_out.sv
-  - rtl/vendored/pulp_hyperbus/src/hyperbus_ddr_out.sv
-  - rtl/vendored/pulp_hyperbus/src/hyperbus_trx.sv
-  - rtl/vendored/pulp_hyperbus/src/hyperbus_cfg_regs.sv
-  - rtl/vendored/pulp_hyperbus/src/hyperbus_phy2r.sv
-  - rtl/vendored/pulp_hyperbus/src/hyperbus_w2phy.sv
-  - rtl/vendored/pulp_hyperbus/src/hyperbus_axi.sv
-  - rtl/vendored/pulp_hyperbus/src/hyperbus_phy.sv
-  - rtl/vendored/pulp_hyperbus/src/hyperbus_phy_if.sv
-  - rtl/vendored/pulp_hyperbus/src/hyperbus_clk_gen.sv
-  - rtl/vendored/pulp_hyperbus/src/hyperbus.sv
-  # OpenTitan SPI host
-  - rtl/vendored/opentitan_spi_host/rtl/spi_host_reg_pkg.sv
-  - rtl/vendored/opentitan_spi_host/rtl/spi_host_reg_top.sv
-  - rtl/vendored/opentitan_spi_host/rtl/spi_host_byte_merge.sv
-  - rtl/vendored/opentitan_spi_host/rtl/spi_host_byte_select.sv
-  - rtl/vendored/opentitan_spi_host/rtl/spi_host_cmd_pkg.sv
-  - rtl/vendored/opentitan_spi_host/rtl/spi_host_command_queue.sv
-  - rtl/vendored/opentitan_spi_host/rtl/spi_host_fsm.sv
-  - rtl/vendored/opentitan_spi_host/rtl/spi_host_window.sv
-  - rtl/vendored/opentitan_spi_host/rtl/spi_host_data_fifos.sv
-  - rtl/vendored/opentitan_spi_host/rtl/spi_host_shift_register.sv
-  - rtl/vendored/opentitan_spi_host/rtl/spi_host_core.sv
-  - rtl/vendored/opentitan_spi_host/rtl/spi_host.sv
-  # PULP OBI UART
-  - rtl/vendored/pulp_obi_uart/rtl/obi_uart_pkg.sv
-  - rtl/vendored/pulp_obi_uart/rtl/obi_uart_baudgen.sv
-  - rtl/vendored/pulp_obi_uart/rtl/obi_uart_interrupts.sv
-  - rtl/vendored/pulp_obi_uart/rtl/obi_uart_modem.sv
-  - rtl/vendored/pulp_obi_uart/rtl/obi_uart_rx.sv
-  - rtl/vendored/pulp_obi_uart/rtl/obi_uart_tx.sv
-  - rtl/vendored/pulp_obi_uart/rtl/obi_uart_register.sv
-  - rtl/vendored/pulp_obi_uart/rtl/obi_uart.sv
+  - hw/vendored/pulp_hyperbus/src/hyperbus_pkg.sv
+  - hw/configurable_delay.sv
+  - hw/vendored/pulp_hyperbus/src/hyperbus_delay.sv
+  - hw/vendored/pulp_hyperbus/src/hyperbus_clock_diff_out.sv
+  - hw/vendored/pulp_hyperbus/src/hyperbus_ddr_out.sv
+  - hw/vendored/pulp_hyperbus/src/hyperbus_trx.sv
+  - hw/vendored/pulp_hyperbus/src/hyperbus_cfg_regs.sv
+  - hw/vendored/pulp_hyperbus/src/hyperbus_phy2r.sv
+  - hw/vendored/pulp_hyperbus/src/hyperbus_w2phy.sv
+  - hw/vendored/pulp_hyperbus/src/hyperbus_axi.sv
+  - hw/vendored/pulp_hyperbus/src/hyperbus_phy.sv
+  - hw/vendored/pulp_hyperbus/src/hyperbus_phy_if.sv
+  - hw/vendored/pulp_hyperbus/src/hyperbus_clk_gen.sv
+  - hw/vendored/pulp_hyperbus/src/hyperbus.sv
 
-  # Core RTL files
-  # Keep in compile order
-  - rtl/core/friscv_pkg.sv
-  - rtl/core/friscv_zsbl_rom_pkg.sv  # generated by sw/boot/gen_zsbl_rom.py
-  - rtl/core/friscv_amo_unit.sv
-  - rtl/core/friscv_core_complex.sv
-  - rtl/core/friscv_core.sv
-  - rtl/core/friscv_cpu_subsystem_core.sv
-  - rtl/core/friscv_muldiv.sv
-  - rtl/core/friscv_ex_stage_branch_unit.sv
-  - rtl/core/friscv_ex_stage.sv
-  - rtl/core/friscv_csr_file.sv
-  - rtl/core/friscv_trap_controller.sv
-  - rtl/core/friscv_id_regfile.sv
-  - rtl/core/friscv_id_decoder.sv
-  - rtl/core/friscv_id_stage.sv
-  - rtl/core/friscv_if_stage.sv
-  - rtl/core/friscv_l1_arbiter.sv
-  - rtl/core/friscv_mem_if.sv
-  - rtl/core/friscv_mem_stage.sv
-  - rtl/core/friscv_mmu.sv
-  - rtl/core/friscv_pipeline_control.sv
-  - rtl/core/friscv_pmp_check.sv
-  - rtl/core/friscv_ptw.sv
-  - rtl/core/friscv_tlb.sv
-  - rtl/core/friscv_wb_stage.sv
-  - rtl/core/friscv_zsbl_rom.sv
-
-  # SoC RTL files
-  - rtl/soc/configurable_delay.sv
-  - rtl/soc/friscv_soc_pkg.sv
-  - rtl/soc/friscv_axi4_full_adapter.sv
-  - rtl/soc/friscv_axi4_full_adapter_intf.sv
-  - rtl/soc/friscv_from_mem.sv
-  - rtl/soc/friscv_to_mem.sv
-  - rtl/soc/mem_to_reg.sv
-  - rtl/soc/friscv_pinmux.sv
-  - rtl/soc/friscv_scb.sv
-  - rtl/soc/friscv_ext_guard.sv
-  - rtl/soc/friscv_ocm_llc.sv
-  - rtl/soc/friscv_mem_hub.sv
-  - rtl/soc/friscv_soc.sv
-
-  # Target wrapper
+  # Chip RTL
+  - hw/friscv_pinmux.sv
   - hw/friscv_chip_soc.sv
