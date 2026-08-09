@@ -5,7 +5,7 @@ package:
     - "Matej Jurasić <matej.jurasic@cappig.dev>"
 
 dependencies:
-  friscv-soc:            { git: "https://github.com/EmilPopovic/friscv-soc.git",            version: 0.1.0  }
+  vernii:                { git: "https://github.com/EmilPopovic/vernii.git",                  version: 0.1.0  }
   axi:                   { git: "https://github.com/pulp-platform/axi.git",                   version: 0.39.1 }
   register_interface:    { git: "https://github.com/pulp-platform/register_interface.git",    version: 0.3.9  }
   tech_cells_generic:    { git: "https://github.com/pulp-platform/tech_cells_generic.git",    version: 0.2.11 }
