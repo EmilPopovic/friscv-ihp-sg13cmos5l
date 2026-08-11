@@ -21,9 +21,9 @@ meta:
     KLayout.Antenna: null
     Checker.KLayoutAntenna: null
 
-DESIGN_NAME: friscv_soc_top
+DESIGN_NAME: chip_top
 VERILOG_FILES:
-- dir::../src/friscv_soc_top.sv
+- dir::../src/chip_top.sv
 
 # TARGET_ASIC swaps hw/configurable_delay.sv from a passthrough to the hardened delay_line_D4_O1_6P000 macro
 VERILOG_DEFINES: [FUNCTIONAL, TARGET_ASIC]
@@ -101,9 +101,9 @@ PAD_WEST: [
 ]
 
 # SDC files
-PNR_SDC_FILE: dir::friscv_soc_top.sdc
-SIGNOFF_SDC_FILE: dir::friscv_soc_top.sdc
-FALLBACK_SDC: dir::friscv_soc_top.sdc
+PNR_SDC_FILE: dir::chip_top.sdc
+SIGNOFF_SDC_FILE: dir::chip_top.sdc
+FALLBACK_SDC: dir::chip_top.sdc
 
 # Power / ground nets
 VDD_NETS:
@@ -175,15 +175,12 @@ LAYERS_RC:
     TopMetal1: {res: 0.0000128049, cap: 0.000221699}
 
 # Signoff waivers
-
-# 1. KLayout DRC
+# KLayout DRC
 ERROR_ON_KLAYOUT_DRC: false
-
-# 2. KLayout density
+# KLayout density
 # TODO check if we can do this
 ERROR_ON_KLAYOUT_DENSITY: false
-#
-# 3. Max capacitance
+# Max capacitance
 # TODO check if we can do this also
 # MAX_CAP_VIOLATION_CORNERS: ["*"]
 
@@ -236,16 +233,16 @@ MACROS:
       "*_slow_1p08V_125C":
         - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_512x32_c2_bm_bist_slow_1p08V_125C.lib
     instances:
-      friscv_soc_inst.i_friscv_soc.friscv_mem_hub.ocm_llc.gen_ways[0].way_sram.gen_512x32.gen_cuts[0].i_cut:
+      soc_inst.i_vernii_soc.friscv_mem_hub.ocm_llc.gen_ways[0].way_sram.gen_512x32.gen_cuts[0].i_cut:
         location: [336.0, 852.28]
         orientation: N
-      friscv_soc_inst.i_friscv_soc.friscv_mem_hub.ocm_llc.gen_ways[1].way_sram.gen_512x32.gen_cuts[0].i_cut:
+      soc_inst.i_vernii_soc.friscv_mem_hub.ocm_llc.gen_ways[1].way_sram.gen_512x32.gen_cuts[0].i_cut:
         location: [1347.36, 852.28]
         orientation: N
-      friscv_soc_inst.i_friscv_soc.friscv_mem_hub.ocm_llc.gen_ways[2].way_sram.gen_512x32.gen_cuts[0].i_cut:
+      soc_inst.i_vernii_soc.friscv_mem_hub.ocm_llc.gen_ways[2].way_sram.gen_512x32.gen_cuts[0].i_cut:
         location: [336.0, 1054.28]
         orientation: FS
-      friscv_soc_inst.i_friscv_soc.friscv_mem_hub.ocm_llc.gen_ways[3].way_sram.gen_512x32.gen_cuts[0].i_cut:
+      soc_inst.i_vernii_soc.friscv_mem_hub.ocm_llc.gen_ways[3].way_sram.gen_512x32.gen_cuts[0].i_cut:
         location: [1347.36, 1054.28]
         orientation: FS
   RM_IHPSG13_1P_64x64_c2_bm_bist:
@@ -264,7 +261,7 @@ MACROS:
       "*_slow_1p08V_125C":
         - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_64x64_c2_bm_bist_slow_1p08V_125C.lib
     instances:
-      friscv_soc_inst.i_friscv_soc.friscv_mem_hub.ocm_llc.gen_tag_sram.tag_sram.gen_64x64.i_cut:
+      soc_inst.i_vernii_soc.friscv_mem_hub.ocm_llc.gen_tag_sram.tag_sram.gen_64x64.i_cut:
         location: [657.76, 1697.12]
         orientation: N
   # HyperBus PHY delay line, 6 ns full scale at 0.375 ns/step
@@ -284,11 +281,11 @@ MACROS:
         - dir::../src/mc_delay/views/delay_line_D4_O1_6P000.lib
     instances:
       # RWDS
-      friscv_soc_inst.i_hyperbus.i_phy.genblk1.i_phy.i_trx.i_delay_rx_rwds_90.i_delay.i_delay_line:
+      soc_inst.i_hyperbus.i_phy.genblk1.i_phy.i_trx.i_delay_rx_rwds_90.i_delay.i_delay_line:
         location: [1290.24, 366.66]
         orientation: N
       # CK
-      friscv_soc_inst.i_hyperbus.genblk1.i_delay_tx_clk_90.i_delay.i_delay_line:
+      soc_inst.i_hyperbus.genblk1.i_delay_tx_clk_90.i_delay.i_delay_line:
         location: [1392.0, 366.66]
         orientation: N
 

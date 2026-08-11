@@ -8,7 +8,7 @@
 
 `timescale 1ns/1ps
 
-module friscv_chip_soc import friscv_soc_pkg::*; #(
+module friscv_chip_soc import vernii_pkg::*; #(
     parameter int unsigned SramBase          = 32'h0000_0000,
     parameter int unsigned SramSize          = 32'h0000_2000,
     parameter int unsigned MemBase           = 32'h8000_0000,
@@ -35,14 +35,24 @@ module friscv_chip_soc import friscv_soc_pkg::*; #(
     // JTAG
     input  logic  i_jtag_tck,
     input  logic  i_jtag_tms,
+    input  logic  i_jtag_trstn,
     input  logic  i_jtag_tdi,
     output logic  o_jtag_tdo,
+    output logic  o_jtag_tdo_oe,
 
     // GPIO Port A muxed pads (PA0..PA24)
     input  logic [NumPads-1:0] pad_in_i,
     output logic [NumPads-1:0] pad_out_o,
     output logic [NumPads-1:0] pad_oe_o
 );
+
+// Output clock as heartbeat, do not use as real clock
+logic [6:0] clk_div;
+always_ff @(posedge i_clk or negedge i_rstn) begin
+    if (!i_rstn) clk_div <= '0;
+    else         clk_div <= clk_div + 1;
+end
+assign o_clk_out = clk_div[6];
 
 localparam int unsigned NumMuxPads = 13;
 localparam int unsigned NumAfs     = 2;
@@ -72,11 +82,11 @@ localparam axi_pkg::xbar_rule_32_t [NumExtRegSlv-1:0] ExtRegSlvRules = '{
 
 logic por_rstn, soc_rstn;
 
-friscv_axi_req_t  axi_mem_req;
-friscv_axi_resp_t axi_mem_rsp;
+vernii_axi_req_t  axi_mem_req;
+vernii_axi_resp_t axi_mem_rsp;
 
-friscv_reg_req_t [NumExtRegSlv-1:0] reg_ext_req;
-friscv_reg_rsp_t [NumExtRegSlv-1:0] reg_ext_rsp;
+vernii_reg_req_t [NumExtRegSlv-1:0] reg_ext_req;
+vernii_reg_rsp_t [NumExtRegSlv-1:0] reg_ext_rsp;
 
 logic [31:0] gpio_in, gpio_out, gpio_oe;
 
@@ -84,7 +94,7 @@ logic                  qspi0_sck, qspi0_sck_oe;
 logic [Qspi0NumCs-1:0] qspi0_cs,  qspi0_cs_oe;
 logic [3:0]            qspi0_sd_i, qspi0_sd_o, qspi0_sd_oe;
 
-friscv_soc #(
+vernii_soc #(
     .SramBase         ( SramBase         ),
     .SramSize         ( SramSize         ),
     .MemBase          ( MemBase          ),
@@ -97,16 +107,14 @@ friscv_soc #(
     .NumStraps        ( NumMuxPads       ),
     .NumExtRegSlv     ( NumExtRegSlv     ),
     .ExtRegSlvRules   ( ExtRegSlvRules   )
-) i_friscv_soc (
+) i_vernii_soc (
     .i_clk         ( i_clk                   ),
     .i_rstn        ( i_rstn                  ),
     .o_por_rstn    ( por_rstn                ),
     .o_soc_rstn    ( soc_rstn                ),
-    .o_clk_out     ( o_clk_out               ),
     .o_end         ( o_end                   ),
     .o_axi_mem_req ( axi_mem_req             ),
     .i_axi_mem_rsp ( axi_mem_rsp             ),
-    .o_axi_mem_en  (                         ),
     .o_reg_ext_req ( reg_ext_req             ),
     .i_reg_ext_rsp ( reg_ext_rsp             ),
     .i_strap       ( pad_in_i[NumMuxPads-1:0]),
@@ -114,8 +122,10 @@ friscv_soc #(
     .o_uart_tx     ( o_uart_tx               ),
     .i_jtag_tck    ( i_jtag_tck              ),
     .i_jtag_tms    ( i_jtag_tms              ),
+    .i_jtag_trstn  ( i_jtag_trstn            ),
     .i_jtag_tdi    ( i_jtag_tdi              ),
     .o_jtag_tdo    ( o_jtag_tdo              ),
+    .o_jtag_tdo_oe ( o_jtag_tdo_oe           ),
     .o_qspi_sck    ( qspi0_sck               ),
     .o_qspi_sck_oe ( qspi0_sck_oe            ),
     .o_qspi_cs     ( qspi0_cs                ),
@@ -157,7 +167,7 @@ logic [NumMuxPads-1:0][NumAfs-1:0] oe_func;
 logic [NumMuxPads-1:0] pm_pad_out, pm_pad_oe;
 
 // Region-relative pinmux register address
-friscv_reg_req_t pinmux_req;
+vernii_reg_req_t pinmux_req;
 always_comb begin
     pinmux_req      = reg_ext_req[PinmuxSlv];
     pinmux_req.addr = reg_ext_req[PinmuxSlv].addr & (PinmuxSize - 1);
@@ -167,8 +177,8 @@ friscv_pinmux #(
     .NumPads  ( NumMuxPads       ),
     .NumAfs   ( NumAfs           ),
     .AfInIdle ( '0               ),  // Idle level presented to non-selected AFs, all 0
-    .reg_req_t( friscv_reg_req_t ),
-    .reg_rsp_t( friscv_reg_rsp_t )
+    .reg_req_t( vernii_reg_req_t ),
+    .reg_rsp_t( vernii_reg_rsp_t )
  ) pinmux (
     .clk_i      ( i_clk                     ),
     .rst_ni     ( por_rstn                  ),
@@ -241,17 +251,17 @@ hyperbus #(
     .AxiDataWidth    ( DataWidth               ),
     .AxiIdWidth      ( AxiIdWidth              ),
     .AxiUserWidth    ( AxiUserWidth            ),
-    .axi_req_t       ( friscv_axi_req_t        ),
-    .axi_rsp_t       ( friscv_axi_resp_t       ),
-    .axi_w_chan_t    ( friscv_axi_w_chan_t     ),
-    .axi_b_chan_t    ( friscv_axi_b_chan_t     ),
-    .axi_ar_chan_t   ( friscv_axi_ar_chan_t    ),
-    .axi_r_chan_t    ( friscv_axi_r_chan_t     ),
-    .axi_aw_chan_t   ( friscv_axi_aw_chan_t    ),
+    .axi_req_t       ( vernii_axi_req_t        ),
+    .axi_rsp_t       ( vernii_axi_resp_t       ),
+    .axi_w_chan_t    ( vernii_axi_w_chan_t     ),
+    .axi_b_chan_t    ( vernii_axi_b_chan_t     ),
+    .axi_ar_chan_t   ( vernii_axi_ar_chan_t    ),
+    .axi_r_chan_t    ( vernii_axi_r_chan_t     ),
+    .axi_aw_chan_t   ( vernii_axi_aw_chan_t    ),
     .RegAddrWidth    ( 32                      ),
     .RegDataWidth    ( 32                      ),
-    .reg_req_t       ( friscv_reg_req_t        ),
-    .reg_rsp_t       ( friscv_reg_rsp_t        ),
+    .reg_req_t       ( vernii_reg_req_t        ),
+    .reg_rsp_t       ( vernii_reg_rsp_t        ),
     .axi_rule_t      ( axi_pkg::xbar_rule_32_t ),
     .MinFreqMHz      ( HyperMinFreqMHz         ),
     .RstChipBase     ( MemBase                 ),

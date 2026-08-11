@@ -1,4 +1,18 @@
-TOP = friscv_soc_top
+TOP = chip_top
+
+LIBRELANE = librelane librelane/config.yaml \
+	--pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk
+
+AREA_RUN_TAG = area
+AREA_RUN_DIR = librelane/runs/$(AREA_RUN_TAG)
+
+SRAM_LIB_DIR = ${PDK_ROOT}/ihp-sg13cmos5l/libs.ref/sg13cmos5l_sram/lib
+AREA_LIBERTIES = \
+	${LIBERTY} \
+	${PDK_ROOT}/ihp-sg13cmos5l/libs.ref/sg13cmos5l_io/lib/sg13cmos5l_io_typ_1p2V_3p3V_25C.lib \
+	$(SRAM_LIB_DIR)/RM_IHPSG13_1P_512x32_c2_bm_bist_typ_1p20V_25C.lib \
+	$(SRAM_LIB_DIR)/RM_IHPSG13_1P_64x64_c2_bm_bist_typ_1p20V_25C.lib \
+	src/mc_delay/views/delay_line_D4_O1_6P000.lib
 
 sources.f: ../../Bender.yml ../../Bender.lock $(wildcard src/*.sv)
 	bender script flist-plus -t rtl -t synthesis > $@
@@ -9,6 +23,7 @@ sources.f: ../../Bender.yml ../../Bender.lock $(wildcard src/*.sv)
 	sed -i '\|/hw/configurable_delay\.sv$$|d' $@
 	echo "$(CURDIR)/src/stubs/RM_IHPSG13_1P_1024x32_c2_bm_bist.sv" >> $@
 	echo "$(CURDIR)/src/stubs/RM_IHPSG13_1P_512x32_c2_bm_bist.sv" >> $@
+	echo "$(CURDIR)/src/stubs/RM_IHPSG13_1P_256x32_c2_bm_bist.sv" >> $@
 	echo "$(CURDIR)/src/stubs/RM_IHPSG13_1P_64x64_c2_bm_bist.sv" >> $@
 	echo "$(CURDIR)/src/stubs/delay_line_D4_O1_6P000.sv" >> $@
 	echo "$(CURDIR)/src/stubs/sg13cmos5l_stdcell_stubs.sv" >> $@
@@ -19,21 +34,24 @@ sources.f: ../../Bender.yml ../../Bender.lock $(wildcard src/*.sv)
 
 .PHONY: area
 area: sources.f
-	rm -f area.rpt synth.log
-	set -o pipefail; yosys -m slang -c synth.tcl 2>&1 | tee synth.log
+	rm -f area.rpt
+	$(LIBRELANE) --run-tag $(AREA_RUN_TAG) --overwrite --to Yosys.Synthesis
+	netlist=$$(echo $(AREA_RUN_DIR)/*-yosys-synthesis/$(TOP).nl.v); \
+	yosys -p "read_verilog -sv $$netlist; stat $(foreach lib,$(AREA_LIBERTIES),-liberty $(lib))" | tee area.rpt
 
 .PHONY: librelane
 librelane: sources.f
-	librelane librelane/config.yaml --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk
+	$(LIBRELANE)
 
 .PHONY: librelane-openroad
 librelane-openroad:
-	librelane librelane/config.yaml --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk --last-run --flow OpenInOpenRoad
+	$(LIBRELANE) --last-run --flow OpenInOpenRoad
 
 .PHONY: librelane-klayout
 librelane-klayout:
-	librelane librelane/config.yaml --pdk ${PDK} --pdk-root ${PDK_ROOT} --manual-pdk --last-run --flow OpenInKLayout
+	$(LIBRELANE) --last-run --flow OpenInKLayout
 
 .PHONY: clean
 clean:
-	rm -f sources.f area.rpt synth.log
+	rm -f sources.f area.rpt
+	rm -rf $(AREA_RUN_DIR)

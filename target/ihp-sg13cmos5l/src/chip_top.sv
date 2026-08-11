@@ -39,7 +39,7 @@
 
 `default_nettype none
 
-module friscv_soc_top #(
+module chip_top #(
     // Power/ground pads for core
     parameter NUM_VDD_PADS = 3,    // pins 17, 33, 42
     parameter NUM_VSS_PADS = 3,    // pins 15, 32, 41
@@ -229,28 +229,30 @@ endgenerate
 
 (* keep *) friscv_chip_soc #(
     .NumPads ( NUM_GPIO_PADS )
-) friscv_soc_inst (
-    .i_clk      ( clk_PAD2CORE   ),
-    .i_rstn     ( rst_n_PAD2CORE ),
+) soc_inst (
+    .i_clk         ( clk_PAD2CORE                 ),
+    .i_rstn        ( rst_n_PAD2CORE               ),
 
-    .o_clk_out  ( output_CORE2PAD[OUT_CLK_OUT] ),
+    .o_clk_out     ( output_CORE2PAD[OUT_CLK_OUT] ),
 
-    .o_end      ( /* no package pin */ ),
+    .o_end         ( /* no package pin */         ),
 
     // UART0
-    .i_uart_rx  ( input_PAD2CORE [IN_UART_RX]  ),
-    .o_uart_tx  ( output_CORE2PAD[OUT_UART_TX] ),
+    .i_uart_rx     ( input_PAD2CORE [IN_UART_RX]  ),
+    .o_uart_tx     ( output_CORE2PAD[OUT_UART_TX] ),
 
     // JTAG
-    .i_jtag_tck ( input_PAD2CORE [IN_TCK]  ),
-    .i_jtag_tms ( input_PAD2CORE [IN_TMS]  ),
-    .i_jtag_tdi ( input_PAD2CORE [IN_TDI]  ),
-    .o_jtag_tdo ( output_CORE2PAD[OUT_TDO] ),
+    .i_jtag_tck    ( input_PAD2CORE [IN_TCK]      ),
+    .i_jtag_tms    ( input_PAD2CORE [IN_TMS]      ),
+    .i_jtag_trstn  ( 1'b1                         ),
+    .i_jtag_tdi    ( input_PAD2CORE [IN_TDI]      ),
+    .o_jtag_tdo    ( output_CORE2PAD[OUT_TDO]     ),
+    .o_jtag_tdo_oe ( /* no package pin */         ),
 
     // Muxed signals
-    .pad_in_i   ( bidir_PAD2CORE    ),
-    .pad_out_o  ( bidir_CORE2PAD    ),
-    .pad_oe_o   ( bidir_CORE2PAD_OE )
+    .pad_in_i      ( bidir_PAD2CORE               ),
+    .pad_out_o     ( bidir_CORE2PAD               ),
+    .pad_oe_o      ( bidir_CORE2PAD_OE            )
 );
 
 endmodule
