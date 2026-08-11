@@ -42,6 +42,17 @@ endmodule
     .A_BIST_EN    (  1'b0 ), \
     .A_DLY        (  1'b0 )
 
+`define IHP13_TC_SRAM_256x32_TIEOFF \
+    .A_BIST_CLK   (  1'b0 ), \
+    .A_BIST_ADDR  (  8'd0 ), \
+    .A_BIST_DIN   ( 32'd0 ), \
+    .A_BIST_BM    ( 32'd0 ), \
+    .A_BIST_MEN   (  1'b0 ), \
+    .A_BIST_WEN   (  1'b0 ), \
+    .A_BIST_REN   (  1'b0 ), \
+    .A_BIST_EN    (  1'b0 ), \
+    .A_DLY        (  1'b0 )
+
 `define IHP13_TC_SRAM_64x64_TIEOFF \
     .A_BIST_CLK   (  1'b0 ), \
     .A_BIST_ADDR  (  6'd0 ), \
@@ -163,6 +174,44 @@ module tc_sram #(
        .A_DIN   ( wdata_i[0]                  ),
        .A_DOUT  ( cut_rdata[c]                ),
        `IHP13_TC_SRAM_512x32_TIEOFF
+      );
+    end
+
+  end else if (NumWords % 256 == 0 && DataWidth == 32 && P1L1) begin: gen_256x32
+    localparam int unsigned CutAddrWidth = 8;
+    localparam int unsigned NumCuts      = NumWords / 256;
+    localparam int unsigned SelWidth     = (NumCuts > 1) ? $clog2(NumCuts) : 1;
+
+    logic [NumCuts-1:0][DataWidth-1:0] cut_rdata;
+    logic [SelWidth-1:0] sel_d, sel_q;
+
+    if (NumCuts > 1) begin : gen_sel
+      assign sel_d = addr_i[0][AddrWidth-1:CutAddrWidth];
+      always_ff @(posedge clk_i or negedge rst_ni) begin
+        if (!rst_ni)       sel_q <= '0;
+        else if (req_i[0]) sel_q <= sel_d;
+      end
+    end else begin : gen_no_sel
+      assign sel_d = '0;
+      assign sel_q = '0;
+    end
+
+    assign rdata_o[0] = cut_rdata[sel_q];
+
+    for (genvar c = 0; c < NumCuts; ++c) begin : gen_cuts
+      logic men;
+      assign men = req_i[0] & (sel_d == c);
+
+      RM_IHPSG13_1P_256x32_c2_bm_bist i_cut (
+       .A_CLK   ( clk_i                       ),
+       .A_ADDR  ( addr_i[0][CutAddrWidth-1:0] ),
+       .A_BM    ( bm[0]                       ),
+       .A_MEN   ( men                         ),
+       .A_WEN   ( we_i[0]                     ),
+       .A_REN   ( ~we_i[0]                    ),
+       .A_DIN   ( wdata_i[0]                  ),
+       .A_DOUT  ( cut_rdata[c]                ),
+       `IHP13_TC_SRAM_256x32_TIEOFF
       );
     end
 
