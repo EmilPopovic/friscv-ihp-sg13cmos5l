@@ -52,7 +52,7 @@ if { [info exists ::env(MAX_CAPACITANCE_CONSTRAINT)] } {
 set clocks [get_clocks $clock_port]
 
 # ============================================================
-# HyperBus handles
+# Pad handles
 # ============================================================
 
 set TCK_SYS [expr {1.0 * $::env(CLOCK_PERIOD)}]
@@ -70,27 +70,45 @@ proc hyp_pin1 {pattern} {
     return $pins
 }
 
-# get_pins over a list of muxed-pad indices
-proc hyp_pad_pins {idxs pin} {
+# get_ports over the bits of a pad bus, checked
+proc bus_ports {name n} {
     set pats {}
-    foreach i $idxs { lappend pats "bidirs\[$i\].bidir_pad/$pin" }
+    for {set i 0} {$i < $n} {incr i} { lappend pats "${name}\[$i\]" }
+    set ports [get_ports $pats]
+    if { [llength $ports] != $n } {
+        error "pads: expected $n ports on $name, found [llength $ports]"
+    }
+    return $ports
+}
+
+proc pad_bus_pins {fmt n pin} {
+    set pats {}
+    for {set i 0} {$i < $n} {incr i} { lappend pats "[format $fmt $i]/$pin" }
     set pins [get_pins $pats]
-    if { [llength $pins] != [llength $idxs] } {
-        error "HyperBus: expected [llength $idxs] '$pin' pad pins, found [llength $pins]"
+    if { [llength $pins] != $n } {
+        error "pads: expected $n '$pin' pins on $fmt, found [llength $pins]"
     }
     return $pins
 }
 
-# get_ports over a list of muxed-pad indices
-proc hyp_pad_ports {idxs} {
-    set pats {}
-    foreach i $idxs { lappend pats "bidir_PAD\[$i\]" }
-    set ports [get_ports $pats]
-    if { [llength $ports] != [llength $idxs] } {
-        error "HyperBus: expected [llength $idxs] pad ports, found [llength $ports]"
-    }
-    return $ports
-}
+# GPIO Port A, PA0..PA9
+set GPIO_PORTS [bus_ports gpio_PAD 10]
+
+# QSPI0
+set QSPI_IO  [bus_ports qspi_io_PAD 4]
+set QSPI_SCK [get_ports qspi_sck_PAD]
+set QSPI_CS  [bus_ports qspi_cs_PAD 3]
+
+# HyperBus
+set HYP_DQ_IN    [bus_ports hb_dq_PAD 8]
+set HYP_RWDS     [get_ports hb_rwds_PAD]
+set HYP_IO       [concat $HYP_DQ_IN $HYP_RWDS]
+set HYP_OUT_COUT [get_ports hb_ck_PAD]
+set HYP_OUT_CS   [bus_ports hb_cs_PAD 2]
+set HYP_OUT_RST  [get_ports hb_rst_PAD]
+
+set HYP_OUT_DOEN [concat [pad_bus_pins "hb_dqs\[%d\].hb_dq_pad" 8 c2p_en] \
+                         [get_pins hb_rwds_pad/c2p_en]]
 
 # ============================================================
 # Secondary clock domains
@@ -101,7 +119,7 @@ set jtag_period 100
 create_clock -name jtag_tck -period $jtag_period [get_ports {input_PAD[0]}]
 
 # HyperBus RWDS
-create_clock -name hb_rwds -period $::env(CLOCK_PERIOD) [get_ports {bidir_PAD[21]}]
+create_clock -name hb_rwds -period $::env(CLOCK_PERIOD) $HYP_RWDS
 
 # The quarter-period-shifted clock that leaves the chip as HB_CK
 create_generated_clock -name hb_ck_int -divide_by 1 \
@@ -123,8 +141,8 @@ set all_clocks [all_clocks]
 set jtag_in_ports  [get_ports {input_PAD[1] input_PAD[2]}]
 set jtag_out_ports [get_ports {output_PAD[1]}]
 
-# Input-only pads
-set clk_core_input_ports [get_ports {rst_n_PAD input_PAD[3]}]
+# Input-only pads. [3]=TRST# is asynchronous, see below
+set clk_core_input_ports [get_ports {rst_n_PAD input_PAD[4]}]
 
 set_input_delay -min 0 -clock $clocks $clk_core_input_ports
 set_input_delay -max $input_delay_value -clock $clocks $clk_core_input_ports
@@ -135,24 +153,18 @@ set clk_core_output_ports [get_ports {output_PAD[0] output_PAD[2]}]
 
 set_output_delay $output_delay_value -clock $clocks $clk_core_output_ports
 
-# Bidirectional pads, all except PA21 (bidir_PAD[21] = HB RWDS, a clock source)
-set core_inout_names {}
-for {set i 0} {$i < 25} {incr i} {
-	if { $i == 21 } { continue }
-	lappend core_inout_names "bidir_PAD\[$i\]"
-}
-set clk_core_inout_ports [get_ports $core_inout_names]
+# Bidirectional pads. QSPI0 and the HyperBus are source-synchronous and get
+# their output constraints below; RWDS is a clock source and takes neither.
+set clk_core_inout_ports [concat $GPIO_PORTS $QSPI_IO $HYP_DQ_IN]
 
 set_input_delay -min 0 -clock $clocks $clk_core_inout_ports
 set_input_delay -max $input_delay_value -clock $clocks $clk_core_inout_ports
 
-set core_inout_out_names {}
-for {set i 0} {$i < 25} {incr i} {
-	if { $i >= 5  && $i <= 12 } { continue }
-	if { $i >= 13 && $i <= 22 } { continue }
-	lappend core_inout_out_names "bidir_PAD\[$i\]"
-}
-set_output_delay $output_delay_value -clock $clocks [get_ports $core_inout_out_names]
+# HB_CS/HB_RST also carry a system-clock output constraint on top of the
+# source-synchronous one below; that is what the 13.5 ns signoff was closed
+# against, so it is kept rather than relaxed
+set_output_delay $output_delay_value -clock $clocks \
+    [concat $GPIO_PORTS $HYP_OUT_CS $HYP_OUT_RST]
 
 # JTAG data pins timed against TCK
 set jtag_io_delay  [expr $jtag_period * $::env(IO_DELAY_CONSTRAINT) / 100]
@@ -161,11 +173,11 @@ set_input_delay  -min $jtag_min_delay -clock jtag_tck $jtag_in_ports
 set_input_delay  -max $jtag_io_delay  -clock jtag_tck $jtag_in_ports
 set_output_delay $jtag_io_delay       -clock jtag_tck $jtag_out_ports
 
-# Asynchronous pad inputs, no hold
-set_false_path -hold -from [get_ports {input_PAD[3] bidir_PAD[0] bidir_PAD[1] bidir_PAD[2] bidir_PAD[3] bidir_PAD[4] bidir_PAD[5] bidir_PAD[6] bidir_PAD[7] bidir_PAD[8] bidir_PAD[9] bidir_PAD[10] bidir_PAD[11] bidir_PAD[12]}]
+# Asynchronous pad inputs, no hold: UART0_RX and the GPIOs
+set_false_path -hold -from [concat [get_ports {input_PAD[4]}] $GPIO_PORTS]
 
-# rst_n_PAD is a free-running asynchronous input
-set_false_path -from [get_ports rst_n_PAD]
+# rst_n_PAD and TRST_N are free-running asynchronous inputs
+set_false_path -from [get_ports {rst_n_PAD input_PAD[3]}]
 
 # ============================================================
 # HyperBus
@@ -183,20 +195,12 @@ set HYP_MAX_SLEW 0.75
 set HYP_DDR_MAX [expr {$TCK_SYS / 4 - $HYP_MAX_SLEW}]
 set HYP_DDR_MIN [expr {$TCK_SYS / 4 + $HYP_MAX_SLEW}]
 
-set HYP_IO_IDX   {13 14 15 16 17 18 19 20 21}  ;# DQ[7:0] + RWDS
-set HYP_DQ_IDX   {13 14 15 16 17 18 19 20}     ;# DQ[7:0] alone
+# HYP_IO / HYP_DQ_IN / HYP_OUT_COUT / HYP_OUT_CS / HYP_OUT_RST / HYP_OUT_DOEN
+# are set up in the pad handles section above.
 
-set HYP_IO       [hyp_pad_ports $HYP_IO_IDX]   ;# DQ + RWDS, data both ways
-set HYP_DQ_IN    [hyp_pad_ports $HYP_DQ_IDX]   ;# read data, captured on RWDS
-set HYP_OUT_COUT [hyp_pad_ports {22}]          ;# CK: the timing reference
-set HYP_OUT_CS   [hyp_pad_ports {23}]
-set HYP_OUT_RST  [hyp_pad_ports {24}]
-
-set HYP_OUT_DOEN [hyp_pad_pins $HYP_IO_IDX c2p_en]
-
-# ------------------------------------------------------------
+# ============================================================
 # Delay lines
-# ------------------------------------------------------------
+# ============================================================
 
 # configurable_delay maps to the hardened delay_line_D4_O1_6P000 macro
 #
@@ -205,7 +209,7 @@ set HYP_OUT_DOEN [hyp_pad_pins $HYP_IO_IDX c2p_en]
 # the residual trim error.
 
 set HYP_DLY_STEP 0.375
-set HYP_DLY_FS   6.000  ;# full scale, 16 taps
+set HYP_DLY_FS   6.000
 
 set HYP_RX_TREE_SKEW 1.0
 
@@ -225,8 +229,7 @@ puts "\[INFO] HyperBus delay-line targets: TX $HYP_TX_TGT_DLY ns, RX $HYP_RX_TGT
 set hyp_corners {}
 catch { foreach c [sta::corners] { lappend hyp_corners [$c name] } }
 
-foreach dline [list $HYP_TX_DLINE $HYP_RX_DLINE] \
-        tgt   [list $HYP_TX_TGT_DLY $HYP_RX_TGT_DLY] {
+foreach dline [list $HYP_TX_DLINE $HYP_RX_DLINE] tgt [list $HYP_TX_TGT_DLY $HYP_RX_TGT_DLY] {
     set dly_from [hyp_pin1 "$dline/clk_i"]
     set dly_to   [hyp_pin1 "$dline/clk_o*"]
 
@@ -249,9 +252,9 @@ foreach dline [list $HYP_TX_DLINE $HYP_RX_DLINE] \
     set_false_path -through [get_pins "$dline/delay_i*"]
 }
 
-# ------------------------------------------------------------
-# The 90-degree TX clock domain
-# ------------------------------------------------------------
+# ============================================================
+# 90-degree TX clock domain
+# ============================================================
 
 # CK leaves the chip as the delayed clock while DQ/RWDS transition on the
 # undelayed one, that is what centres the data on the CK edge. It also puts the
@@ -263,9 +266,9 @@ lappend HYP_CK90_ENDS {*}[hyp_pin1 "*i_hyper_ck_gating.i_clkgate/GATE"]
 set_multicycle_path -setup 0 -to $HYP_CK90_ENDS
 set_multicycle_path -hold  0 -to $HYP_CK90_ENDS
 
-# ------------------------------------------------------------
+# ============================================================
 # DDR output: DQ and RWDS
-# ------------------------------------------------------------
+# ============================================================
 
 set_output_delay -max -add_delay             -clock hb_ck_int -reference_pin $HYP_OUT_COUT $HYP_DDR_MAX $HYP_IO
 set_output_delay -max -add_delay -clock_fall -clock hb_ck_int -reference_pin $HYP_OUT_COUT $HYP_DDR_MAX $HYP_IO
@@ -283,9 +286,9 @@ set_output_delay -min -add_delay -clock hb_ck_int -reference_pin $HYP_OUT_COUT [
 set_multicycle_path -setup 2 -to $HYP_OUT_RST
 set_multicycle_path -hold  1 -to $HYP_OUT_RST
 
-# ------------------------------------------------------------
+# ============================================================
 # DDR input: DQ and RWDS
-# ------------------------------------------------------------
+# ============================================================
 
 # Reads are captured on RWDS, not on the system clock, so the DQ inputs are
 # timed against the RWDS clock as well. Transitions happen at the edge-aligned
@@ -297,9 +300,7 @@ set_input_delay -max -add_delay -clock_fall -clock hb_rwds -network_latency_incl
 set_input_delay -min -add_delay             -clock hb_rwds -network_latency_included $HYP_DDR_MIN $HYP_DQ_IN
 set_input_delay -min -add_delay -clock_fall -clock hb_rwds -network_latency_included $HYP_DDR_MIN $HYP_DQ_IN
 
-# ------------------------------------------------------------
 # DDR output muxes
-# ------------------------------------------------------------
 
 set hyper_ddr_mux_sel [get_pins {*i_ddrmux.i_mux/S}]
 if { [llength $hyper_ddr_mux_sel] != 9 } {
@@ -311,12 +312,10 @@ set_sense -type clock -stop_propagation $hyper_ddr_mux_sel
 # QSPI0 source-synchronous to SCK
 # ============================================================
 
-set QSPI_IO   [hyp_pad_ports {5 6 7 8}]    ;# IO0..IO3
-set QSPI_SCK  [hyp_pad_ports {9}]          ;# SCK pad
-set QSPI_CS   [hyp_pad_ports {10 11 12}]   ;# CS0..CS2
+# QSPI_IO / QSPI_SCK / QSPI_CS are set up in the pad handles section above
 set QSPI_DATA [concat $QSPI_IO $QSPI_CS]
 
-set QSPI_SCK_SRC [hyp_pad_pins {9} c2p]
+set QSPI_SCK_SRC [get_pins qspi_sck_pad/c2p]
 
 create_generated_clock -name qspi_sck -divide_by 2 -source [get_pins [lindex $::env(CLOCK_NET) 0]] $QSPI_SCK_SRC
 

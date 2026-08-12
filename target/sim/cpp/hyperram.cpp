@@ -13,12 +13,6 @@ constexpr uint64_t READ_TRANSACTION = uint64_t(1) << 47;
 constexpr uint64_t REGISTER_SPACE = uint64_t(1) << 46;
 constexpr uint64_t ADDRESS_UPPER_MASK = (uint64_t(1) << 29) - 1;
 
-constexpr unsigned HB_DQ_LSB   = 13;
-constexpr unsigned HB_RWDS_BIT = 21;
-constexpr unsigned HB_CK_BIT   = 22;
-constexpr unsigned HB_CS_BIT   = 23;
-constexpr unsigned HB_RST_BIT  = 24;
-
 unsigned env_unsigned(const char* name, unsigned fallback) {
     const char* text = std::getenv(name);
 
@@ -26,42 +20,40 @@ unsigned env_unsigned(const char* name, unsigned fallback) {
 }
 
 uint8_t hb_dq_out(const Dut& top) {
-    return uint8_t((top.pad_out_o >> HB_DQ_LSB) & 0xFF);
+    return uint8_t(top.o_hyper_dq);
 }
 
 bool hb_dq_oe(const Dut& top) {
-    return ((top.pad_oe_o >> HB_DQ_LSB) & 1) != 0;
+    return top.o_hyper_dq_oe != 0;
 }
 
 bool hb_rwds_out(const Dut& top) {
-    return ((top.pad_out_o >> HB_RWDS_BIT) & 1) != 0;
+    return top.o_hyper_rwds != 0;
 }
 
 bool hb_rwds_oe(const Dut& top) {
-    return ((top.pad_oe_o >> HB_RWDS_BIT) & 1) != 0;
+    return top.o_hyper_rwds_oe != 0;
 }
 
 bool hb_ck(const Dut& top) {
-    return ((top.pad_out_o >> HB_CK_BIT) & 1) != 0;
+    return top.o_hyper_ck != 0;
 }
 
-// PA23 carries HB_CS0_N, active low
+// Only chip 0 is modelled; HB_CS1_N drives a second device the TB does not have
 bool hb_cs_active(const Dut& top) {
-    return ((top.pad_out_o >> HB_CS_BIT) & 1) == 0;
+    return (top.o_hyper_csn & 1) == 0;
 }
 
 bool hb_reset_n(const Dut& top) {
-    return ((top.pad_out_o >> HB_RST_BIT) & 1) != 0;
+    return top.o_hyper_rstn != 0;
 }
 
 void set_hb_dq_in(Dut& top, uint8_t value) {
-    top.pad_in_i = (top.pad_in_i & ~(uint32_t(0xFF) << HB_DQ_LSB)) |
-                   (uint32_t(value) << HB_DQ_LSB);
+    top.i_hyper_dq = value;
 }
 
 void set_hb_rwds_in(Dut& top, bool value) {
-    top.pad_in_i = (top.pad_in_i & ~(uint32_t(1) << HB_RWDS_BIT)) |
-                   (uint32_t(value ? 1 : 0) << HB_RWDS_BIT);
+    top.i_hyper_rwds = value ? 1 : 0;
 }
 
 }  // namespace

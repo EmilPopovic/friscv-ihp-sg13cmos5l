@@ -41,63 +41,79 @@ PRIMARY_GDSII_STREAMOUT_TOOL: klayout
 
 # Specify the pad instances for the padring
 PAD_SOUTH: [
-    "bidirs\\[13\\].bidir_pad",     #  1  PA13  HB_DQ0  / DBG_D0
-    "bidirs\\[14\\].bidir_pad",     #  2  PA14  HB_DQ1  / DBG_D1
-    "bidirs\\[15\\].bidir_pad",     #  3  PA15  HB_DQ2  / DBG_D2
-    "bidirs\\[16\\].bidir_pad",     #  4  PA16  HB_DQ3  / DBG_D3
-    "iovdd_pads\\[0\\].iovdd_pad",  #  5  IOVDD
-    "bidirs\\[17\\].bidir_pad",     #  6  PA17  HB_DQ4  / DBG_D4
-    "bidirs\\[18\\].bidir_pad",     #  7  PA18  HB_DQ5  / DBG_D5
-    "bidirs\\[19\\].bidir_pad",     #  8  PA19  HB_DQ6  / DBG_D6
-    "bidirs\\[20\\].bidir_pad",     #  9  PA20  HB_DQ7  / DBG_D7
-    "bidirs\\[21\\].bidir_pad",     # 10  PA21  HB_RWDS / DBG_SEL0
-    "bidirs\\[22\\].bidir_pad",     # 11  PA22  HB_CK   / DBG_SEL1
-    "iovss_pads\\[0\\].iovss_pad"   # 12  IOVSS
+    "hb_dqs\\[0\\].hb_dq_pad",      # S0  HB_DQ0
+    "hb_dqs\\[1\\].hb_dq_pad",      # S1  HB_DQ1
+    "hb_dqs\\[2\\].hb_dq_pad",      # S2  HB_DQ2
+    "hb_dqs\\[3\\].hb_dq_pad",      # S3  HB_DQ3
+    "iovss_pads\\[0\\].iovss_pad",  # S4  IOVSS
+    "hb_dqs\\[4\\].hb_dq_pad",      # S5  HB_DQ4
+    "hb_dqs\\[5\\].hb_dq_pad",      # S6  HB_DQ5
+    "hb_dqs\\[6\\].hb_dq_pad",      # S7  HB_DQ6
+    "hb_dqs\\[7\\].hb_dq_pad",      # S8  HB_DQ7
+    hb_rwds_pad,                    # S9  HB_RWDS
+    "iovdd_pads\\[0\\].iovdd_pad",  # S10 IOVDD
+    hb_ck_pad,                      # S11 HB_CK
+    "vdd_pads\\[0\\].vdd_pad",      # S12 VDD
+    "hb_css\\[0\\].hb_cs_pad",      # S13 HB_CS0#
+    "hb_css\\[1\\].hb_cs_pad",      # S14 HB_CS1#
+    "vss_pads\\[0\\].vss_pad"       # S15 VSS
 ]
 
 PAD_EAST: [
-    "bidirs\\[23\\].bidir_pad",     # 13  PA23  HB_CS0_N / DBG_SEL2
-    "bidirs\\[24\\].bidir_pad",     # 14  PA24  HB_RST_N / DBG_SEL3
-    "vss_pads\\[0\\].vss_pad",      # 15  VSS
-    "outputs\\[0\\].output_pad",    # 16  CLK_OUT
-    "vdd_pads\\[0\\].vdd_pad",      # 17  VDD
-    "bidirs\\[0\\].bidir_pad",      # 18  PA0
-    "bidirs\\[1\\].bidir_pad",      # 19  PA1  (irq)
-    "bidirs\\[2\\].bidir_pad",      # 20  PA2  (irq)
-    "iovss_pads\\[1\\].iovss_pad",  # 21  IOVSS
-    "iovdd_pads\\[1\\].iovdd_pad",  # 22  IOVDD
-    "bidirs\\[3\\].bidir_pad",      # 23  PA3  (irq)
-    "bidirs\\[4\\].bidir_pad"       # 24  PA4  (irq)
+    hb_rst_pad,                     # E0  HB_RST#
+    "gpios\\[0\\].gpio_pad",        # E1  PA0
+    "gpios\\[1\\].gpio_pad",        # E2  PA1
+    "gpios\\[2\\].gpio_pad",        # E3  PA2
+    "iovss_pads\\[1\\].iovss_pad",  # E4  IOVSS
+    "iovdd_pads\\[1\\].iovdd_pad",  # E5  IOVDD
+    "gpios\\[3\\].gpio_pad",        # E6  PA3
+    "gpios\\[4\\].gpio_pad",        # E7  PA4
+    "vss_pads\\[1\\].vss_pad",      # E8  VSS
+    clk_out_pad,                    # E9  CLK_OUT
+    "vdd_pads\\[1\\].vdd_pad",      # E10 VDD
+    "gpios\\[5\\].gpio_pad",        # E11 PA5
+    "gpios\\[6\\].gpio_pad",        # E12 PA6
+    "gpios\\[7\\].gpio_pad",        # E13 PA7
+    "iovss_pads\\[2\\].iovss_pad",  # E14 IOVSS
+    "iovdd_pads\\[2\\].iovdd_pad"   # E15 IOVDD
 ]
 
 PAD_NORTH: [
-    "bidirs\\[12\\].bidir_pad",     # 36  PA12  QSPI0_CS2
-    "bidirs\\[11\\].bidir_pad",     # 35  PA11  QSPI0_CS1
-    "bidirs\\[10\\].bidir_pad",     # 34  PA10  QSPI0_CS0
-    "vdd_pads\\[1\\].vdd_pad",      # 33  VDD
-    "vss_pads\\[1\\].vss_pad",      # 32  VSS
-    "bidirs\\[9\\].bidir_pad",      # 31  PA9   QSPI0_SCK
-    "iovdd_pads\\[2\\].iovdd_pad",  # 30  IOVDD
-    "iovss_pads\\[2\\].iovss_pad",  # 29  IOVSS
-    "bidirs\\[8\\].bidir_pad",      # 28  PA8   QSPI0_IO3 (strap)
-    "bidirs\\[7\\].bidir_pad",      # 27  PA7   QSPI0_IO2 (strap)
-    "bidirs\\[6\\].bidir_pad",      # 26  PA6   QSPI0_IO1
-    "bidirs\\[5\\].bidir_pad"       # 25  PA5   QSPI0_IO0
+    "vdd_pads\\[3\\].vdd_pad",      # N0  VDD
+    "vss_pads\\[3\\].vss_pad",      # N1  VSS
+    "gpios\\[8\\].gpio_pad",        # N2  PA8
+    "gpios\\[9\\].gpio_pad",        # N3  PA9
+    "qspi_css\\[2\\].qspi_cs_pad",  # N4  QSPI0_CS2#
+    "qspi_css\\[1\\].qspi_cs_pad",  # N5  QSPI0_CS1#
+    "qspi_css\\[0\\].qspi_cs_pad",  # N6  QSPI0_CS0#
+    "iovdd_pads\\[3\\].iovdd_pad",  # N7  IOVDD
+    "iovss_pads\\[3\\].iovss_pad",  # N8  IOVSS
+    qspi_sck_pad,                   # N9  QSPI0_SCK
+    "vdd_pads\\[2\\].vdd_pad",      # N10 VDD
+    "vss_pads\\[2\\].vss_pad",      # N11 VSS
+    "qspi_ios\\[3\\].qspi_io_pad",  # N12 QSPI0_IO3
+    "qspi_ios\\[2\\].qspi_io_pad",  # N13 QSPI0_IO2
+    "qspi_ios\\[1\\].qspi_io_pad",  # N14 QSPI0_IO1
+    "qspi_ios\\[0\\].qspi_io_pad"   # N15 QSPI0_IO0
 ]
 
 PAD_WEST: [
-    "iovdd_pads\\[3\\].iovdd_pad",  # 48  IOVDD
-    clk_pad,                        # 47  CLK
-    "iovss_pads\\[3\\].iovss_pad",  # 46  IOVSS
-    rst_n_pad,                      # 45  RST_N
-    "inputs\\[3\\].input_pad",      # 44  UART0_RX
-    "outputs\\[2\\].output_pad",    # 43  UART0_TX
-    "vdd_pads\\[2\\].vdd_pad",      # 42  VDD
-    "vss_pads\\[2\\].vss_pad",      # 41  VSS
-    "outputs\\[1\\].output_pad",    # 40  TDO
-    "inputs\\[2\\].input_pad",      # 39  TDI
-    "inputs\\[1\\].input_pad",      # 38  TMS
-    "inputs\\[0\\].input_pad"       # 37  TCK
+    "iovdd_pads\\[4\\].iovdd_pad",  # W0  IOVDD
+    clk_pad,                        # W1  CLK
+    "iovss_pads\\[5\\].iovss_pad",  # W2  IOVSS
+    rst_n_pad,                      # W3  RST#
+    uart_rx_pad,                    # W4  UART0_RX
+    uart_tx_pad,                    # W5  UART0_TX
+    "iovss_pads\\[4\\].iovss_pad",  # W6  IOVSS
+    jtag_tdo_pad,                   # W7  TDO
+    jtag_tdi_pad,                   # W8  TDI
+    jtag_tms_pad,                   # W9  TMS
+    "vdd_pads\\[5\\].vdd_pad",      # W10 VDD
+    jtag_tck_pad,                   # W11 TCK
+    "vss_pads\\[5\\].vss_pad",      # W12 VSS
+    jtag_trst_n_pad,                # W13 TRST#
+    "vss_pads\\[4\\].vss_pad",      # W14 VSS
+    "vdd_pads\\[4\\].vdd_pad"       # W15 VDD
 ]
 
 # SDC files

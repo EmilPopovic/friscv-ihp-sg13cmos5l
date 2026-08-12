@@ -8,51 +8,21 @@
 
 // Based on https://github.com/IHP-GmbH/ihp-sg13cmos5l-librelane-template/blob/main/src/chip_top.sv
 
-// ============================================================================
-//  Pin  Signal  Type / function            | Pin  Signal    Type / function
-//  ---  ------  -------------------------- | ---  --------  -------------------
-//    1  PA13    bidir  HB_DQ0              |  25  PA5       bidir  QSPI0_IO0
-//    2  PA14    bidir  HB_DQ1              |  26  PA6       bidir  QSPI0_IO1
-//    3  PA15    bidir  HB_DQ2              |  27  PA7       bidir  QSPI0_IO2 (strap)
-//    4  PA16    bidir  HB_DQ3              |  28  PA8       bidir  QSPI0_IO3 (strap)
-//    5  IOVDD   power                      |  29  IOVSS     power
-//    6  PA17    bidir  HB_DQ4              |  30  IOVDD     power
-//    7  PA18    bidir  HB_DQ5              |  31  PA9       bidir  QSPI0_SCK
-//    8  PA19    bidir  HB_DQ6              |  32  VSS       power
-//    9  PA20    bidir  HB_DQ7              |  33  VDD       power
-//   10  PA21    bidir  HB_RWDS             |  34  PA10      bidir  QSPI0_CS0
-//   11  PA22    output HB_CK               |  35  PA11      bidir  QSPI0_CS1
-//   12  IOVSS   power                      |  36  PA12      bidir  QSPI0_CS2
-//   13  PA23    output HB_CS0_N            |  37  TCK       input
-//   14  PA24    output HB_RST_N            |  38  TMS       input
-//   15  VSS     power                      |  39  TDI       input
-//   16  CLK_OUT output                     |  40  TDO       output
-//   17  VDD     power                      |  41  VSS       power
-//   18  PA0     bidir                      |  42  VDD       power
-//   19  PA1     bidir (irq)                |  43  UART0_TX  output
-//   20  PA2     bidir (irq)                |  44  UART0_RX  input
-//   21  IOVSS   power                      |  45  RST_N     input
-//   22  IOVDD   power                      |  46  IOVSS     power
-//   23  PA3     bidir (irq)                |  47  CLK       input
-//   24  PA4     bidir (irq)                |  48  IOVDD     power
-// ============================================================================
-
 `default_nettype none
 
 module chip_top #(
     // Power/ground pads for core
-    parameter NUM_VDD_PADS = 3,    // pins 17, 33, 42
-    parameter NUM_VSS_PADS = 3,    // pins 15, 32, 41
+    parameter NUM_VDD_PADS = 6,
+    parameter NUM_VSS_PADS = 6,
 
     // Power/ground pads for I/O
-    parameter NUM_IOVDD_PADS = 4,  // pins 5, 22, 30, 48
-    parameter NUM_IOVSS_PADS = 4,  // pins 12, 21, 29, 46
+    parameter NUM_IOVDD_PADS = 5,
+    parameter NUM_IOVSS_PADS = 6,
 
     // Signal pads
-    parameter NUM_GPIO_PADS   = 25, // PA0..PA24
-    parameter NUM_INPUT_PADS  = 4,  // TCK, TMS, TDI, UART0_RX
-    parameter NUM_OUTPUT_PADS = 3,  // CLK_OUT, TDO, UART0_TX
-    parameter NUM_BIDIR_PADS  = NUM_GPIO_PADS  // PA0..PA24
+    parameter NUM_GPIO_PADS   = 10,
+    parameter NUM_QSPI_CS     = 3,
+    parameter NUM_HB_CS       = 2
 ) (
     `ifdef USE_POWER_PINS
     inout wire IOVDD,
@@ -62,39 +32,70 @@ module chip_top #(
     `endif
     inout wire clk_PAD,
     inout wire rst_n_PAD,
-    inout wire [NUM_INPUT_PADS-1 :0] input_PAD,
-    inout wire [NUM_OUTPUT_PADS-1:0] output_PAD,
-    inout wire [NUM_BIDIR_PADS-1 :0] bidir_PAD
+    inout wire clk_out_PAD,
+
+    // JTAG
+    inout wire jtag_tck_PAD,
+    inout wire jtag_tms_PAD,
+    inout wire jtag_tdi_PAD,
+    inout wire jtag_trst_n_PAD,
+    inout wire jtag_tdo_PAD,
+
+    // UART0
+    inout wire uart_rx_PAD,
+    inout wire uart_tx_PAD,
+
+    // GPIO Port A
+    inout wire [NUM_GPIO_PADS-1:0] gpio_PAD,
+
+    // QSPI0
+    inout wire [3:0]             qspi_io_PAD,
+    inout wire                   qspi_sck_PAD,
+    inout wire [NUM_QSPI_CS-1:0] qspi_cs_PAD,
+
+    // HyperBus
+    inout wire [7:0]           hb_dq_PAD,
+    inout wire                 hb_rwds_PAD,
+    inout wire                 hb_ck_PAD,
+    inout wire [NUM_HB_CS-1:0] hb_cs_PAD,
+    inout wire                 hb_rst_PAD
 );
 
 // ============================================================
-// Pad array index map
+// Clock and reset pad instances
 // ============================================================
-
-// Dedicated: clk_PAD (pin 47), rst_n_PAD (pin 45)
-
-// input_PAD[]
-localparam int IN_TCK     = 0;   // pin 37
-localparam int IN_TMS     = 1;   // pin 38
-localparam int IN_TDI     = 2;   // pin 39
-localparam int IN_UART_RX = 3;   // pin 44
-
-// output_PAD[]
-localparam int OUT_CLK_OUT  = 0;  // pin 16
-localparam int OUT_TDO      = 1;  // pin 40
-localparam int OUT_UART_TX  = 2;  // pin 43
-
-// bidir_PAD[]: bidir_PAD[n]
 
 wire clk_PAD2CORE;
 wire rst_n_PAD2CORE;
-wire [NUM_INPUT_PADS-1 :0] input_PAD2CORE;
-wire [NUM_OUTPUT_PADS-1:0] output_CORE2PAD;
-wire [NUM_BIDIR_PADS-1 :0] bidir_PAD2CORE;
-wire [NUM_BIDIR_PADS-1 :0] bidir_CORE2PAD;
-wire [NUM_BIDIR_PADS-1 :0] bidir_CORE2PAD_OE;
 
+// Clock pad
+sg13cmos5l_IOPadIn clk_pad (
+    `ifdef USE_POWER_PINS
+    .iovdd ( IOVDD ),
+    .iovss ( IOVSS ),
+    .vdd   ( VDD   ),
+    .vss   ( VSS   ),
+    `endif
+    .p2c   ( clk_PAD2CORE ),
+    .pad   ( clk_PAD      )
+);
+
+// Reset pad
+sg13cmos5l_IOPadIn rst_n_pad (
+    `ifdef USE_POWER_PINS
+    .iovdd ( IOVDD ),
+    .iovss ( IOVSS ),
+    .vdd   ( VDD   ),
+    .vss   ( VSS   ),
+    `endif
+    .p2c   ( rst_n_PAD2CORE ),
+    .pad   ( rst_n_PAD      )
+);
+
+// ============================================================
 // Power/ground pad instances
+// ============================================================
+
 generate
     // IOVDD pads
     for (genvar i = 0; i < NUM_IOVDD_PADS; i++) begin : iovdd_pads
@@ -149,110 +150,331 @@ generate
     end
 endgenerate
 
-// Signal IO pad instances
+// ============================================================
+// JTAG pad instances
+// ============================================================
 
-// Schmitt trigger
-sg13cmos5l_IOPadIn clk_pad (
+wire jtag_tck_PAD2CORE;
+wire jtag_tms_PAD2CORE;
+wire jtag_tdi_PAD2CORE;
+wire jtag_trst_n_PAD2CORE;
+wire jtag_tdo_CORE2PAD;
+
+// TCK pad
+sg13cmos5l_IOPadIn jtag_tck_pad (
     `ifdef USE_POWER_PINS
     .iovdd ( IOVDD ),
     .iovss ( IOVSS ),
     .vdd   ( VDD   ),
     .vss   ( VSS   ),
     `endif
-    .p2c   ( clk_PAD2CORE ),
-    .pad   ( clk_PAD      )
+    .p2c   ( jtag_tck_PAD2CORE ),
+    .pad   ( jtag_tck_PAD      )
 );
 
-// Normal input
-sg13cmos5l_IOPadIn rst_n_pad (
+// TMS pad
+sg13cmos5l_IOPadIn jtag_tms_pad (
     `ifdef USE_POWER_PINS
     .iovdd ( IOVDD ),
     .iovss ( IOVSS ),
     .vdd   ( VDD   ),
     .vss   ( VSS   ),
     `endif
-    .p2c   ( rst_n_PAD2CORE ),
-    .pad   ( rst_n_PAD      )
+    .p2c   ( jtag_tms_PAD2CORE ),
+    .pad   ( jtag_tms_PAD      )
 );
 
-// Input pads
+// TDI pad
+sg13cmos5l_IOPadIn jtag_tdi_pad (
+    `ifdef USE_POWER_PINS
+    .iovdd ( IOVDD ),
+    .iovss ( IOVSS ),
+    .vdd   ( VDD   ),
+    .vss   ( VSS   ),
+    `endif
+    .p2c   ( jtag_tdi_PAD2CORE ),
+    .pad   ( jtag_tdi_PAD      )
+);
+
+// TRST# pad
+sg13cmos5l_IOPadIn jtag_trst_n_pad (
+    `ifdef USE_POWER_PINS
+    .iovdd ( IOVDD ),
+    .iovss ( IOVSS ),
+    .vdd   ( VDD   ),
+    .vss   ( VSS   ),
+    `endif
+    .p2c   ( jtag_trst_n_PAD2CORE ),
+    .pad   ( jtag_trst_n_PAD      )
+);
+
+// TDO pad
+sg13cmos5l_IOPadOut30mA jtag_tdo_pad (
+    `ifdef USE_POWER_PINS
+    .iovdd ( IOVDD ),
+    .iovss ( IOVSS ),
+    .vdd   ( VDD   ),
+    .vss   ( VSS   ),
+    `endif
+    .c2p   ( jtag_tdo_CORE2PAD ),
+    .pad   ( jtag_tdo_PAD      )
+);
+
+// ============================================================
+// UART0 pad instances
+// ============================================================
+
+wire uart_rx_PAD2CORE;
+wire uart_tx_CORE2PAD;
+
+// RX pad
+sg13cmos5l_IOPadIn uart_rx_pad (
+    `ifdef USE_POWER_PINS
+    .iovdd ( IOVDD ),
+    .iovss ( IOVSS ),
+    .vdd   ( VDD   ),
+    .vss   ( VSS   ),
+    `endif
+    .p2c   ( uart_rx_PAD2CORE ),
+    .pad   ( uart_rx_PAD      )
+);
+
+// TX pad
+sg13cmos5l_IOPadOut30mA uart_tx_pad (
+    `ifdef USE_POWER_PINS
+    .iovdd ( IOVDD ),
+    .iovss ( IOVSS ),
+    .vdd   ( VDD   ),
+    .vss   ( VSS   ),
+    `endif
+    .c2p   ( uart_tx_CORE2PAD ),
+    .pad   ( uart_tx_PAD      )
+);
+
+wire clk_out_CORE2PAD;
+
+// Output clock pad
+sg13cmos5l_IOPadOut30mA clk_out_pad (
+    `ifdef USE_POWER_PINS
+    .iovdd ( IOVDD ),
+    .iovss ( IOVSS ),
+    .vdd   ( VDD   ),
+    .vss   ( VSS   ),
+    `endif
+    .c2p   ( clk_out_CORE2PAD ),
+    .pad   ( clk_out_PAD      )
+);
+
+// ============================================================
+// GPIO pad instances
+// ============================================================
+
+wire [NUM_GPIO_PADS-1:0] gpio_PAD2CORE;
+wire [NUM_GPIO_PADS-1:0] gpio_CORE2PAD;
+wire [NUM_GPIO_PADS-1:0] gpio_CORE2PAD_OE;
+
 generate
-    for (genvar i = 0; i < NUM_INPUT_PADS; i++) begin : inputs
-        sg13cmos5l_IOPadIn input_pad (
+    for (genvar i = 0; i < NUM_GPIO_PADS; i++) begin : gpios
+        sg13cmos5l_IOPadInOut30mA gpio_pad (
             `ifdef USE_POWER_PINS
             .iovdd  ( IOVDD ),
             .iovss  ( IOVSS ),
             .vdd    ( VDD   ),
             .vss    ( VSS   ),
             `endif
-            .p2c    ( input_PAD2CORE[i] ),
-            .pad    ( input_PAD[i]      )
+            .c2p    ( gpio_CORE2PAD[i]    ),
+            .c2p_en ( gpio_CORE2PAD_OE[i] ),
+            .p2c    ( gpio_PAD2CORE[i]    ),
+            .pad    ( gpio_PAD[i]         )
         );
     end
 endgenerate
 
-// Output pads
+// ============================================================
+// QSPI0 pad instances
+// ============================================================
+
+wire [3:0]             qspi_io_PAD2CORE;
+wire [3:0]             qspi_io_CORE2PAD;
+wire [3:0]             qspi_io_CORE2PAD_OE;
+wire                   qspi_sck_CORE2PAD;
+wire [NUM_QSPI_CS-1:0] qspi_cs_CORE2PAD;
+
 generate
-    for (genvar i = 0; i < NUM_OUTPUT_PADS; i++) begin : outputs
-        sg13cmos5l_IOPadOut30mA output_pad (
+    // QSPI0 I/O pads
+    for (genvar i = 0; i < 4; i++) begin : qspi_ios
+        sg13cmos5l_IOPadInOut30mA qspi_io_pad (
             `ifdef USE_POWER_PINS
             .iovdd  ( IOVDD ),
             .iovss  ( IOVSS ),
             .vdd    ( VDD   ),
             .vss    ( VSS   ),
             `endif
-            .c2p    ( output_CORE2PAD[i] ),
-            .pad    ( output_PAD[i]      )
+            .c2p    ( qspi_io_CORE2PAD[i]    ),
+            .c2p_en ( qspi_io_CORE2PAD_OE[i] ),
+            .p2c    ( qspi_io_PAD2CORE[i]    ),
+            .pad    ( qspi_io_PAD[i]         )
         );
     end
-endgenerate
 
-// Bidirectional pads
-generate
-    for (genvar i = 0; i < NUM_BIDIR_PADS; i++) begin : bidirs
-        sg13cmos5l_IOPadInOut30mA bidir_pad (
+    // QSPI0 CS# pads
+    for (genvar i = 0; i < NUM_QSPI_CS; i++) begin : qspi_css
+        sg13cmos5l_IOPadOut30mA qspi_cs_pad (
             `ifdef USE_POWER_PINS
             .iovdd  ( IOVDD ),
             .iovss  ( IOVSS ),
             .vdd    ( VDD   ),
             .vss    ( VSS   ),
             `endif
-            .c2p    ( bidir_CORE2PAD[i]    ),
-            .c2p_en ( bidir_CORE2PAD_OE[i] ),
-            .p2c    ( bidir_PAD2CORE[i]    ),
-            .pad    ( bidir_PAD[i]         )
+            .c2p    ( qspi_cs_CORE2PAD[i] ),
+            .pad    ( qspi_cs_PAD[i]      )
         );
     end
 endgenerate
 
-// Core design
+// QSPI0 SCK pad
+sg13cmos5l_IOPadOut30mA qspi_sck_pad (
+    `ifdef USE_POWER_PINS
+    .iovdd  ( IOVDD ),
+    .iovss  ( IOVSS ),
+    .vdd    ( VDD   ),
+    .vss    ( VSS   ),
+    `endif
+    .c2p    ( qspi_sck_CORE2PAD ),
+    .pad    ( qspi_sck_PAD      )
+);
+
+// ============================================================
+// HyperBus pad instances
+// ============================================================
+
+wire [7:0]           hb_dq_PAD2CORE;
+wire [7:0]           hb_dq_CORE2PAD;
+wire                 hb_dq_CORE2PAD_OE;
+wire                 hb_rwds_PAD2CORE;
+wire                 hb_rwds_CORE2PAD;
+wire                 hb_rwds_CORE2PAD_OE;
+wire                 hb_ck_CORE2PAD;
+wire [NUM_HB_CS-1:0] hb_cs_CORE2PAD;
+wire                 hb_rst_CORE2PAD;
+
+generate
+    // HyperBus DQ pads
+    for (genvar i = 0; i < 8; i++) begin : hb_dqs
+        sg13cmos5l_IOPadInOut30mA hb_dq_pad (
+            `ifdef USE_POWER_PINS
+            .iovdd  ( IOVDD ),
+            .iovss  ( IOVSS ),
+            .vdd    ( VDD   ),
+            .vss    ( VSS   ),
+            `endif
+            .c2p    ( hb_dq_CORE2PAD[i]  ),
+            .c2p_en ( hb_dq_CORE2PAD_OE  ),
+            .p2c    ( hb_dq_PAD2CORE[i]  ),
+            .pad    ( hb_dq_PAD[i]       )
+        );
+    end
+
+    // HyperBus CS# pads
+    for (genvar i = 0; i < NUM_HB_CS; i++) begin : hb_css
+        sg13cmos5l_IOPadOut30mA hb_cs_pad (
+            `ifdef USE_POWER_PINS
+            .iovdd  ( IOVDD ),
+            .iovss  ( IOVSS ),
+            .vdd    ( VDD   ),
+            .vss    ( VSS   ),
+            `endif
+            .c2p    ( hb_cs_CORE2PAD[i] ),
+            .pad    ( hb_cs_PAD[i]      )
+        );
+    end
+endgenerate
+
+// HyperBus RWDS pad
+sg13cmos5l_IOPadInOut30mA hb_rwds_pad (
+    `ifdef USE_POWER_PINS
+    .iovdd  ( IOVDD ),
+    .iovss  ( IOVSS ),
+    .vdd    ( VDD   ),
+    .vss    ( VSS   ),
+    `endif
+    .c2p    ( hb_rwds_CORE2PAD    ),
+    .c2p_en ( hb_rwds_CORE2PAD_OE ),
+    .p2c    ( hb_rwds_PAD2CORE    ),
+    .pad    ( hb_rwds_PAD         )
+);
+
+// HyperBus CK pad
+sg13cmos5l_IOPadOut30mA hb_ck_pad (
+    `ifdef USE_POWER_PINS
+    .iovdd  ( IOVDD ),
+    .iovss  ( IOVSS ),
+    .vdd    ( VDD   ),
+    .vss    ( VSS   ),
+    `endif
+    .c2p    ( hb_ck_CORE2PAD ),
+    .pad    ( hb_ck_PAD      )
+);
+
+// HyperBus RST# pad
+sg13cmos5l_IOPadOut30mA hb_rst_pad (
+    `ifdef USE_POWER_PINS
+    .iovdd  ( IOVDD ),
+    .iovss  ( IOVSS ),
+    .vdd    ( VDD   ),
+    .vss    ( VSS   ),
+    `endif
+    .c2p    ( hb_rst_CORE2PAD ),
+    .pad    ( hb_rst_PAD      )
+);
+
+// ============================================================
+// Core
+// ============================================================
 
 (* keep *) friscv_chip_soc #(
-    .NumPads ( NUM_GPIO_PADS )
+    .NumGpios ( NUM_GPIO_PADS ),
+    .MemChips ( NUM_HB_CS     )
 ) soc_inst (
-    .i_clk         ( clk_PAD2CORE                 ),
-    .i_rstn        ( rst_n_PAD2CORE               ),
-
-    .o_clk_out     ( output_CORE2PAD[OUT_CLK_OUT] ),
-
-    .o_end         ( /* no package pin */         ),
-
-    // UART0
-    .i_uart_rx     ( input_PAD2CORE [IN_UART_RX]  ),
-    .o_uart_tx     ( output_CORE2PAD[OUT_UART_TX] ),
+    .i_clk           ( clk_PAD2CORE         ),
+    .i_rstn          ( rst_n_PAD2CORE       ),
+    .o_clk_out       ( clk_out_CORE2PAD     ),
+    .o_end           ( /* no package pin */ ),
 
     // JTAG
-    .i_jtag_tck    ( input_PAD2CORE [IN_TCK]      ),
-    .i_jtag_tms    ( input_PAD2CORE [IN_TMS]      ),
-    .i_jtag_trstn  ( 1'b1                         ),
-    .i_jtag_tdi    ( input_PAD2CORE [IN_TDI]      ),
-    .o_jtag_tdo    ( output_CORE2PAD[OUT_TDO]     ),
-    .o_jtag_tdo_oe ( /* no package pin */         ),
+    .i_jtag_tck      ( jtag_tck_PAD2CORE    ),
+    .i_jtag_tms      ( jtag_tms_PAD2CORE    ),
+    .i_jtag_trstn    ( jtag_trst_n_PAD2CORE ),
+    .i_jtag_tdi      ( jtag_tdi_PAD2CORE    ),
+    .o_jtag_tdo      ( jtag_tdo_CORE2PAD    ),
+    .o_jtag_tdo_oe   ( /* no package pin */ ),
 
-    // Muxed signals
-    .pad_in_i      ( bidir_PAD2CORE               ),
-    .pad_out_o     ( bidir_CORE2PAD               ),
-    .pad_oe_o      ( bidir_CORE2PAD_OE            )
+    // UART0
+    .i_uart_rx       ( uart_rx_PAD2CORE     ),
+    .o_uart_tx       ( uart_tx_CORE2PAD     ),
+
+    // QSPI0
+    .o_qspi_sck      ( qspi_sck_CORE2PAD    ),
+    .o_qspi_csn      ( qspi_cs_CORE2PAD     ),
+    .i_qspi_sd       ( qspi_io_PAD2CORE     ),
+    .o_qspi_sd       ( qspi_io_CORE2PAD     ),
+    .o_qspi_sd_oe    ( qspi_io_CORE2PAD_OE  ),
+
+    // HyperBus
+    .i_hyper_dq      ( hb_dq_PAD2CORE       ),
+    .o_hyper_dq      ( hb_dq_CORE2PAD       ),
+    .o_hyper_dq_oe   ( hb_dq_CORE2PAD_OE    ),
+    .i_hyper_rwds    ( hb_rwds_PAD2CORE     ),
+    .o_hyper_rwds    ( hb_rwds_CORE2PAD     ),
+    .o_hyper_rwds_oe ( hb_rwds_CORE2PAD_OE  ),
+    .o_hyper_ck      ( hb_ck_CORE2PAD       ),
+    .o_hyper_csn     ( hb_cs_CORE2PAD       ),
+    .o_hyper_rstn    ( hb_rst_CORE2PAD      ),
+
+    // GPIO Port A
+    .i_gpio          ( gpio_PAD2CORE        ),
+    .o_gpio          ( gpio_CORE2PAD        ),
+    .o_gpio_oe       ( gpio_CORE2PAD_OE     )
 );
 
 endmodule

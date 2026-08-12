@@ -25,40 +25,48 @@ set_property -dict { PACKAGE_PIN V6  IOSTANDARD LVCMOS33                } [get_p
 set_property -dict { PACKAGE_PIN Y6  IOSTANDARD LVCMOS33 PULLUP   true } [get_ports uart_rx_i]   ;# GPIO15, pin 10
 set_property -dict { PACKAGE_PIN W9  IOSTANDARD LVCMOS33                } [get_ports clk_out_o]  ;# GPIO26, pin 37
 
-# HyperBus, PA13..PA24
+# HyperBus
 # RWDS is the PHY's read capture clock, so it takes Y9, a P-side CCIO pin.
-set_property -dict { PACKAGE_PIN F19 IOSTANDARD LVCMOS33 } [get_ports {pa_io[13]}] ;# GPIO8,  pin 24  HB_DQ0
-set_property -dict { PACKAGE_PIN V10 IOSTANDARD LVCMOS33 } [get_ports {pa_io[14]}] ;# GPIO9,  pin 21  HB_DQ1
-set_property -dict { PACKAGE_PIN V8  IOSTANDARD LVCMOS33 } [get_ports {pa_io[15]}] ;# GPIO10, pin 19  HB_DQ2
-set_property -dict { PACKAGE_PIN W10 IOSTANDARD LVCMOS33 } [get_ports {pa_io[16]}] ;# GPIO11, pin 23  HB_DQ3
-set_property -dict { PACKAGE_PIN B20 IOSTANDARD LVCMOS33 } [get_ports {pa_io[17]}] ;# GPIO12, pin 32  HB_DQ4
-set_property -dict { PACKAGE_PIN W8  IOSTANDARD LVCMOS33 } [get_ports {pa_io[18]}] ;# GPIO13, pin 33  HB_DQ5
-set_property -dict { PACKAGE_PIN B19 IOSTANDARD LVCMOS33 } [get_ports {pa_io[19]}] ;# GPIO16, pin 36  HB_DQ6
-set_property -dict { PACKAGE_PIN Y8  IOSTANDARD LVCMOS33 } [get_ports {pa_io[20]}] ;# GPIO19, pin 35  HB_DQ7
-set_property -dict { PACKAGE_PIN Y9  IOSTANDARD LVCMOS33 } [get_ports {pa_io[21]}] ;# GPIO21, pin 40  HB_RWDS
-set_property -dict { PACKAGE_PIN U7  IOSTANDARD LVCMOS33 } [get_ports {pa_io[22]}] ;# GPIO17, pin 11  HB_CK
-set_property -dict { PACKAGE_PIN A20 IOSTANDARD LVCMOS33 } [get_ports {pa_io[23]}] ;# GPIO20, pin 38  HB_CS0_N
-set_property -dict { PACKAGE_PIN U8  IOSTANDARD LVCMOS33 } [get_ports {pa_io[24]}] ;# GPIO22, pin 15  HB_RST_N
+set_property -dict { PACKAGE_PIN F19 IOSTANDARD LVCMOS33 } [get_ports {hb_dq_io[0]}] ;# GPIO8,  pin 24  HB_DQ0
+set_property -dict { PACKAGE_PIN V10 IOSTANDARD LVCMOS33 } [get_ports {hb_dq_io[1]}] ;# GPIO9,  pin 21  HB_DQ1
+set_property -dict { PACKAGE_PIN V8  IOSTANDARD LVCMOS33 } [get_ports {hb_dq_io[2]}] ;# GPIO10, pin 19  HB_DQ2
+set_property -dict { PACKAGE_PIN W10 IOSTANDARD LVCMOS33 } [get_ports {hb_dq_io[3]}] ;# GPIO11, pin 23  HB_DQ3
+set_property -dict { PACKAGE_PIN B20 IOSTANDARD LVCMOS33 } [get_ports {hb_dq_io[4]}] ;# GPIO12, pin 32  HB_DQ4
+set_property -dict { PACKAGE_PIN W8  IOSTANDARD LVCMOS33 } [get_ports {hb_dq_io[5]}] ;# GPIO13, pin 33  HB_DQ5
+set_property -dict { PACKAGE_PIN B19 IOSTANDARD LVCMOS33 } [get_ports {hb_dq_io[6]}] ;# GPIO16, pin 36  HB_DQ6
+set_property -dict { PACKAGE_PIN Y8  IOSTANDARD LVCMOS33 } [get_ports {hb_dq_io[7]}] ;# GPIO19, pin 35  HB_DQ7
+set_property -dict { PACKAGE_PIN Y9  IOSTANDARD LVCMOS33 } [get_ports hb_rwds_io]    ;# GPIO21, pin 40  HB_RWDS
+set_property -dict { PACKAGE_PIN U7  IOSTANDARD LVCMOS33 } [get_ports hb_ck_o]       ;# GPIO17, pin 11  HB_CK
+set_property -dict { PACKAGE_PIN A20 IOSTANDARD LVCMOS33 } [get_ports {hb_cs_o[0]}]  ;# GPIO20, pin 38  HB_CS0_N
+set_property -dict { PACKAGE_PIN U13 IOSTANDARD LVCMOS33 } [get_ports {hb_cs_o[1]}]  ;# Arduino A2      HB_CS1_N
+set_property -dict { PACKAGE_PIN U8  IOSTANDARD LVCMOS33 } [get_ports hb_rst_o]      ;# GPIO22, pin 15  HB_RST_N
 
-# QSPI0, PA5..PA12, on PMODA in Digilent Pmod SF3 order
-set_property -dict { PACKAGE_PIN Y19 IOSTANDARD LVCMOS33 } [get_ports {pa_io[5]}]  ;# JA2  QSPI0_IO0
-set_property -dict { PACKAGE_PIN Y16 IOSTANDARD LVCMOS33 } [get_ports {pa_io[6]}]  ;# JA3  QSPI0_IO1
-set_property -dict { PACKAGE_PIN U18 IOSTANDARD LVCMOS33 } [get_ports {pa_io[7]}]  ;# JA7  QSPI0_IO2 (strap)
-set_property -dict { PACKAGE_PIN U19 IOSTANDARD LVCMOS33 } [get_ports {pa_io[8]}]  ;# JA8  QSPI0_IO3 (strap)
-set_property -dict { PACKAGE_PIN Y17 IOSTANDARD LVCMOS33 } [get_ports {pa_io[9]}]  ;# JA4  QSPI0_SCK
-set_property -dict { PACKAGE_PIN Y18 IOSTANDARD LVCMOS33 } [get_ports {pa_io[10]}] ;# JA1  QSPI0_CS0
-set_property -dict { PACKAGE_PIN W18 IOSTANDARD LVCMOS33 } [get_ports {pa_io[11]}] ;# JA9  QSPI0_CS1
-set_property -dict { PACKAGE_PIN W19 IOSTANDARD LVCMOS33 } [get_ports {pa_io[12]}] ;# JA10 QSPI0_CS2
+# QSPI0 on PMODA
+set_property -dict { PACKAGE_PIN Y19 IOSTANDARD LVCMOS33 } [get_ports {qspi_io[0]}]  ;# JA2  QSPI0_IO0
+set_property -dict { PACKAGE_PIN Y16 IOSTANDARD LVCMOS33 } [get_ports {qspi_io[1]}]  ;# JA3  QSPI0_IO1
+set_property -dict { PACKAGE_PIN U18 IOSTANDARD LVCMOS33 } [get_ports {qspi_io[2]}]  ;# JA7  QSPI0_IO2
+set_property -dict { PACKAGE_PIN U19 IOSTANDARD LVCMOS33 } [get_ports {qspi_io[3]}]  ;# JA8  QSPI0_IO3
+set_property -dict { PACKAGE_PIN Y17 IOSTANDARD LVCMOS33 } [get_ports qspi_sck_o]    ;# JA4  QSPI0_SCK
+set_property -dict { PACKAGE_PIN Y18 IOSTANDARD LVCMOS33 } [get_ports {qspi_cs_o[0]}];# JA1  QSPI0_CS0_N
+set_property -dict { PACKAGE_PIN W18 IOSTANDARD LVCMOS33 } [get_ports {qspi_cs_o[1]}];# JA9  QSPI0_CS1_N
+set_property -dict { PACKAGE_PIN W19 IOSTANDARD LVCMOS33 } [get_ports {qspi_cs_o[2]}];# JA10 QSPI0_CS2_N
 
-# GPIO, PA0..PA4, on PMODB; PA1..PA4 are the PLIC interrupt sources
-set_property -dict { PACKAGE_PIN W14 IOSTANDARD LVCMOS33 } [get_ports {pa_io[0]}]  ;# JB1
-set_property -dict { PACKAGE_PIN Y14 IOSTANDARD LVCMOS33 } [get_ports {pa_io[1]}]  ;# JB2
-set_property -dict { PACKAGE_PIN T11 IOSTANDARD LVCMOS33 } [get_ports {pa_io[2]}]  ;# JB3
-set_property -dict { PACKAGE_PIN T10 IOSTANDARD LVCMOS33 } [get_ports {pa_io[3]}]  ;# JB4
-set_property -dict { PACKAGE_PIN V16 IOSTANDARD LVCMOS33 } [get_ports {pa_io[4]}]  ;# JB7
+# GPIO Port A
+set_property -dict { PACKAGE_PIN W14 IOSTANDARD LVCMOS33 } [get_ports {gpio_io[0]}]  ;# JB1
+set_property -dict { PACKAGE_PIN Y14 IOSTANDARD LVCMOS33 } [get_ports {gpio_io[1]}]  ;# JB2
+set_property -dict { PACKAGE_PIN T11 IOSTANDARD LVCMOS33 } [get_ports {gpio_io[2]}]  ;# JB3
+set_property -dict { PACKAGE_PIN T10 IOSTANDARD LVCMOS33 } [get_ports {gpio_io[3]}]  ;# JB4
+set_property -dict { PACKAGE_PIN V16 IOSTANDARD LVCMOS33 } [get_ports {gpio_io[4]}]  ;# JB7
+set_property -dict { PACKAGE_PIN W16 IOSTANDARD LVCMOS33 } [get_ports {gpio_io[5]}]  ;# JB8
+set_property -dict { PACKAGE_PIN V12 IOSTANDARD LVCMOS33 } [get_ports {gpio_io[6]}]  ;# JB9
+set_property -dict { PACKAGE_PIN W13 IOSTANDARD LVCMOS33 } [get_ports {gpio_io[7]}]  ;# JB10
+set_property -dict { PACKAGE_PIN T14 IOSTANDARD LVCMOS33 } [get_ports {gpio_io[8]}]  ;# Arduino A0
+set_property -dict { PACKAGE_PIN U12 IOSTANDARD LVCMOS33 } [get_ports {gpio_io[9]}]  ;# Arduino A1
 
-# Defined level when nothing is wired up; PA7/PA8 are sampled as STRAPA
-set_property PULLDOWN true [get_ports {pa_io[*]}]
+set_property PULLDOWN true [get_ports {gpio_io[*]}]
+set_property PULLDOWN true [get_ports {qspi_io[*]}]
+set_property PULLDOWN true [get_ports {hb_dq_io[*]}]
+set_property PULLDOWN true [get_ports hb_rwds_io]
 
 # Timing
 create_clock -period 100.000 -name jtag_tck [get_ports jtag_tck_i]
@@ -77,5 +85,7 @@ set_false_path -from [get_ports uart_rx_i]
 set_false_path -to   [get_ports uart_tx_o]
 set_false_path -to   [get_ports {led_o[*]}]
 set_false_path -to   [get_ports clk_out_o]
-set_false_path -from [get_ports {pa_io[*]}]
-set_false_path -to   [get_ports {pa_io[*]}]
+set_false_path -from [get_ports {gpio_io[*] qspi_io[*] hb_dq_io[*] hb_rwds_io}]
+set_false_path -to   [get_ports {gpio_io[*] qspi_io[*] hb_dq_io[*] hb_rwds_io}]
+set_false_path -to   [get_ports {qspi_sck_o qspi_cs_o[*]}]
+set_false_path -to   [get_ports {hb_ck_o hb_cs_o[*] hb_rst_o}]
