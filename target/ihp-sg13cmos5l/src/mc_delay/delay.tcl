@@ -4,6 +4,7 @@
 #
 # Authors:
 #  - Thomas Benz <tbenz@iis.ee.ethz.ch>
+#  - Emil Popović <mail@emilpopovic.me>
 
 # ToDo: Timing should be on point, it fixes slack too much
 #       -> check window-constraint, maybe add hold-margin and relax slack-margin?

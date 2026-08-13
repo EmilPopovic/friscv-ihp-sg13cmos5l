@@ -5,9 +5,9 @@ The first tapeout of the FRISC-V core, targeting IHP's open-source **SG13CMOS5L*
 
 The SoC itself lives in [friscv-soc](https://github.com/EmilPopovic/friscv-soc)
 and is pulled in as a Bender dependency. This repository holds everything that
-is specific to the chip: `friscv_chip_soc` wraps `friscv_soc` with the HyperBus
-controller on its AXI4 master port, the pin mux on its external register ports
-and the pad map, and `friscv_soc_top` adds the pad ring.
+is specific to the chip: `friscv_chip_soc` wraps `vernii_soc` with the HyperBus
+controller on its AXI4 master port and brings every peripheral out on its own
+dedicated pins, and `chip_top` adds the 64-pad ring.
 
 To develop both together, point Bender at a local checkout in `Bender.local`:
 
@@ -84,7 +84,7 @@ make sim
 
 ## Repository layout
 
-- `hw/` - `friscv_chip_soc`, the pin mux, and the vendored PULP HyperBus.
+- `hw/` - `friscv_chip_soc` and the vendored PULP HyperBus.
 - `target/ihp-sg13cmos5l/` - synthesis, LibreLane flow, pad ring, PDK cells.
 - `target/sim/` - chip-level C++/Verilator simulation harness.
 - `target/xilinx/pynq-z2/` - FPGA counterpart of the chip.

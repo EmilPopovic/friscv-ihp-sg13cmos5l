@@ -5,8 +5,9 @@
 // you may not use this file except in compliance with the License, or,
 // at your option, the Apache License version 2.0.
 // You may obtain a copy of the License at https://solderpad.org/licenses/SHL-2.1/
-
-`timescale 1ns/1ps
+//
+// Emil Popović <mail@emilpopovic.me>
+// Matej Jurasić <matej.jurasic@cappig.dev>
 
 module friscv_chip_soc import vernii_pkg::*; #(
     parameter int unsigned SramBase          = 32'h0000_0000,
@@ -22,56 +23,56 @@ module friscv_chip_soc import vernii_pkg::*; #(
     parameter int unsigned NumGpios          = 10,
     parameter int unsigned ZsblRomSizeBytes  = 128
 ) (
-    input  logic  i_clk,
-    input  logic  i_rstn,
+    input  logic  clk_i,
+    input  logic  rst_ni,
 
-    output logic  o_clk_out,
+    output logic  clk_out_o,
 
-    output logic  o_end,
+    output logic  end_o,
 
     // UART0
-    input  logic  i_uart_rx,
-    output logic  o_uart_tx,
+    input  logic  uart0_rx_i,
+    output logic  uart0_tx_o,
 
     // JTAG
-    input  logic  i_jtag_tck,
-    input  logic  i_jtag_tms,
-    input  logic  i_jtag_trstn,
-    input  logic  i_jtag_tdi,
-    output logic  o_jtag_tdo,
-    output logic  o_jtag_tdo_oe,
+    input  logic  jtag_tck_i,
+    input  logic  jtag_tms_i,
+    input  logic  jtag_trst_ni,
+    input  logic  jtag_tdi_i,
+    output logic  jtag_tdo_o,
+    output logic  jtag_tdo_oe_o,
 
     // QSPI0; SCK and the chip selects are always driven
-    output logic       o_qspi_sck,
-    output logic [2:0] o_qspi_csn,
-    input  logic [3:0] i_qspi_sd,
-    output logic [3:0] o_qspi_sd,
-    output logic [3:0] o_qspi_sd_oe,
+    output logic       qspi0_sck_o,
+    output logic [2:0] qspi0_cs_o,
+    input  logic [3:0] qspi0_sd_i,
+    output logic [3:0] qspi0_sd_o,
+    output logic [3:0] qspi0_sd_oe_o,
 
     // HyperBus
-    input  logic [7:0]          i_hyper_dq,
-    output logic [7:0]          o_hyper_dq,
-    output logic                o_hyper_dq_oe,
-    input  logic                i_hyper_rwds,
-    output logic                o_hyper_rwds,
-    output logic                o_hyper_rwds_oe,
-    output logic                o_hyper_ck,
-    output logic [MemChips-1:0] o_hyper_csn,
-    output logic                o_hyper_rstn,
+    input  logic [7:0]          hyper_dq_i,
+    output logic [7:0]          hyper_dq_o,
+    output logic                hyper_dq_oe_o,
+    input  logic                hyper_rwds_i,
+    output logic                hyper_rwds_o,
+    output logic                hyper_rwds_oe_o,
+    output logic                hyper_ck_o,
+    output logic [MemChips-1:0] hyper_cs_no,
+    output logic                hyper_reset_no,
 
     // GPIO Port A, PA0..PA(NumGpios-1); also the reset straps
-    input  logic [NumGpios-1:0] i_gpio,
-    output logic [NumGpios-1:0] o_gpio,
-    output logic [NumGpios-1:0] o_gpio_oe
+    input  logic [NumGpios-1:0] gpio_a_i,
+    output logic [NumGpios-1:0] gpio_a_o,
+    output logic [NumGpios-1:0] gpio_a_oe_o
 );
 
 // Output clock as heartbeat, do not use as real clock
 logic [6:0] clk_div;
-always_ff @(posedge i_clk or negedge i_rstn) begin
-    if (!i_rstn) clk_div <= '0;
+always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) clk_div <= '0;
     else         clk_div <= clk_div + 1;
 end
-assign o_clk_out = clk_div[6];
+assign clk_out_o = clk_div[6];
 
 localparam int unsigned HyperCfgSlv  = 0;
 localparam int unsigned NumExtRegSlv = 1;
@@ -83,7 +84,7 @@ localparam axi_pkg::xbar_rule_32_t [NumExtRegSlv-1:0] ExtRegSlvRules = '{
     '{ idx: HyperCfgSlv, start_addr: HyperCfgBaseAddr, end_addr: HyperCfgBaseAddr + HyperCfgSize }
 };
 
-logic por_rstn, soc_rstn;
+logic soc_rstn;
 
 vernii_axi_req_t  axi_mem_req;
 vernii_axi_resp_t axi_mem_rsp;
@@ -91,17 +92,17 @@ vernii_axi_resp_t axi_mem_rsp;
 vernii_reg_req_t [NumExtRegSlv-1:0] reg_ext_req;
 vernii_reg_rsp_t [NumExtRegSlv-1:0] reg_ext_rsp;
 
-logic [31:0] gpio_in, gpio_out, gpio_oe;
+logic [31:0] gpio_a_in, gpio_a_out, gpio_a_oe;
 
-assign gpio_in    = 32'(i_gpio);
-assign o_gpio     = gpio_out[NumGpios-1:0];
-assign o_gpio_oe  = gpio_oe [NumGpios-1:0];
+assign gpio_a_in      = 32'(gpio_a_i);
+assign gpio_a_o     = gpio_a_out[NumGpios-1:0];
+assign gpio_a_oe_o  = gpio_a_oe [NumGpios-1:0];
 
 vernii_soc #(
-    .SramBase         ( SramBase           ),
-    .SramSize         ( SramSize           ),
-    .MemBase          ( MemBase            ),
-    .MemSize          ( MemSize * MemChips ),
+    .OcmBase          ( SramBase           ),
+    .OcmSize          ( SramSize           ),
+    .ExtBase          ( MemBase            ),
+    .ExtSize          ( MemSize * MemChips ),
     .LineBytes        ( LineBytes          ),
     .Ways             ( Ways               ),
     .SramTags         ( SramTags           ),
@@ -110,35 +111,35 @@ vernii_soc #(
     .NumExtRegSlv     ( NumExtRegSlv       ),
     .ExtRegSlvRules   ( ExtRegSlvRules     )
 ) i_vernii_soc (
-    .i_clk         ( i_clk         ),
-    .i_rstn        ( i_rstn        ),
-    .o_por_rstn    ( por_rstn      ),
-    .o_soc_rstn    ( soc_rstn      ),
-    .o_end         ( o_end         ),
-    .o_axi_mem_req ( axi_mem_req   ),
-    .i_axi_mem_rsp ( axi_mem_rsp   ),
-    .o_reg_ext_req ( reg_ext_req   ),
-    .i_reg_ext_rsp ( reg_ext_rsp   ),
-    .i_strap       ( i_gpio        ),
-    .i_uart_rx     ( i_uart_rx     ),
-    .o_uart_tx     ( o_uart_tx     ),
-    .i_jtag_tck    ( i_jtag_tck    ),
-    .i_jtag_tms    ( i_jtag_tms    ),
-    .i_jtag_trstn  ( i_jtag_trstn  ),
-    .i_jtag_tdi    ( i_jtag_tdi    ),
-    .o_jtag_tdo    ( o_jtag_tdo    ),
-    .o_jtag_tdo_oe ( o_jtag_tdo_oe ),
-    .o_qspi_sck    ( o_qspi_sck    ),
-    .o_qspi_sck_oe (               ),  // tied high inside spi_host
-    .o_qspi_cs     ( o_qspi_csn    ),
-    .o_qspi_cs_oe  (               ),  // tied high inside spi_host
-    .o_qspi_sd     ( o_qspi_sd     ),
-    .o_qspi_sd_oe  ( o_qspi_sd_oe  ),
-    .i_qspi_sd     ( i_qspi_sd     ),
-    .i_ext_irq     ( '0            ),
-    .i_gpio        ( gpio_in       ),
-    .o_gpio        ( gpio_out      ),
-    .o_gpio_oe     ( gpio_oe       )
+    .clk_i,
+    .rst_ni,
+    .por_rst_no     ( /* unused */ ),
+    .soc_rst_no     ( soc_rstn     ),
+    .end_o,
+    .axi_mem_req_o  ( axi_mem_req  ),
+    .axi_mem_rsp_i  ( axi_mem_rsp  ),
+    .reg_ext_req_o  ( reg_ext_req  ),
+    .reg_ext_rsp_i  ( reg_ext_rsp  ),
+    .strap_i        ( gpio_a_i     ),
+    .uart0_rx_i,
+    .uart0_tx_o,
+    .jtag_tck_i,
+    .jtag_tms_i,
+    .jtag_trst_ni,
+    .jtag_tdi_i,
+    .jtag_tdo_o,
+    .jtag_tdo_oe_o,
+    .qspi0_sck_o,
+    .qspi0_sck_oe_o ( /* no package pin */ ),  // tied high inside spi_host
+    .qspi0_cs_o,
+    .qspi0_cs_oe_o  ( /* no package pin */ ),  // tied high inside spi_host
+    .qspi0_sd_o,
+    .qspi0_sd_oe_o,
+    .qspi0_sd_i,
+    .ext_irq_i      ( '0           ),
+    .gpio_a_i       ( gpio_a_in    ),
+    .gpio_a_o       ( gpio_a_out   ),
+    .gpio_a_oe_o    ( gpio_a_oe    )
 );
 
 // ============================================================
@@ -154,6 +155,8 @@ function automatic hyperbus_pkg::hyper_cfg_t hyper_rst_cfg();
     hyper_rst_cfg.address_mask_msb = 5'($clog2(MemSize));
 endfunction
 
+`pragma diagnostic push
+`pragma diagnostic ignore="-Wempty-output-connection"
 hyperbus #(
     .NumChips        ( MemChips                ),
     .NumPhys         ( HyperNumPhys            ),
@@ -180,25 +183,26 @@ hyperbus #(
     .RstChipSpace    ( MemSize                 ),
     .AxiLogDepth     ( 1                       )
 ) i_hyperbus (
-    .clk_phy_i       ( i_clk                    ),
+    .clk_phy_i       ( clk_i                    ),
     .rst_phy_ni      ( soc_rstn                 ),
-    .clk_sys_i       ( i_clk                    ),
+    .clk_sys_i       ( clk_i                    ),
     .rst_sys_ni      ( soc_rstn                 ),
     .test_mode_i     ( 1'b0                     ),
     .axi_req_i       ( axi_mem_req              ),
     .axi_rsp_o       ( axi_mem_rsp              ),
     .reg_req_i       ( reg_ext_req[HyperCfgSlv] ),
     .reg_rsp_o       ( reg_ext_rsp[HyperCfgSlv] ),
-    .hyper_cs_no     ( o_hyper_csn              ),
-    .hyper_ck_o      ( o_hyper_ck               ),
-    .hyper_ck_no     (                          ),  // single-ended: no package pin
-    .hyper_rwds_o    ( o_hyper_rwds             ),
-    .hyper_rwds_i    ( i_hyper_rwds             ),
-    .hyper_rwds_oe_o ( o_hyper_rwds_oe          ),
-    .hyper_dq_i      ( i_hyper_dq               ),
-    .hyper_dq_o      ( o_hyper_dq               ),
-    .hyper_dq_oe_o   ( o_hyper_dq_oe            ),
-    .hyper_reset_no  ( o_hyper_rstn             )
+    .hyper_cs_no,
+    .hyper_ck_o,
+    .hyper_ck_no     ( /* no package pin */     ),  // single-ended
+    .hyper_rwds_o,
+    .hyper_rwds_i,
+    .hyper_rwds_oe_o,
+    .hyper_dq_i,
+    .hyper_dq_o,
+    .hyper_dq_oe_o,
+    .hyper_reset_no
 );
+`pragma diagnostic pop
 
 endmodule

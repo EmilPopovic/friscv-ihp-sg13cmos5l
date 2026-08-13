@@ -9,6 +9,7 @@
 // Blackbox stubs of the sg13cmos5l stdcells instantiated directly by the
 // tech cell wrappers (tc_clk.sv). Ports match the PDK liberty/verilog views.
 `pragma diagnostic push
+`pragma diagnostic ignore="-Wunused-def"
 `pragma diagnostic ignore="-Wunused-port"
 `pragma diagnostic ignore="-Wundriven-port"
 

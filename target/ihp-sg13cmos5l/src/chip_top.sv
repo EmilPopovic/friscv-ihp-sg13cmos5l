@@ -5,11 +5,17 @@
 // you may not use this file except in compliance with the License, or,
 // at your option, the Apache License version 2.0.
 // You may obtain a copy of the License at https://solderpad.org/licenses/SHL-2.1/
+//
+// Emil Popović <mail@emilpopovic.me>
+// Matej Jurasić <matej.jurasic@cappig.dev>
 
 // Based on https://github.com/IHP-GmbH/ihp-sg13cmos5l-librelane-template/blob/main/src/chip_top.sv
 
 `default_nettype none
 
+`pragma diagnostic push
+`pragma diagnostic ignore="-Wunused-def"
+`pragma diagnostic ignore="-Wunconnected-inout-port"
 module chip_top #(
     // Power/ground pads for core
     parameter NUM_VDD_PADS = 6,
@@ -432,51 +438,55 @@ sg13cmos5l_IOPadOut30mA hb_rst_pad (
 // Core
 // ============================================================
 
+`pragma diagnostic push
+`pragma diagnostic ignore="-Wempty-output-connection"
 (* keep *) friscv_chip_soc #(
     .NumGpios ( NUM_GPIO_PADS ),
     .MemChips ( NUM_HB_CS     )
 ) soc_inst (
-    .i_clk           ( clk_PAD2CORE         ),
-    .i_rstn          ( rst_n_PAD2CORE       ),
-    .o_clk_out       ( clk_out_CORE2PAD     ),
-    .o_end           ( /* no package pin */ ),
+    .clk_i           ( clk_PAD2CORE         ),
+    .rst_ni          ( rst_n_PAD2CORE       ),
+    .clk_out_o       ( clk_out_CORE2PAD     ),
+    .end_o           ( /* no package pin */ ),
 
     // JTAG
-    .i_jtag_tck      ( jtag_tck_PAD2CORE    ),
-    .i_jtag_tms      ( jtag_tms_PAD2CORE    ),
-    .i_jtag_trstn    ( jtag_trst_n_PAD2CORE ),
-    .i_jtag_tdi      ( jtag_tdi_PAD2CORE    ),
-    .o_jtag_tdo      ( jtag_tdo_CORE2PAD    ),
-    .o_jtag_tdo_oe   ( /* no package pin */ ),
+    .jtag_tck_i      ( jtag_tck_PAD2CORE    ),
+    .jtag_tms_i      ( jtag_tms_PAD2CORE    ),
+    .jtag_trst_ni    ( jtag_trst_n_PAD2CORE ),
+    .jtag_tdi_i      ( jtag_tdi_PAD2CORE    ),
+    .jtag_tdo_o      ( jtag_tdo_CORE2PAD    ),
+    .jtag_tdo_oe_o   ( /* no package pin */ ),
 
     // UART0
-    .i_uart_rx       ( uart_rx_PAD2CORE     ),
-    .o_uart_tx       ( uart_tx_CORE2PAD     ),
+    .uart0_rx_i      ( uart_rx_PAD2CORE     ),
+    .uart0_tx_o      ( uart_tx_CORE2PAD     ),
 
     // QSPI0
-    .o_qspi_sck      ( qspi_sck_CORE2PAD    ),
-    .o_qspi_csn      ( qspi_cs_CORE2PAD     ),
-    .i_qspi_sd       ( qspi_io_PAD2CORE     ),
-    .o_qspi_sd       ( qspi_io_CORE2PAD     ),
-    .o_qspi_sd_oe    ( qspi_io_CORE2PAD_OE  ),
+    .qspi0_sck_o     ( qspi_sck_CORE2PAD    ),
+    .qspi0_cs_o      ( qspi_cs_CORE2PAD     ),
+    .qspi0_sd_i      ( qspi_io_PAD2CORE     ),
+    .qspi0_sd_o      ( qspi_io_CORE2PAD     ),
+    .qspi0_sd_oe_o   ( qspi_io_CORE2PAD_OE  ),
 
     // HyperBus
-    .i_hyper_dq      ( hb_dq_PAD2CORE       ),
-    .o_hyper_dq      ( hb_dq_CORE2PAD       ),
-    .o_hyper_dq_oe   ( hb_dq_CORE2PAD_OE    ),
-    .i_hyper_rwds    ( hb_rwds_PAD2CORE     ),
-    .o_hyper_rwds    ( hb_rwds_CORE2PAD     ),
-    .o_hyper_rwds_oe ( hb_rwds_CORE2PAD_OE  ),
-    .o_hyper_ck      ( hb_ck_CORE2PAD       ),
-    .o_hyper_csn     ( hb_cs_CORE2PAD       ),
-    .o_hyper_rstn    ( hb_rst_CORE2PAD      ),
+    .hyper_dq_i      ( hb_dq_PAD2CORE       ),
+    .hyper_dq_o      ( hb_dq_CORE2PAD       ),
+    .hyper_dq_oe_o   ( hb_dq_CORE2PAD_OE    ),
+    .hyper_rwds_i    ( hb_rwds_PAD2CORE     ),
+    .hyper_rwds_o    ( hb_rwds_CORE2PAD     ),
+    .hyper_rwds_oe_o ( hb_rwds_CORE2PAD_OE  ),
+    .hyper_ck_o      ( hb_ck_CORE2PAD       ),
+    .hyper_cs_no     ( hb_cs_CORE2PAD       ),
+    .hyper_reset_no  ( hb_rst_CORE2PAD      ),
 
     // GPIO Port A
-    .i_gpio          ( gpio_PAD2CORE        ),
-    .o_gpio          ( gpio_CORE2PAD        ),
-    .o_gpio_oe       ( gpio_CORE2PAD_OE     )
+    .gpio_a_i        ( gpio_PAD2CORE        ),
+    .gpio_a_o        ( gpio_CORE2PAD        ),
+    .gpio_a_oe_o     ( gpio_CORE2PAD_OE     )
 );
+`pragma diagnostic pop
 
 endmodule
+`pragma diagnostic pop
 
 `default_nettype wire

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 `pragma diagnostic push
+`pragma diagnostic ignore="-Wunused-def"
 `pragma diagnostic ignore="-Wunused-port"
 `pragma diagnostic ignore="-Wundriven-port"
 

@@ -10,7 +10,7 @@
         "target/xilinx/pynq-z2/src",
         ".bender/git/checkouts"
       ],
-      "excludeDirs": ["build", "node_modules", "obj_dir", ".bender"]
+      "excludeDirs": ["build", "node_modules", "obj_dir"]
     }
   ]
 }

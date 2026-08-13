@@ -5,9 +5,14 @@
 // you may not use this file except in compliance with the License, or,
 // at your option, the Apache License version 2.0.
 // You may obtain a copy of the License at https://solderpad.org/licenses/SHL-2.1/
+//
+// Emil Popović <mail@emilpopovic.me>
 
 // Based on https://github.com/pulp-platform/cheshire-ihp130-o/blob/main/target/ihp13/src/tc_sram.sv
 
+`pragma diagnostic push
+`pragma diagnostic ignore="-Wunused-def"
+`pragma diagnostic ignore="-Wunused-parameter"
 module tc_sram_blackbox #(
   parameter int unsigned NumWords     = 32'd0,
   parameter int unsigned DataWidth    = 32'd0,
@@ -19,6 +24,7 @@ module tc_sram_blackbox #(
   parameter              ImplKey      = "none"
 ) ();
 endmodule
+`pragma diagnostic pop
 
 `define IHP13_TC_SRAM_1024x32_TIEOFF \
     .A_BIST_CLK   (  1'b0 ), \
@@ -64,6 +70,8 @@ endmodule
     .A_BIST_EN    (  1'b0 ), \
     .A_DLY        (  1'b0 )
 
+`pragma diagnostic push
+`pragma diagnostic ignore="-Wunused-parameter"
 module tc_sram #(
   parameter int unsigned NumWords     = 32'd1024,
   parameter int unsigned DataWidth    = 32'd128,
@@ -248,5 +256,6 @@ module tc_sram #(
   `endif
 
 end
+`pragma diagnostic pop
 
 endmodule
