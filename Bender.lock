@@ -39,6 +39,20 @@ packages:
     source:
       Git: https://github.com/pulp-platform/common_verification.git
     dependencies: []
+  friscv-mem-if:
+    revision: 22690117aeb6f18e1a35d0b01146fcf142c4a0cb
+    version: 0.1.0
+    source:
+      Git: https://github.com/EmilPopovic/friscv-mem-if.git
+    dependencies: []
+  friscv-mem-utils:
+    revision: aa58d212889b797f1185547c15ba6fd50d9a00af
+    version: 2.0.1
+    source:
+      Git: https://github.com/EmilPopovic/friscv-mem-utils.git
+    dependencies:
+    - axi
+    - friscv-mem-if
   obi:
     revision: 0155fc34e900c7c884e081c0a1114a247937ff69
     version: 0.1.7
@@ -82,8 +96,8 @@ packages:
     - common_cells
     - tech_cells_generic
   riscv-frac-aclint:
-    revision: cda25fce61c64560c540fa491635a55aecff3378
-    version: 0.1.1
+    revision: f87dfaeda5f06b6ef1444f02d69248bbae46852f
+    version: 0.1.2
     source:
       Git: https://github.com/EmilPopovic/riscv-frac-aclint.git
     dependencies:
@@ -96,7 +110,7 @@ packages:
     dependencies:
     - common_verification
   vernii:
-    revision: 84943cfc11be6b06fbf524469b59bb6b44448ad8
+    revision: 7de3b8b5dcbd0a296adf555e37e16e998e68ee64
     version: 0.1.0
     source:
       Git: https://github.com/EmilPopovic/vernii.git
@@ -105,6 +119,8 @@ packages:
     - apb_uart
     - axi
     - common_cells
+    - friscv-mem-if
+    - friscv-mem-utils
     - opentitan_peripherals
     - register_interface
     - riscv-dbg

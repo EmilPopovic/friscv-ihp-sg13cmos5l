@@ -10,18 +10,16 @@
 // Matej Jurasić <matej.jurasic@cappig.dev>
 
 module friscv_chip_soc import vernii_pkg::*; #(
-    parameter int unsigned SramBase          = 32'h0000_0000,
-    parameter int unsigned SramSize          = 32'h0000_2000,
+    parameter int unsigned OcmBase           = 32'h0000_0000,
+    parameter int unsigned OcmSize           = 32'h0000_2000,
     parameter int unsigned MemBase           = 32'h8000_0000,
-    // Window of one HyperBus device, SoC sees MemChips of them back to back
     parameter int unsigned MemSize           = 32'h0100_0000,
     parameter int unsigned MemChips          = 2,
     parameter int unsigned LineBytes         = 32,
     parameter int unsigned Ways              = 4,
     parameter bit          SramTags          = 1'b1,
     parameter bit          HyperClockDelayed = 1'b1,
-    parameter int unsigned NumGpios          = 10,
-    parameter int unsigned ZsblRomSizeBytes  = 128
+    parameter int unsigned NumGpios          = 10
 ) (
     input  logic  clk_i,
     input  logic  rst_ni,
@@ -98,21 +96,23 @@ assign gpio_a_in      = 32'(gpio_a_i);
 assign gpio_a_o     = gpio_a_out[NumGpios-1:0];
 assign gpio_a_oe_o  = gpio_a_oe [NumGpios-1:0];
 
+`pragma diagnostic push
+`pragma diagnostic ignore="-Wempty-output-connection"
 vernii_soc #(
-    .OcmBase          ( SramBase           ),
-    .OcmSize          ( SramSize           ),
+    .OcmBase          ( OcmBase            ),
+    .OcmSize          ( OcmSize            ),
     .ExtBase          ( MemBase            ),
     .ExtSize          ( MemSize * MemChips ),
     .LineBytes        ( LineBytes          ),
     .Ways             ( Ways               ),
     .SramTags         ( SramTags           ),
-    .ZsblRomSizeBytes ( ZsblRomSizeBytes   ),
     .NumStraps        ( NumGpios           ),
     .NumExtRegSlv     ( NumExtRegSlv       ),
     .ExtRegSlvRules   ( ExtRegSlvRules     )
 ) i_vernii_soc (
     .clk_i,
     .rst_ni,
+    .test_mode_i    ( 1'b0         ),
     .por_rst_no     ( /* unused */ ),
     .soc_rst_no     ( soc_rstn     ),
     .end_o,
@@ -141,6 +141,7 @@ vernii_soc #(
     .gpio_a_o       ( gpio_a_out   ),
     .gpio_a_oe_o    ( gpio_a_oe    )
 );
+`pragma diagnostic pop
 
 // ============================================================
 // External memory
