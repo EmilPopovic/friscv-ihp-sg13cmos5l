@@ -322,7 +322,7 @@ wire                   qspi0_sck_CORE2PAD;
 wire [NUM_QSPI_CS-1:0] qspi0_cs_CORE2PAD;
 
 // QSPI0 I/O pads
-for (genvar i = 0; i < 4; i++) begin : qspi_ios
+for (genvar i = 0; i < 4; i++) begin : qspi0_io_pads
     (* keep *) sg13cmos5l_IOPadInOut30mA qspi0_io_pad (
         `ifdef USE_POWER_PINS
         .iovdd  ( IOVDD ),
@@ -338,7 +338,7 @@ for (genvar i = 0; i < 4; i++) begin : qspi_ios
 end
 
 // QSPI0 CS# pads
-for (genvar i = 0; i < NUM_QSPI_CS; i++) begin : qspi_css
+for (genvar i = 0; i < NUM_QSPI_CS; i++) begin : qspi0_cs_pads
     (* keep *) sg13cmos5l_IOPadOut30mA qspi0_cs_pad (
         `ifdef USE_POWER_PINS
         .iovdd  ( IOVDD ),
@@ -378,7 +378,7 @@ wire [NUM_HB_CS-1:0] hb_cs_CORE2PAD;
 wire                 hb_rst_CORE2PAD;
 
 // HyperBus DQ pads
-for (genvar i = 0; i < 8; i++) begin : hb_dqs
+for (genvar i = 0; i < 8; i++) begin : hb_dq_pads
     (* keep *) sg13cmos5l_IOPadInOut30mA hb_dq_pad (
         `ifdef USE_POWER_PINS
         .iovdd  ( IOVDD ),
@@ -394,7 +394,7 @@ for (genvar i = 0; i < 8; i++) begin : hb_dqs
 end
 
 // HyperBus CS# pads
-for (genvar i = 0; i < NUM_HB_CS; i++) begin : hb_css
+for (genvar i = 0; i < NUM_HB_CS; i++) begin : hb_cs_pads
     (* keep *) sg13cmos5l_IOPadOut30mA hb_cs_pad (
         `ifdef USE_POWER_PINS
         .iovdd  ( IOVDD ),
