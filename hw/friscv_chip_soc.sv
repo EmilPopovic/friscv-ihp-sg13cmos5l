@@ -19,7 +19,8 @@ module friscv_chip_soc import vernii_pkg::*; #(
     parameter int unsigned Ways              = 4,
     parameter bit          SramTags          = 1'b1,
     parameter bit          HyperClockDelayed = 1'b1,
-    parameter int unsigned NumGpios          = 10
+    parameter int unsigned NumGpios          = 8,
+    parameter int unsigned BootSelW          = 2
 ) (
     input  logic  clk_i,
     input  logic  rst_ni,
@@ -58,7 +59,10 @@ module friscv_chip_soc import vernii_pkg::*; #(
     output logic [MemChips-1:0] hyper_cs_no,
     output logic                hyper_reset_no,
 
-    // GPIO Port A, PA0..PA(NumGpios-1); also the reset straps
+    // Boot mode select, static straps on dedicated pins
+    input  logic [BootSelW-1:0] boot_sel_i,
+
+    // GPIO Port A, PA0..PA(NumGpios-1)
     input  logic [NumGpios-1:0] gpio_a_i,
     output logic [NumGpios-1:0] gpio_a_o,
     output logic [NumGpios-1:0] gpio_a_oe_o
@@ -73,12 +77,12 @@ end
 assign clk_out_o = clk_div[6];
 
 localparam int unsigned HyperCfgSlv  = 0;
-localparam int unsigned NumExtRegSlv = 1;
+localparam int unsigned NumMRegRules = 1;
 
 localparam logic [31:0] HyperCfgBaseAddr = 32'h5001_0000;
 localparam logic [31:0] HyperCfgSize     = 32'h0000_1000;
 
-localparam axi_pkg::xbar_rule_32_t [NumExtRegSlv-1:0] ExtRegSlvRules = '{
+localparam axi_pkg::xbar_rule_32_t [NumMRegRules-1:0] MRegRules = '{
     '{ idx: HyperCfgSlv, start_addr: HyperCfgBaseAddr, end_addr: HyperCfgBaseAddr + HyperCfgSize }
 };
 
@@ -87,8 +91,8 @@ logic soc_rstn;
 vernii_axi_req_t  axi_mem_req;
 vernii_axi_resp_t axi_mem_rsp;
 
-vernii_reg_req_t [NumExtRegSlv-1:0] reg_ext_req;
-vernii_reg_rsp_t [NumExtRegSlv-1:0] reg_ext_rsp;
+vernii_reg_req_t [NumMRegRules-1:0] m_reg_req;
+vernii_reg_rsp_t [NumMRegRules-1:0] m_reg_rsp;
 
 logic [31:0] gpio_a_in, gpio_a_out, gpio_a_oe;
 
@@ -99,16 +103,16 @@ assign gpio_a_oe_o  = gpio_a_oe [NumGpios-1:0];
 `pragma diagnostic push
 `pragma diagnostic ignore="-Wempty-output-connection"
 vernii_soc #(
-    .OcmBase          ( OcmBase            ),
-    .OcmSize          ( OcmSize            ),
-    .ExtBase          ( MemBase            ),
-    .ExtSize          ( MemSize * MemChips ),
-    .LineBytes        ( LineBytes          ),
-    .Ways             ( Ways               ),
-    .SramTags         ( SramTags           ),
-    .NumStraps        ( NumGpios           ),
-    .NumExtRegSlv     ( NumExtRegSlv       ),
-    .ExtRegSlvRules   ( ExtRegSlvRules     )
+    .OcmBase        ( OcmBase            ),
+    .OcmSize        ( OcmSize            ),
+    .ExtBase        ( MemBase            ),
+    .ExtSize        ( MemSize * MemChips ),
+    .LineBytes      ( LineBytes          ),
+    .Ways           ( Ways               ),
+    .SramTags       ( SramTags           ),
+    .BootSelW       ( BootSelW           ),
+    .NumMRegRules   ( NumMRegRules       ),
+    .MRegRules      ( MRegRules          )
 ) i_vernii_soc (
     .clk_i,
     .rst_ni,
@@ -116,11 +120,13 @@ vernii_soc #(
     .por_rst_no     ( /* unused */ ),
     .soc_rst_no     ( soc_rstn     ),
     .end_o,
-    .axi_mem_req_o  ( axi_mem_req  ),
-    .axi_mem_rsp_i  ( axi_mem_rsp  ),
-    .reg_ext_req_o  ( reg_ext_req  ),
-    .reg_ext_rsp_i  ( reg_ext_rsp  ),
-    .strap_i        ( gpio_a_i     ),
+    .s_axi_gp_req_i ( '0           ),
+    .s_axi_gp_rsp_o ( /* unused */ ),
+    .m_axi_hp_req_o ( axi_mem_req  ),
+    .m_axi_hp_rsp_i ( axi_mem_rsp  ),
+    .m_reg_req_o    ( m_reg_req    ),
+    .m_reg_rsp_i    ( m_reg_rsp    ),
+    .boot_sel_i,
     .uart0_rx_i,
     .uart0_tx_o,
     .jtag_tck_i,
@@ -130,9 +136,9 @@ vernii_soc #(
     .jtag_tdo_o,
     .jtag_tdo_oe_o,
     .qspi0_sck_o,
-    .qspi0_sck_oe_o ( /* no package pin */ ),  // tied high inside spi_host
+    .qspi0_sck_oe_o ( /* unused */ ),  // tied high inside spi_host
     .qspi0_cs_o,
-    .qspi0_cs_oe_o  ( /* no package pin */ ),  // tied high inside spi_host
+    .qspi0_cs_oe_o  ( /* unused */ ),  // tied high inside spi_host
     .qspi0_sd_o,
     .qspi0_sd_oe_o,
     .qspi0_sd_i,
@@ -143,9 +149,9 @@ vernii_soc #(
 );
 `pragma diagnostic pop
 
-// ============================================================
-// External memory
-// ============================================================
+/////////////////////
+// External Memory //
+/////////////////////
 
 localparam int unsigned HyperNumPhys    = 1;
 localparam int unsigned HyperMinFreqMHz = 40;
@@ -191,11 +197,11 @@ hyperbus #(
     .test_mode_i     ( 1'b0                     ),
     .axi_req_i       ( axi_mem_req              ),
     .axi_rsp_o       ( axi_mem_rsp              ),
-    .reg_req_i       ( reg_ext_req[HyperCfgSlv] ),
-    .reg_rsp_o       ( reg_ext_rsp[HyperCfgSlv] ),
+    .reg_req_i       ( m_reg_req[HyperCfgSlv]   ),
+    .reg_rsp_o       ( m_reg_rsp[HyperCfgSlv]   ),
     .hyper_cs_no,
     .hyper_ck_o,
-    .hyper_ck_no     ( /* no package pin */     ),  // single-ended
+    .hyper_ck_no     ( /* unused */             ),  // single-ended for 3 V parts
     .hyper_rwds_o,
     .hyper_rwds_i,
     .hyper_rwds_oe_o,

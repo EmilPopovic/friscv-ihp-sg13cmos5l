@@ -39,20 +39,13 @@ packages:
     source:
       Git: https://github.com/pulp-platform/common_verification.git
     dependencies: []
-  friscv-mem-if:
-    revision: 22690117aeb6f18e1a35d0b01146fcf142c4a0cb
-    version: 0.1.0
-    source:
-      Git: https://github.com/EmilPopovic/friscv-mem-if.git
-    dependencies: []
   friscv-mem-utils:
-    revision: aa58d212889b797f1185547c15ba6fd50d9a00af
-    version: 2.0.1
+    revision: 8f3fdd09d282b1e81be085a69017ab7038ad40d6
+    version: 4.1.0
     source:
       Git: https://github.com/EmilPopovic/friscv-mem-utils.git
     dependencies:
     - axi
-    - friscv-mem-if
   obi:
     revision: 0155fc34e900c7c884e081c0a1114a247937ff69
     version: 0.1.7
@@ -78,6 +71,12 @@ packages:
     - common_cells
     - register_interface
     - tech_cells_generic
+  reg-rom:
+    revision: 29447f72abd1e42424df50f4a42a8c4f4ea5e5ee
+    version: 0.1.1
+    source:
+      Git: https://github.com/cappig/reg-rom.git
+    dependencies: []
   register_interface:
     revision: 146501d80052b61475cdc333d3aab4cd769fd5dc
     version: 0.3.9
@@ -110,8 +109,8 @@ packages:
     dependencies:
     - common_verification
   vernii:
-    revision: 7de3b8b5dcbd0a296adf555e37e16e998e68ee64
-    version: 0.1.0
+    revision: 21ca38c37559230ecf22d5786ed8126c719aa97b
+    version: 1.0.0-rc.1
     source:
       Git: https://github.com/EmilPopovic/vernii.git
     dependencies:
@@ -119,9 +118,9 @@ packages:
     - apb_uart
     - axi
     - common_cells
-    - friscv-mem-if
     - friscv-mem-utils
     - opentitan_peripherals
+    - reg-rom
     - register_interface
     - riscv-dbg
     - riscv-frac-aclint

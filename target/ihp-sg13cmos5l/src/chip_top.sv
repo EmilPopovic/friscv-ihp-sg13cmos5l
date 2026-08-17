@@ -26,7 +26,8 @@ module chip_top #(
     parameter int unsigned NUM_IOVSS_PADS = 6,
 
     // Signal pads
-    parameter int unsigned NUM_GPIO_PADS   = 10,
+    parameter int unsigned NUM_GPIO_PADS   = 8,
+    parameter int unsigned NUM_BOOT_PADS   = 2,
     parameter int unsigned NUM_QSPI_CS     = 3,
     parameter int unsigned NUM_HB_CS       = 2
 ) (
@@ -50,6 +51,9 @@ module chip_top #(
     // UART0
     inout wire uart0_rx_PAD,
     inout wire uart0_tx_PAD,
+
+    // Boot mode straps
+    inout wire [NUM_BOOT_PADS-1:0] boot_PAD,
 
     // GPIO Port A
     inout wire [NUM_GPIO_PADS-1:0] gpio_a_PAD,
@@ -83,6 +87,9 @@ end
 if (NUM_GPIO_PADS > 32) begin : gen_chk_max_gpio
     $fatal(1, "chip_top: NUM_GPIO_PADS must be <= 32, got %0d", NUM_GPIO_PADS);
 end
+if (NUM_BOOT_PADS < 1) begin : gen_chk_has_boot
+    $fatal(1, "chip_top: NUM_BOOT_PADS must be >= 1, got %0d", NUM_BOOT_PADS);
+end
 if (NUM_QSPI_CS > 3) begin : gen_chk_legal_qspi_cs
     $fatal(1, "chip_top: NUM_QSPI_CS must be <= 3, got %0d", NUM_QSPI_CS);
 end
@@ -90,9 +97,9 @@ if (NUM_HB_CS < 1 || NUM_HB_CS > 2) begin : gen_chk_legal_hb_cs
     $fatal(1, "chip_top: NUM_HB_CS must be 1 or 2, got %0d", NUM_HB_CS);
 end
 
-// ============================================================
-// Clock and reset pad instances
-// ============================================================
+///////////////////////////////////
+// Clock and reset pad instances //
+///////////////////////////////////
 
 wire clk_PAD2CORE;
 wire rst_n_PAD2CORE;
@@ -121,9 +128,9 @@ wire rst_n_PAD2CORE;
     .pad   ( rst_n_PAD      )
 );
 
-// ============================================================
-// Power/ground pad instances
-// ============================================================
+////////////////////////////////
+// Power/ground pad instances //
+////////////////////////////////
 
 // IOVDD pads
 for (genvar i = 0; i < NUM_IOVDD_PADS; i++) begin : iovdd_pads
@@ -173,9 +180,9 @@ for (genvar i = 0; i < NUM_VSS_PADS; i++) begin : vss_pads
     );
 end
 
-// ============================================================
-// JTAG pad instances
-// ============================================================
+////////////////////////
+// JTAG pad instances //
+////////////////////////
 
 wire jtag_tck_PAD2CORE;
 wire jtag_tms_PAD2CORE;
@@ -243,9 +250,9 @@ wire jtag_tdo_CORE2PAD;
     .pad   ( jtag_tdo_PAD      )
 );
 
-// ============================================================
-// UART0 pad instances
-// ============================================================
+/////////////////////////
+// UART0 pad instances //
+/////////////////////////
 
 wire uart0_rx_PAD2CORE;
 wire uart0_tx_CORE2PAD;
@@ -288,9 +295,28 @@ wire clk_out_CORE2PAD;
     .pad   ( clk_out_PAD      )
 );
 
-// ============================================================
-// GPIO pad instances
-// ============================================================
+////////////////////////
+// Boot pad instances //
+////////////////////////
+
+wire [NUM_BOOT_PADS-1:0] boot_PAD2CORE;
+
+for (genvar i = 0; i < NUM_BOOT_PADS; i++) begin : boot_pads
+    (* keep *) sg13cmos5l_IOPadIn boot_pad (
+        `ifdef USE_POWER_PINS
+        .iovdd ( IOVDD ),
+        .iovss ( IOVSS ),
+        .vdd   ( VDD   ),
+        .vss   ( VSS   ),
+        `endif
+        .p2c   ( boot_PAD2CORE[i] ),
+        .pad   ( boot_PAD[i]      )
+    );
+end
+
+////////////////////////
+// GPIO pad instances //
+////////////////////////
 
 wire [NUM_GPIO_PADS-1:0] gpio_a_PAD2CORE;
 wire [NUM_GPIO_PADS-1:0] gpio_a_CORE2PAD;
@@ -311,9 +337,9 @@ for (genvar i = 0; i < NUM_GPIO_PADS; i++) begin : gpio_a_pads
     );
 end
 
-// ============================================================
-// QSPI0 pad instances
-// ============================================================
+/////////////////////////
+// QSPI0 pad instances //
+/////////////////////////
 
 wire [3:0]             qspi0_io_PAD2CORE;
 wire [3:0]             qspi0_io_CORE2PAD;
@@ -363,9 +389,9 @@ end
     .pad    ( qspi0_sck_PAD      )
 );
 
-// ============================================================
-// HyperBus pad instances
-// ============================================================
+////////////////////////////
+// HyperBus pad instances //
+////////////////////////////
 
 wire [7:0]           hb_dq_PAD2CORE;
 wire [7:0]           hb_dq_CORE2PAD;
@@ -445,14 +471,15 @@ end
     .pad    ( hb_rst_PAD      )
 );
 
-// ============================================================
-// Core
-// ============================================================
+//////////
+// Core //
+//////////
 
 `pragma diagnostic push
 `pragma diagnostic ignore="-Wempty-output-connection"
 (* keep *) friscv_chip_soc #(
     .NumGpios ( NUM_GPIO_PADS ),
+    .BootSelW ( NUM_BOOT_PADS ),
     .MemChips ( NUM_HB_CS     )
 ) soc_inst (
     .clk_i           ( clk_PAD2CORE         ),
@@ -489,6 +516,9 @@ end
     .hyper_ck_o      ( hb_ck_CORE2PAD       ),
     .hyper_cs_no     ( hb_cs_CORE2PAD       ),
     .hyper_reset_no  ( hb_rst_CORE2PAD      ),
+
+    // Boot mode select
+    .boot_sel_i      ( boot_PAD2CORE        ),
 
     // GPIO Port A
     .gpio_a_i        ( gpio_a_PAD2CORE      ),
