@@ -1,0 +1,122 @@
+Raise the max_capacitance design-rule limit on the 30 mA pad cells' pad pin
+
+--- a/libs.ref/sg13cmos5l_io/lib/sg13cmos5l_io_fast_1p32V_3p6V_m40C.lib
++++ b/libs.ref/sg13cmos5l_io/lib/sg13cmos5l_io_fast_1p32V_3p6V_m40C.lib
+@@ -1307,7 +1307,7 @@
+       input_voltage : "pad";
+       related_ground_pin : iovss;
+       related_power_pin : iovdd;
+-      max_capacitance : 9.99915;
++      max_capacitance : 11.0;
+       capacitance : 0.344807;
+       rise_capacitance : 0.3422;
+       rise_capacitance_range (0.312154, 0.362295);
+@@ -2830,7 +2830,7 @@
+       output_voltage : "pad";
+       related_ground_pin : iovss;
+       related_power_pin : iovdd;
+-      max_capacitance : 9.69355;
++      max_capacitance : 30.0;
+       timing () {
+         related_pin : "c2p";
+         timing_sense : positive_unate;
+--- a/libs.ref/sg13cmos5l_io/lib/sg13cmos5l_io_fast_1p65V_3p6V_m40C.lib
++++ b/libs.ref/sg13cmos5l_io/lib/sg13cmos5l_io_fast_1p65V_3p6V_m40C.lib
+@@ -1307,7 +1307,7 @@
+       input_voltage : "pad";
+       related_ground_pin : iovss;
+       related_power_pin : iovdd;
+-      max_capacitance : 10.0022;
++      max_capacitance : 11.0;
+       capacitance : 0.344961;
+       rise_capacitance : 0.343521;
+       rise_capacitance_range (0.31299, 0.363677);
+@@ -2830,7 +2830,7 @@
+       output_voltage : "pad";
+       related_ground_pin : iovss;
+       related_power_pin : iovdd;
+-      max_capacitance : 9.66853;
++      max_capacitance : 30.0;
+       timing () {
+         related_pin : "c2p";
+         timing_sense : positive_unate;
+--- a/libs.ref/sg13cmos5l_io/lib/sg13cmos5l_io_slow_1p08V_3p0V_125C.lib
++++ b/libs.ref/sg13cmos5l_io/lib/sg13cmos5l_io_slow_1p08V_3p0V_125C.lib
+@@ -1307,7 +1307,7 @@
+       input_voltage : "pad";
+       related_ground_pin : iovss;
+       related_power_pin : iovdd;
+-      max_capacitance : 0.668662;
++      max_capacitance : 11.0;
+       capacitance : 0.36632;
+       rise_capacitance : 0.361502;
+       rise_capacitance_range (0.329622, 0.385076);
+@@ -2830,7 +2830,7 @@
+       output_voltage : "pad";
+       related_ground_pin : iovss;
+       related_power_pin : iovdd;
+-      max_capacitance : 2.62768;
++      max_capacitance : 30.0;
+       timing () {
+         related_pin : "c2p";
+         timing_sense : positive_unate;
+--- a/libs.ref/sg13cmos5l_io/lib/sg13cmos5l_io_slow_1p35V_3p0V_125C.lib
++++ b/libs.ref/sg13cmos5l_io/lib/sg13cmos5l_io_slow_1p35V_3p0V_125C.lib
+@@ -1307,7 +1307,7 @@
+       input_voltage : "pad";
+       related_ground_pin : iovss;
+       related_power_pin : iovdd;
+-      max_capacitance : 0.454808;
++      max_capacitance : 11.0;
+       capacitance : 0.366392;
+       rise_capacitance : 0.362351;
+       rise_capacitance_range (0.330303, 0.386121);
+@@ -2830,7 +2830,7 @@
+       output_voltage : "pad";
+       related_ground_pin : iovss;
+       related_power_pin : iovdd;
+-      max_capacitance : 2.56963;
++      max_capacitance : 30.0;
+       timing () {
+         related_pin : "c2p";
+         timing_sense : positive_unate;
+--- a/libs.ref/sg13cmos5l_io/lib/sg13cmos5l_io_typ_1p2V_3p3V_25C.lib
++++ b/libs.ref/sg13cmos5l_io/lib/sg13cmos5l_io_typ_1p2V_3p3V_25C.lib
+@@ -1307,7 +1307,7 @@
+       input_voltage : "pad";
+       related_ground_pin : iovss;
+       related_power_pin : iovdd;
+-      max_capacitance : 4.83452;
++      max_capacitance : 11.0;
+       capacitance : 0.354236;
+       rise_capacitance : 0.35065;
+       rise_capacitance_range (0.319563, 0.372349);
+@@ -2830,7 +2830,7 @@
+       output_voltage : "pad";
+       related_ground_pin : iovss;
+       related_power_pin : iovdd;
+-      max_capacitance : 4.53171;
++      max_capacitance : 30.0;
+       timing () {
+         related_pin : "c2p";
+         timing_sense : positive_unate;
+--- a/libs.ref/sg13cmos5l_io/lib/sg13cmos5l_io_typ_1p5V_3p3V_25C.lib
++++ b/libs.ref/sg13cmos5l_io/lib/sg13cmos5l_io_typ_1p5V_3p3V_25C.lib
+@@ -1307,7 +1307,7 @@
+       input_voltage : "pad";
+       related_ground_pin : iovss;
+       related_power_pin : iovdd;
+-      max_capacitance : 4.70188;
++      max_capacitance : 11.0;
+       capacitance : 0.354281;
+       rise_capacitance : 0.351601;
+       rise_capacitance_range (0.320385, 0.373507);
+@@ -2830,7 +2830,7 @@
+       output_voltage : "pad";
+       related_ground_pin : iovss;
+       related_power_pin : iovdd;
+-      max_capacitance : 4.43775;
++      max_capacitance : 30.0;
+       timing () {
+         related_pin : "c2p";
+         timing_sense : positive_unate;

@@ -32,22 +32,6 @@ VERILOG_DEFINES: [FUNCTIONAL, TARGET_ASIC]
 USE_SLANG: true
 SLANG_ARGUMENTS: ['--keep-hierarchy', '-F', 'ref::$DESIGN_DIR/../sources.f']
 
-# Keep part of the hierarchy for debugging and librelane-image target
-# SYNTH_KEEP_HIERARCHY_INSTANCES: [
-#     # '*friscv_chip_soc*/i_hyperbus',       # HyperBus
-#     '*friscv_core_complex*/cpu_0',        # FRISC-V
-#     '*friscv_id_stage*/regfile',          # Regfile
-#     '*friscv_core_complex*/gen_mmu.mmu',  # MMU
-#     '*vernii_soc*/dmi',                   # JTAG
-#     '*vernii_soc*/dm',                    # DM
-#     '*vernii_soc*/clint',                 # ACLINT
-#     '*vernii_soc*/plic',                  # PLIC
-#     '*vernii_soc*/gpio_a',                # GPIO A
-#     '*vernii_soc*/qspi0',                 # QSPI0
-#     '*vernii_soc*/uart0',                 # UART0
-#     '*vernii_soc*/scb'                    # SCB
-# ]
-
 RUN_LINTER: false
 
 ERROR_ON_SYNTH_CHECKS: false
@@ -97,8 +81,8 @@ PAD_EAST: [
 PAD_NORTH: [
     "vdd_pads\\[3\\].vdd_pad",           # N0  VDD
     "vss_pads\\[3\\].vss_pad",           # N1  VSS
-    "gpio_a_pads\\[8\\].gpio_a_pad",     # N2  PA8
-    "gpio_a_pads\\[9\\].gpio_a_pad",     # N3  PA9
+    "boot_pads\\[1\\].boot_pad",         # N2  BOOT1
+    "boot_pads\\[0\\].boot_pad",         # N3  BOOT0
     "qspi0_cs_pads\\[2\\].qspi0_cs_pad", # N4  QSPI0_CS2#
     "qspi0_cs_pads\\[1\\].qspi0_cs_pad", # N5  QSPI0_CS1#
     "qspi0_cs_pads\\[0\\].qspi0_cs_pad", # N6  QSPI0_CS0#
@@ -147,7 +131,7 @@ GND_NETS:
 CLOCK_PORT: clk_PAD
 CLOCK_NET: clk_pad/p2c
 
-CLOCK_PERIOD: 13.5
+CLOCK_PERIOD: 12.5
 
 SYNTH_STRATEGY: "DELAY 0"
 SYNTH_ABC_BUFFERING: true
@@ -164,21 +148,21 @@ FP_MACRO_VERTICAL_HALO: 5
 # Keep signal routing off the SRAM macro power stripes
 # Do not use GRT_MACRO_EXTENSION for this
 ROUTING_OBSTRUCTIONS:
-# gen_ways[0]  416.64 x 191.34 @ [336.00,  852.28]
-- ["Metal4",    336.00,  852.28,  752.64, 1043.62]
-- ["TopMetal1", 336.00,  852.28,  752.64, 1043.62]
-# gen_ways[1]  416.64 x 191.34 @ [1347.36, 852.28]
-- ["Metal4",   1347.36,  852.28, 1764.00, 1043.62]
-- ["TopMetal1",1347.36,  852.28, 1764.00, 1043.62]
-# gen_ways[2]  416.64 x 191.34 @ [336.00, 1054.28]
-- ["Metal4",    336.00, 1054.28,  752.64, 1245.62]
-- ["TopMetal1", 336.00, 1054.28,  752.64, 1245.62]
-# gen_ways[3]  416.64 x 191.34 @ [1347.36, 1054.28]
-- ["Metal4",   1347.36, 1054.28, 1764.00, 1245.62]
-- ["TopMetal1",1347.36, 1054.28, 1764.00, 1245.62]
-# gen_tag_sram 784.48 x  64.36 @ [657.76, 1697.12]
-- ["Metal4",    657.76, 1697.12, 1442.24, 1761.48]
-- ["TopMetal1", 657.76, 1697.12, 1442.24, 1761.48]
+# gen_ways[0]
+- ["Metal4",    336.00,  550.36,  752.64,  741.70]
+- ["TopMetal1", 336.00,  550.36,  752.64,  741.70]
+# gen_ways[1]
+- ["Metal4",   1347.36,  550.36, 1764.00,  741.70]
+- ["TopMetal1",1347.36,  550.36, 1764.00,  741.70]
+# gen_ways[2]
+- ["Metal4",    336.00,  752.36,  752.64,  943.70]
+- ["TopMetal1", 336.00,  752.36,  752.64,  943.70]
+# gen_ways[3]
+- ["Metal4",   1347.36,  752.36, 1764.00,  943.70]
+- ["TopMetal1",1347.36,  752.36, 1764.00,  943.70]
+# gen_tag_sram
+- ["Metal4",    657.76,  336.00, 1442.24,  400.36]
+- ["TopMetal1", 657.76,  336.00, 1442.24,  400.36]
 
 PL_TARGET_DENSITY_PCT: 85
 GRT_ALLOW_CONGESTION: true
@@ -186,6 +170,8 @@ GRT_ALLOW_CONGESTION: true
 GRT_ADJUSTMENT: 0.22
 
 SETUP_VIOLATION_CORNERS: ["*"]
+MAX_CAP_VIOLATION_CORNERS: ["*"]
+MAX_SLEW_VIOLATION_CORNERS: [""]
 
 GRT_DESIGN_REPAIR_MAX_CAP_PCT: 20
 GRT_DESIGN_REPAIR_MAX_SLEW_PCT: 30
@@ -209,16 +195,6 @@ LAYERS_RC:
     Metal3:    {res: 0.000515,     cap: 0.000184000}
     Metal4:    {res: 0.000515,     cap: 0.000183576}
     TopMetal1: {res: 0.0000128049, cap: 0.000221699}
-
-# Signoff waivers
-# KLayout DRC
-# ERROR_ON_KLAYOUT_DRC: false
-# KLayout density
-# TODO check if we can do this
-# ERROR_ON_KLAYOUT_DENSITY: false
-# Max capacitance
-# TODO check if we can do this also
-# MAX_CAP_VIOLATION_CORNERS: ["*"]
 
 RUN_POST_GRT_DESIGN_REPAIR: true
 RUN_POST_GRT_RESIZER_TIMING: true
@@ -269,17 +245,17 @@ MACROS:
       "*_slow_1p08V_125C":
         - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_512x32_c2_bm_bist_slow_1p08V_125C.lib
     instances:
-      soc_inst.i_vernii_soc.friscv_mem_hub.ocm_llc.gen_ways[0].way_sram.gen_512x32.gen_cuts[0].i_cut:
-        location: [336.0, 852.28]
+      soc_inst.i_vernii_soc.i_mem_hub.gen_ocm_llc.ocm_llc.gen_ways[0].way_sram.gen_512x32.gen_cuts[0].i_cut:
+        location: [336.0, 550.36]
         orientation: N
-      soc_inst.i_vernii_soc.friscv_mem_hub.ocm_llc.gen_ways[1].way_sram.gen_512x32.gen_cuts[0].i_cut:
-        location: [1347.36, 852.28]
+      soc_inst.i_vernii_soc.i_mem_hub.gen_ocm_llc.ocm_llc.gen_ways[1].way_sram.gen_512x32.gen_cuts[0].i_cut:
+        location: [1347.36, 550.36]
         orientation: N
-      soc_inst.i_vernii_soc.friscv_mem_hub.ocm_llc.gen_ways[2].way_sram.gen_512x32.gen_cuts[0].i_cut:
-        location: [336.0, 1054.28]
+      soc_inst.i_vernii_soc.i_mem_hub.gen_ocm_llc.ocm_llc.gen_ways[2].way_sram.gen_512x32.gen_cuts[0].i_cut:
+        location: [336.0, 752.36]
         orientation: FS
-      soc_inst.i_vernii_soc.friscv_mem_hub.ocm_llc.gen_ways[3].way_sram.gen_512x32.gen_cuts[0].i_cut:
-        location: [1347.36, 1054.28]
+      soc_inst.i_vernii_soc.i_mem_hub.gen_ocm_llc.ocm_llc.gen_ways[3].way_sram.gen_512x32.gen_cuts[0].i_cut:
+        location: [1347.36, 752.36]
         orientation: FS
   RM_IHPSG13_1P_64x64_c2_bm_bist:
     gds:
@@ -297,9 +273,9 @@ MACROS:
       "*_slow_1p08V_125C":
         - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_64x64_c2_bm_bist_slow_1p08V_125C.lib
     instances:
-      soc_inst.i_vernii_soc.friscv_mem_hub.ocm_llc.gen_tag_sram.tag_sram.gen_64x64.i_cut:
-        location: [657.76, 1697.12]
-        orientation: N
+      soc_inst.i_vernii_soc.i_mem_hub.gen_ocm_llc.ocm_llc.gen_tag_sram.tag_sram.gen_64x64.i_cut:
+        location: [657.76, 336.0]
+        orientation: FS
   # HyperBus PHY delay line, 6 ns full scale at 0.375 ns/step
   # Ported from cheshire-ihp130-o to CMOS5L
   # Only tt corner characterized, all point at it, similar to Basilisk
@@ -318,11 +294,11 @@ MACROS:
     instances:
       # RWDS
       soc_inst.i_hyperbus.i_phy.genblk1.i_phy.i_trx.i_delay_rx_rwds_90.i_delay.i_delay_line:
-        location: [1290.24, 366.66]
+        location: [1501.76, 366.66]
         orientation: N
       # CK
       soc_inst.i_hyperbus.genblk1.i_delay_tx_clk_90.i_delay.i_delay_line:
-        location: [1392.0, 366.66]
+        location: [1603.52, 366.66]
         orientation: N
 
 # This is an alternative method compared to

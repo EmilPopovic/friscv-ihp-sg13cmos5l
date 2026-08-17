@@ -166,10 +166,18 @@
             hash = "sha256-IhidmbbWyxWduV4ZuZSUAPN+LBl34s1l3WuVRd2AVlM=";
           };
           ihp-sg13cmos5l-liberty = "${ihp-cmos5l-pdk}/libs.ref/sg13cmos5l_stdcell/lib/sg13cmos5l_stdcell_typ_1p20V_25C.lib";
-          pdk-root = pkgs.runCommand "ihp-pdk-root" { } ''
+          ihp-cmos5l-patches = ./target/ihp-sg13cmos5l/pdk-patches;
+          pdk-root = pkgs.runCommand "ihp-pdk-root" {
+            nativeBuildInputs = [ pkgs.gnupatch ];
+          } ''
             mkdir -p $out
             ln -s ${ihp-pdk}/ihp-sg13g2 $out/ihp-sg13g2
             cp -a ${ihp-cmos5l-pdk} $out/ihp-sg13cmos5l
+            chmod -R u+w $out/ihp-sg13cmos5l
+            for p in ${ihp-cmos5l-patches}/*.patch; do
+              echo "applying $(basename $p)"
+              patch -p1 -d $out/ihp-sg13cmos5l < "$p"
+            done
           '';
         in {
           default = pkgs.mkShell {

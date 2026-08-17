@@ -1,0 +1,54 @@
+Metal fill density, adapted from pulp-platform/croc ihp13/patches/
+
+--- a/libs.tech/klayout/tech/macros/sg13cmos5l_filler_Metal.lym
++++ b/libs.tech/klayout/tech/macros/sg13cmos5l_filler_Metal.lym
+@@ -130,9 +130,9 @@
+ 
+ 	distances = {
+ 		'distance_m1' => 1.5,
+-		'distance_m2' => 1.5,
+-		'distance_m3' => 2.0,
+-		'distance_m4' => 2.0,
++		'distance_m2' => 0.42,
++		'distance_m3' => 1.0,
++		'distance_m4' => 0.8,
+ 		'distance_tm1' => 3.05
+ 	}
+ 
+@@ -184,6 +184,17 @@
+ 	pattern_m1_m = fill_pattern("Met1_M_FILL_CELL").shape(8, 22,  box(0.0, 0.0, width_m1_m, height_m1_m))
+ 	pattern_m2_s = fill_pattern("Met2_S_FILL_CELL").shape(10, 22, box(0.0, 0.0, width_m2_s, height_m2_s))
+ 	pattern_m2_m = fill_pattern("Met2_M_FILL_CELL").shape(10, 22, box(0.0, 0.0, width_m2_m, height_m2_m))
++	# Smaller leftover cell for the dense core, still above the MFil.b 0.6 um minimum
++	# Leftover cell for the M2-starved core. 0.6 um is the MFil.b minimum filler
++	# width. M2_T_SPACE is filler-to-filler only: clearance to real Metal2 stays
++	# at the MFil.c 0.42 um carved out above. 0.21 um is Mn.b, the process
++	# minimum metal space; the DRC deck does not check filler-to-filler at all
++	# (Mn.b runs on metal2_drw only), so this is a judgement call -- confirm with
++	# IHP before tapeout. At 0.42 instead, the worst M2 window drops to 24.60%.
++	width_m2_t = 0.6
++	height_m2_t = 0.6
++	M2_T_SPACE = 0.21
++	pattern_m2_t = fill_pattern("Met2_T_FILL_CELL").shape(10, 22, box(0.0, 0.0, width_m2_t, height_m2_t))
+ 	pattern_m3_s = fill_pattern("Met3_S_FILL_CELL").shape(30, 22, box(0.0, 0.0, width_m3_s, height_m3_s))
+ 	pattern_m3_m = fill_pattern("Met3_M_FILL_CELL").shape(30, 22, box(0.0, 0.0, width_m3_m, height_m3_m))
+ 	pattern_m4_s = fill_pattern("Met4_S_FILL_CELL").shape(50, 22, box(0.0, 0.0, width_m4_s, height_m4_s))
+@@ -205,8 +216,17 @@
+ 	M2Fil_c = Metal2.dup
+ 	M2Fil_c.size(0.42, 0.42, "square_limit")
+ 	M2Fil = EdgeSeal.holes - (M2Fil_b | M2Fil_c | Metal2_nofill | Metal2_slit | NoMetFiller)
++	# Sweep fixed origins instead of one grid: KLayout's multi_origin/auto_origin
++	# put cells off the 5 nm grid, so the upstream advice is repeated fixed origins.
+ 	M2Fil_left = M2Fil.fill_with_left(pattern_m2_m, hstep(width_m2_m + distance_m2_m), vstep(height_m2_m + distance_m2_m))
+-	M2Fil_left.fill(pattern_m2_s, hstep(width_m2_s + distance_m2_s), vstep(height_m2_s + distance_m2_s))
++	for it in 0..24 do
++		origin_shift = (it * 0.07).round(2)
++		M2Fil_left = M2Fil_left.fill_with_left(pattern_m2_s, hstep(width_m2_s + distance_m2_s), vstep(height_m2_s + distance_m2_s), origin(origin_shift, origin_shift))
++	end
++	for it in 0..24 do
++		origin_shift = (it * 0.07).round(2)
++		M2Fil_left = M2Fil_left.fill_with_left(pattern_m2_t, hstep(width_m2_t + M2_T_SPACE), vstep(height_m2_t + M2_T_SPACE), origin(origin_shift, origin_shift))
++	end
+ 
+ 	print("Filling M3\n")
+ 	M3Fil_b = Metal3_filler.dup
