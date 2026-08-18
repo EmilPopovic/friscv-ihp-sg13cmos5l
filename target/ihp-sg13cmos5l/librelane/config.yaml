@@ -5,6 +5,8 @@
 # you may not use this file except in compliance with the License, or,
 # at your option, the Apache License version 2.0.
 # You may obtain a copy of the License at https://solderpad.org/licenses/SHL-2.1/
+#
+# Emil Popović <mail@emilpopovic.me>
 
 # Based on https://github.com/IHP-GmbH/ihp-sg13cmos5l-librelane-template/blob/main/librelane/config.yaml
 
@@ -32,88 +34,91 @@ VERILOG_DEFINES: [FUNCTIONAL, TARGET_ASIC]
 USE_SLANG: true
 SLANG_ARGUMENTS: ['--keep-hierarchy', '-F', 'ref::$DESIGN_DIR/../sources.f']
 
+# Ignore spurious warnings from linter/Yosys
 RUN_LINTER: false
-
 ERROR_ON_SYNTH_CHECKS: false
 
 # Slightly smaller file sizes
 PRIMARY_GDSII_STREAMOUT_TOOL: klayout
 
+# 12.5 ns = 80.00 MHz
+CLOCK_PERIOD: 12.5
+
 # Specify the pad instances for the padring
 PAD_SOUTH: [
-    "hb_dq_pads\\[0\\].hb_dq_pad",       # S0  HB_DQ0
-    "hb_dq_pads\\[1\\].hb_dq_pad",       # S1  HB_DQ1
-    "hb_dq_pads\\[2\\].hb_dq_pad",       # S2  HB_DQ2
-    "hb_dq_pads\\[3\\].hb_dq_pad",       # S3  HB_DQ3
-    "iovss_pads\\[0\\].iovss_pad",       # S4  IOVSS
-    "hb_dq_pads\\[4\\].hb_dq_pad",       # S5  HB_DQ4
-    "hb_dq_pads\\[5\\].hb_dq_pad",       # S6  HB_DQ5
-    "hb_dq_pads\\[6\\].hb_dq_pad",       # S7  HB_DQ6
-    "hb_dq_pads\\[7\\].hb_dq_pad",       # S8  HB_DQ7
-    hb_rwds_pad,                         # S9  HB_RWDS
-    "iovdd_pads\\[0\\].iovdd_pad",       # S10 IOVDD
-    hb_ck_pad,                           # S11 HB_CK
-    "vdd_pads\\[0\\].vdd_pad",           # S12 VDD
-    "hb_cs_pads\\[0\\].hb_cs_pad",       # S13 HB_CS0#
-    "hb_cs_pads\\[1\\].hb_cs_pad",       # S14 HB_CS1#
-    "vss_pads\\[0\\].vss_pad"            # S15 VSS
+    "hb_dq_pads\\[0\\].hb_dq_pad",       # 17  S0   HB_DQ0
+    "hb_dq_pads\\[1\\].hb_dq_pad",       # 18  S1   HB_DQ1
+    "hb_dq_pads\\[2\\].hb_dq_pad",       # 19  S2   HB_DQ2
+    "hb_dq_pads\\[3\\].hb_dq_pad",       # 20  S3   HB_DQ3
+    "iovss_pads\\[0\\].iovss_pad",       # 21  S4   IOVSS
+    "hb_dq_pads\\[4\\].hb_dq_pad",       # 22  S5   HB_DQ4
+    "hb_dq_pads\\[5\\].hb_dq_pad",       # 23  S6   HB_DQ5
+    "hb_dq_pads\\[6\\].hb_dq_pad",       # 24  S7   HB_DQ6
+    "hb_dq_pads\\[7\\].hb_dq_pad",       # 25  S8   HB_DQ7
+    hb_rwds_pad,                         # 26  S9   HB_RWDS
+    "iovdd_pads\\[0\\].iovdd_pad",       # 27  S10  IOVDD
+    hb_ck_pad,                           # 28  S11  HB_CK
+    "vdd_pads\\[0\\].vdd_pad",           # 29  S12  VDD
+    "hb_cs_pads\\[0\\].hb_cs_pad",       # 30  S13  HB_CS0#
+    "hb_cs_pads\\[1\\].hb_cs_pad",       # 31  S14  HB_CS1#
+    "vss_pads\\[0\\].vss_pad"            # 32  S15  VSS
 ]
 
 PAD_EAST: [
-    hb_rst_pad,                          # E0  HB_RST#
-    "gpio_a_pads\\[0\\].gpio_a_pad",     # E1  PA0
-    "gpio_a_pads\\[1\\].gpio_a_pad",     # E2  PA1
-    "gpio_a_pads\\[2\\].gpio_a_pad",     # E3  PA2
-    "iovss_pads\\[1\\].iovss_pad",       # E4  IOVSS
-    "iovdd_pads\\[1\\].iovdd_pad",       # E5  IOVDD
-    "gpio_a_pads\\[3\\].gpio_a_pad",     # E6  PA3
-    "gpio_a_pads\\[4\\].gpio_a_pad",     # E7  PA4
-    "vss_pads\\[1\\].vss_pad",           # E8  VSS
-    clk_out_pad,                         # E9  CLK_OUT
-    "vdd_pads\\[1\\].vdd_pad",           # E10 VDD
-    "gpio_a_pads\\[5\\].gpio_a_pad",     # E11 PA5
-    "gpio_a_pads\\[6\\].gpio_a_pad",     # E12 PA6
-    "gpio_a_pads\\[7\\].gpio_a_pad",     # E13 PA7
-    "iovss_pads\\[2\\].iovss_pad",       # E14 IOVSS
-    "iovdd_pads\\[2\\].iovdd_pad"        # E15 IOVDD
+    hb_rst_pad,                          # 33  E0   HB_RST#
+    "gpio_a_pads\\[0\\].gpio_a_pad",     # 34  E1   PA0
+    "gpio_a_pads\\[1\\].gpio_a_pad",     # 35  E2   PA1
+    "gpio_a_pads\\[2\\].gpio_a_pad",     # 36  E3   PA2
+    "iovss_pads\\[1\\].iovss_pad",       # 37  E4   IOVSS
+    "iovdd_pads\\[1\\].iovdd_pad",       # 38  E5   IOVDD
+    "gpio_a_pads\\[3\\].gpio_a_pad",     # 39  E6   PA3
+    "gpio_a_pads\\[4\\].gpio_a_pad",     # 40  E7   PA4
+    "vss_pads\\[1\\].vss_pad",           # 41  E8   VSS
+    clk_out_pad,                         # 42  E9   CLK_OUT
+    "vdd_pads\\[1\\].vdd_pad",           # 43  E10  VDD
+    "gpio_a_pads\\[5\\].gpio_a_pad",     # 44  E11  PA5
+    "gpio_a_pads\\[6\\].gpio_a_pad",     # 45  E12  PA6
+    "gpio_a_pads\\[7\\].gpio_a_pad",     # 46  E13  PA7
+    "iovss_pads\\[2\\].iovss_pad",       # 47  E14  IOVSS
+    "iovdd_pads\\[2\\].iovdd_pad"        # 48  E15  IOVDD
 ]
 
 PAD_NORTH: [
-    "vdd_pads\\[3\\].vdd_pad",           # N0  VDD
-    "vss_pads\\[3\\].vss_pad",           # N1  VSS
-    "boot_pads\\[1\\].boot_pad",         # N2  BOOT1
-    "boot_pads\\[0\\].boot_pad",         # N3  BOOT0
-    "qspi0_cs_pads\\[2\\].qspi0_cs_pad", # N4  QSPI0_CS2#
-    "qspi0_cs_pads\\[1\\].qspi0_cs_pad", # N5  QSPI0_CS1#
-    "qspi0_cs_pads\\[0\\].qspi0_cs_pad", # N6  QSPI0_CS0#
-    "iovdd_pads\\[3\\].iovdd_pad",       # N7  IOVDD
-    "iovss_pads\\[3\\].iovss_pad",       # N8  IOVSS
-    qspi0_sck_pad,                       # N9  QSPI0_SCK
-    "vdd_pads\\[2\\].vdd_pad",           # N10 VDD
-    "vss_pads\\[2\\].vss_pad",           # N11 VSS
-    "qspi0_io_pads\\[3\\].qspi0_io_pad", # N12 QSPI0_IO3
-    "qspi0_io_pads\\[2\\].qspi0_io_pad", # N13 QSPI0_IO2
-    "qspi0_io_pads\\[1\\].qspi0_io_pad", # N14 QSPI0_IO1
-    "qspi0_io_pads\\[0\\].qspi0_io_pad"  # N15 QSPI0_IO0
+    "vdd_pads\\[3\\].vdd_pad",           # 64  N0   VDD
+    "vss_pads\\[3\\].vss_pad",           # 63  N1   VSS
+    "boot_pads\\[1\\].boot_pad",         # 62  N2   BOOT1
+    "boot_pads\\[0\\].boot_pad",         # 61  N3   BOOT0
+    "qspi0_cs_pads\\[2\\].qspi0_cs_pad", # 60  N4   QSPI0_CS2#
+    "qspi0_cs_pads\\[1\\].qspi0_cs_pad", # 59  N5   QSPI0_CS1#
+    "qspi0_cs_pads\\[0\\].qspi0_cs_pad", # 58  N6   QSPI0_CS0#
+    "iovdd_pads\\[3\\].iovdd_pad",       # 57  N7   IOVDD
+    "iovss_pads\\[3\\].iovss_pad",       # 56  N8   IOVSS
+    qspi0_sck_pad,                       # 55  N9   QSPI0_SCK
+    "vdd_pads\\[2\\].vdd_pad",           # 54  N10  VDD
+    "vss_pads\\[2\\].vss_pad",           # 53  N11  VSS
+    "qspi0_io_pads\\[3\\].qspi0_io_pad", # 52  N12  QSPI0_IO3
+    "qspi0_io_pads\\[2\\].qspi0_io_pad", # 51  N13  QSPI0_IO2
+    "qspi0_io_pads\\[1\\].qspi0_io_pad", # 50  N14  QSPI0_IO1
+    "qspi0_io_pads\\[0\\].qspi0_io_pad"  # 49  N15  QSPI0_IO0
 ]
 
 PAD_WEST: [
-    "iovdd_pads\\[4\\].iovdd_pad",       # W0  IOVDD
-    clk_pad,                             # W1  CLK
-    "iovss_pads\\[5\\].iovss_pad",       # W2  IOVSS
-    rst_n_pad,                           # W3  RST#
-    uart0_rx_pad,                        # W4  UART0_RX
-    uart0_tx_pad,                        # W5  UART0_TX
-    "iovss_pads\\[4\\].iovss_pad",       # W6  IOVSS
-    jtag_tdo_pad,                        # W7  TDO
-    jtag_tdi_pad,                        # W8  TDI
-    jtag_tms_pad,                        # W9  TMS
-    "vdd_pads\\[5\\].vdd_pad",           # W10 VDD
-    jtag_tck_pad,                        # W11 TCK
-    "vss_pads\\[5\\].vss_pad",           # W12 VSS
-    jtag_trst_n_pad,                     # W13 TRST#
-    "vss_pads\\[4\\].vss_pad",           # W14 VSS
-    "vdd_pads\\[4\\].vdd_pad"            # W15 VDD
+    "iovdd_pads\\[4\\].iovdd_pad",       # 16  W0   IOVDD
+    clk_pad,                             # 15  W1   CLK
+    "iovss_pads\\[5\\].iovss_pad",       # 14  W2   IOVSS
+    rst_n_pad,                           # 13  W3   RST#
+    uart0_rx_pad,                        # 12  W4   UART0_RX
+    uart0_tx_pad,                        # 11  W5   UART0_TX
+    "iovss_pads\\[4\\].iovss_pad",       # 10  W6   IOVSS
+    jtag_tdo_pad,                        #  9  W7   TDO
+    jtag_tdi_pad,                        #  8  W8   TDI
+    jtag_tms_pad,                        #  7  W9   TMS
+    "vdd_pads\\[5\\].vdd_pad",           #  6  W10  VDD
+    jtag_tck_pad,                        #  5  W11  TCK
+    "vss_pads\\[5\\].vss_pad",           #  4  W12  VSS
+    jtag_trst_n_pad,                     #  3  W13  TRST#
+    "vss_pads\\[4\\].vss_pad",           #  2  W14  VSS
+    "vdd_pads\\[4\\].vdd_pad"            #  1  W15  VDD
 ]
 
 # SDC files
@@ -130,8 +135,6 @@ GND_NETS:
 # Clock
 CLOCK_PORT: clk_PAD
 CLOCK_NET: clk_pad/p2c
-
-CLOCK_PERIOD: 12.5
 
 SYNTH_STRATEGY: "DELAY 0"
 SYNTH_ABC_BUFFERING: true
@@ -164,6 +167,7 @@ ROUTING_OBSTRUCTIONS:
 - ["Metal4",    657.76,  336.00, 1442.24,  400.36]
 - ["TopMetal1", 657.76,  336.00, 1442.24,  400.36]
 
+# Try to keep design compact instead of spreading out
 PL_TARGET_DENSITY_PCT: 85
 GRT_ALLOW_CONGESTION: true
 
@@ -186,6 +190,10 @@ CTS_CLK_MAX_WIRE_LENGTH: 800
 GRT_DESIGN_REPAIR_MAX_WIRE_LENGTH: 0
 WIRE_LENGTH_THRESHOLD: 2500
 
+# Do not set to true
+DESIGN_REPAIR_REMOVE_BUFFERS: false
+
+# Do not change
 MAX_TRANSITION_CONSTRAINT: 0.75
 
 LAYERS_RC:
@@ -217,6 +225,8 @@ EXTRA_LEFS:
 IGNORE_DISCONNECTED_MODULES:
 - bondpad_70x70_5L
 
+# Shrink ring to have more core area
+# We don't need that much power
 PDN_CORE_RING_VWIDTH: 5
 PDN_CORE_RING_HWIDTH: 5
 PDN_CORE_RING_VSPACING: 2

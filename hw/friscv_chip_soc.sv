@@ -88,6 +88,17 @@ localparam axi_pkg::xbar_rule_32_t [NumMRegRules-1:0] MRegRules = '{
 
 logic soc_rstn;
 
+// Replicate reset for HyperBus PHY and system to avoid creating a large reset tree
+logic [1:0] hyper_rstn_rep;
+
+for (genvar i = 0; i < 2; i++) begin : gen_hyper_rst_rep
+    soc_rst_replica i_soc_rst_replica (
+        .clk_i,
+        .rst_ni ( soc_rstn          ),
+        .rst_no ( hyper_rstn_rep[i] )
+    );
+end
+
 vernii_axi_req_t  axi_mem_req;
 vernii_axi_resp_t axi_mem_rsp;
 
@@ -191,9 +202,9 @@ hyperbus #(
     .AxiLogDepth     ( 1                       )
 ) i_hyperbus (
     .clk_phy_i       ( clk_i                    ),
-    .rst_phy_ni      ( soc_rstn                 ),
+    .rst_phy_ni      ( hyper_rstn_rep[0]        ),
     .clk_sys_i       ( clk_i                    ),
-    .rst_sys_ni      ( soc_rstn                 ),
+    .rst_sys_ni      ( hyper_rstn_rep[1]        ),
     .test_mode_i     ( 1'b0                     ),
     .axi_req_i       ( axi_mem_req              ),
     .axi_rsp_o       ( axi_mem_rsp              ),

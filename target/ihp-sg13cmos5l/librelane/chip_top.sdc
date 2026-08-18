@@ -42,6 +42,7 @@ puts "\[INFO] Setting output delay to: $output_delay_value"
 puts "\[INFO] Setting input delay to: $input_delay_value"
 
 set_max_fanout $::env(MAX_FANOUT_CONSTRAINT) [current_design]
+set_max_transition 4.0 [all_outputs]
 if { [info exists ::env(MAX_TRANSITION_CONSTRAINT)] } {
     set_max_transition $::env(MAX_TRANSITION_CONSTRAINT) [current_design]
 }
@@ -336,8 +337,6 @@ set_load -max 10.0 [all_outputs]
 
 set_input_transition 1.0 [concat $GPIO_PORTS $BOOT_PORTS $QSPI_IO $HYP_DQ_IN \
     [get_ports {rst_n_PAD jtag_tms_PAD jtag_tdi_PAD jtag_trst_n_PAD uart0_rx_PAD}]]
-
-set_max_transition 4.0 [all_outputs]
 
 puts "\[INFO] Setting clock setup uncertainty to: $::env(CLOCK_UNCERTAINTY_CONSTRAINT)"
 set_clock_uncertainty -setup $::env(CLOCK_UNCERTAINTY_CONSTRAINT) $all_clocks
