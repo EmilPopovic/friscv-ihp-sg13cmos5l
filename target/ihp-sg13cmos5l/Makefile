@@ -14,6 +14,27 @@ AREA_LIBERTIES = \
 	$(SRAM_LIB_DIR)/RM_IHPSG13_1P_64x64_c2_bm_bist_typ_1p20V_25C.lib \
 	src/mc_delay/views/delay_line_D4_O1_6P000.lib
 
+SHELL_PDK_ROOT := $(PDK_ROOT)
+PDK_PATCHES    := $(sort $(wildcard pdk-patches/*.patch))
+PDK_DIR        := $(CURDIR)/.pdk
+PDK_STAMP      := $(PDK_DIR)/.stamp
+PDK_ROOT       := $(PDK_DIR)
+
+$(PDK_STAMP): $(PDK_PATCHES)
+	@rm -rf $(PDK_DIR)
+	@mkdir -p $(PDK_DIR)
+	@cp -a $(SHELL_PDK_ROOT)/ihp-sg13cmos5l $(PDK_DIR)/ihp-sg13cmos5l
+	@ln -sfn $(SHELL_PDK_ROOT)/ihp-sg13g2 $(PDK_DIR)/ihp-sg13g2
+	@chmod -R u+w $(PDK_DIR)/ihp-sg13cmos5l
+	@for p in $(PDK_PATCHES); do \
+	    patch -p1 -N -s -d $(PDK_DIR)/ihp-sg13cmos5l < $$p >/dev/null 2>&1 || true; \
+	    if ! patch -p1 -R -f -s --dry-run -d $(PDK_DIR)/ihp-sg13cmos5l < $$p >/dev/null 2>&1; then \
+	        echo "ERROR: PDK patch $$(basename $$p) did not apply"; exit 1; \
+	    fi; \
+	done
+	@find $(PDK_DIR)/ihp-sg13cmos5l \( -name '*.rej' -o -name '*.orig' \) -delete
+	@touch $@
+
 sources.f: ../../Bender.yml ../../Bender.lock $(wildcard src/*.sv)
 	bender script flist-plus -t rtl -t synthesis > $@
 	sed -i '\|/tech_cells_generic-[^/]*/src/rtl/tc_sram\.sv$$|d' $@
@@ -33,14 +54,14 @@ sources.f: ../../Bender.yml ../../Bender.lock $(wildcard src/*.sv)
 	echo "$(CURDIR)/src/mc_delay.sv" >> $@
 
 .PHONY: area
-area: sources.f
+area: $(PDK_STAMP) sources.f
 	rm -f area.rpt
 	$(LIBRELANE) --run-tag $(AREA_RUN_TAG) --overwrite --to Yosys.Synthesis
 	netlist=$$(echo $(AREA_RUN_DIR)/*-yosys-synthesis/$(TOP).nl.v); \
 	yosys -p "read_verilog -sv $$netlist; stat $(foreach lib,$(AREA_LIBERTIES),-liberty $(lib))" | tee area.rpt
 
 .PHONY: librelane
-librelane: sources.f
+librelane: $(PDK_STAMP) sources.f
 	$(LIBRELANE)
 
 .PHONY: librelane-openroad
@@ -54,4 +75,4 @@ librelane-klayout:
 .PHONY: clean
 clean:
 	rm -f sources.f area.rpt
-	rm -rf $(AREA_RUN_DIR)
+	rm -rf $(AREA_RUN_DIR) $(PDK_DIR)
