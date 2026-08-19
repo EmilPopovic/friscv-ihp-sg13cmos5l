@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Emil=20Popovi=C4=87?= <mail@emilpopovic.me>
+Date: Wed, 19 Aug 2026 00:00:00 +0200
+Subject: Reset TX delay-line tap to the code modelled in chip_top.sdc
+---
+ src/hyperbus_pkg.sv | 10 +++++++++-
+1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/src/hyperbus_pkg.sv b/src/hyperbus_pkg.sv
+index 2ea4f47..d92d665 100644
+--- a/src/hyperbus_pkg.sv
++++ b/src/hyperbus_pkg.sv
+@@ -68,8 +68,16 @@ package hyperbus_pkg;
+             en_latency_additional:      'b0,
+             t_burst_max:                ((MinFreqMhz*35)/10), // t_{csm}: At lowest legal clock (100 MHz) 3.5us (0.5us safety margin)
+             t_read_write_recovery:      'h6,
+             t_rx_clk_delay:             'h8,
+-            t_tx_clk_delay:             'h8,
++            t_tx_clk_delay:             'h5,
+             address_mask_msb:           'd25,                // 26 bit addresses = 2^6*2^20B == 64 MB per chip (biggest availale as of now)
+             address_space:              'b0,
+             phys_in_use:                NumPhys-1,
+-- 
+2.53.0

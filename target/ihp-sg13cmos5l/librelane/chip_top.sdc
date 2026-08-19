@@ -209,22 +209,41 @@ set HYP_EDGE_HALF [expr {$TCK_SYS / 2}]
 # ============================================================
 
 set HYP_DLY_STEP 0.375
-set HYP_DLY_FS   6.000
 
-set HYP_TX_SKEW      $HYP_DLY_STEP
-set HYP_RX_TREE_SKEW 1.0
+set HYP_TX_SKEW      [expr {2 * $HYP_DLY_STEP}]
 
-proc hyp_tap {target step fs} {
-    set taps [expr {round(double($target) / $step)}]
-    if { $taps < 1 } { set taps 1 }
-    if { $taps * $step > $fs } { set taps [expr {int($fs / $step)}] }
-    return [expr {$taps * $step}]
+set HYP_RX_TREE_SKEW 2.25
+
+set HYP_DLY_TAPS {
+    { 0 0.670}  { 8 0.844}  { 4 1.033}  {12 1.556}
+    { 2 1.911}  {10 2.085}  { 6 2.713}  {14 2.969}
+    { 1 3.341}  { 9 3.338}  { 5 4.047}  {13 4.043}
+    { 3 4.686}  {11 4.682}  { 7 5.549}  {15 5.607}
 }
 
-set HYP_TX_TGT_DLY [hyp_tap [expr {$TCK_SYS / 4.0 + $HYP_TX_SKEW}]   $HYP_DLY_STEP $HYP_DLY_FS]
-set HYP_RX_TGT_DLY [hyp_tap [expr {$TCK_SYS / 4.0 - $HYP_RX_TREE_SKEW}] $HYP_DLY_STEP $HYP_DLY_FS]
+proc hyp_tap {target} {
+    global HYP_DLY_TAPS
+    set best {}
+    foreach entry $HYP_DLY_TAPS {
+        set code [lindex $entry 0]
+        set dly  [lindex $entry 1]
+        set err  [expr {abs($dly - $target)}]
+        if { $best eq "" || $err < [lindex $best 2] - 0.010 } {
+            set best [list $code $dly $err]
+        }
+    }
+    return [lrange $best 0 1]
+}
 
-puts "\[INFO] HyperBus delay-line targets: TX $HYP_TX_TGT_DLY ns, RX $HYP_RX_TGT_DLY ns (TCK_SYS $TCK_SYS)"
+set HYP_TX_TAP [hyp_tap [expr {$TCK_SYS / 4.0 + $HYP_TX_SKEW}]]
+set HYP_RX_TAP [hyp_tap [expr {$TCK_SYS / 4.0 - $HYP_RX_TREE_SKEW}]]
+
+set HYP_TX_CODE    [lindex $HYP_TX_TAP 0]
+set HYP_TX_TGT_DLY [lindex $HYP_TX_TAP 1]
+set HYP_RX_CODE    [lindex $HYP_RX_TAP 0]
+set HYP_RX_TGT_DLY [lindex $HYP_RX_TAP 1]
+
+puts "\[INFO] HyperBus delay-line targets: TX $HYP_TX_TGT_DLY ns (t_tx_clk_delay=$HYP_TX_CODE), RX $HYP_RX_TGT_DLY ns (t_rx_clk_delay=$HYP_RX_CODE) (TCK_SYS $TCK_SYS)"
 
 set hyp_corners {}
 catch { foreach c [sta::corners] { lappend hyp_corners [$c name] } }
