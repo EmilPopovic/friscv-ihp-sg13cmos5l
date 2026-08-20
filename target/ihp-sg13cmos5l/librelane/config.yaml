@@ -167,8 +167,7 @@ ROUTING_OBSTRUCTIONS:
 - ["Metal4",    657.76,  336.00, 1442.24,  400.36]
 - ["TopMetal1", 657.76,  336.00, 1442.24,  400.36]
 
-# Try to keep design compact instead of spreading out
-PL_TARGET_DENSITY_PCT: 85
+PL_TARGET_DENSITY_PCT: 78
 GRT_ALLOW_CONGESTION: true
 
 GRT_ADJUSTMENT: 0.22
