@@ -49,7 +49,7 @@ SYNTH_KEEP_HIERARCHY_INSTANCES: [
     '*vernii_soc*/i_cpu',     # CPU
     '*vernii_soc*/i_dmi',     # JTAG
     '*vernii_soc*/i_dm',      # DM
-    '*vernii_soc*/i_clint',   # ACLINT
+    '*vernii_soc*/i_aclint',  # ACLINT
     '*vernii_soc*/i_plic',    # PLIC
     '*vernii_soc*/i_gpio_a',  # GPIO A
     '*vernii_soc*/i_qspi0',   # QSPI0

@@ -109,8 +109,8 @@ packages:
     dependencies:
     - common_verification
   vernii:
-    revision: e07367e72f1c294d5a278554c5aba4dedb35d90e
-    version: 1.0.0-rc.5
+    revision: 79e84f0888052029da8106a8dbdec053d10e0944
+    version: 1.0.0
     source:
       Git: https://github.com/EmilPopovic/vernii.git
     dependencies:
