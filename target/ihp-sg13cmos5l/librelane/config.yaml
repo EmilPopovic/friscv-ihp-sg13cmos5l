@@ -44,6 +44,19 @@ PRIMARY_GDSII_STREAMOUT_TOOL: klayout
 # 12.5 ns = 80.00 MHz
 CLOCK_PERIOD: 12.5
 
+# Keep part of the hierarchy for debugging and librelane-image target
+SYNTH_KEEP_HIERARCHY_INSTANCES: [
+    '*vernii_soc*/i_cpu',     # CPU
+    '*vernii_soc*/i_dmi',     # JTAG
+    '*vernii_soc*/i_dm',      # DM
+    '*vernii_soc*/i_clint',   # ACLINT
+    '*vernii_soc*/i_plic',    # PLIC
+    '*vernii_soc*/i_gpio_a',  # GPIO A
+    '*vernii_soc*/i_qspi0',   # QSPI0
+    '*vernii_soc*/i_uart0',   # UART0
+    '*vernii_soc*/i_scb'      # SCB
+]
+
 # Specify the pad instances for the padring
 PAD_SOUTH: [
     "hb_dq_pads\\[0\\].hb_dq_pad",       # 17  S0   HB_DQ0
@@ -176,7 +189,7 @@ SETUP_VIOLATION_CORNERS: ["*"]
 MAX_CAP_VIOLATION_CORNERS: ["*"]
 MAX_SLEW_VIOLATION_CORNERS: [""]
 
-GRT_DESIGN_REPAIR_MAX_CAP_PCT: 35
+GRT_DESIGN_REPAIR_MAX_CAP_PCT: 40
 GRT_DESIGN_REPAIR_MAX_SLEW_PCT: 40
 
 PL_RESIZER_HOLD_SLACK_MARGIN: 0.1
