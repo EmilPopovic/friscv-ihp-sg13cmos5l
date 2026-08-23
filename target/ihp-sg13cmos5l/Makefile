@@ -64,6 +64,10 @@ area: $(PDK_STAMP) sources.f
 librelane: $(PDK_STAMP) sources.f
 	$(LIBRELANE)
 
+.PHONY: check-last
+check-last:
+	python3 signoff_report.py
+
 .PHONY: librelane-openroad
 librelane-openroad:
 	$(LIBRELANE) --last-run --flow OpenInOpenRoad

@@ -18,6 +18,10 @@ librelane-openroad:
 librelane-klayout:
 	make -C target/ihp-sg13cmos5l librelane-klayout
 
+.PHONY: check-last
+check-last:
+	make -C target/ihp-sg13cmos5l check-last
+
 .PHONY: clean
 clean:
 	make -C target/sim clean
