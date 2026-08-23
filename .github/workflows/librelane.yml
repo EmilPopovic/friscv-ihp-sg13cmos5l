@@ -1,0 +1,33 @@
+# Copyright 2026 FER, HPC Architecture and Application Research Center
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+#
+# Emil Popović <mail@emilpopovic.me>
+
+name: librelane
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: DeterminateSystems/nix-installer-action@v22
+
+      - uses: DeterminateSystems/magic-nix-cache-action@v14
+        with:
+          use-flakehub: false
+          use-gha-cache: true
+      
+      - name: Build
+        run: nix develop --accept-flake-config --command make librelane
+
+      - name: Check signoff
+        run: nix develop --accept-flake-config --command make check-last
