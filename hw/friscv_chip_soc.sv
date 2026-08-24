@@ -20,12 +20,13 @@ module friscv_chip_soc import vernii_pkg::*; #(
     parameter bit          SramTags          = 1'b1,
     parameter bit          HyperClockDelayed = 1'b1,
     parameter int unsigned NumGpios          = 8,
-    parameter int unsigned BootSelW          = 2
+    parameter int unsigned BootSelW          = 2,
+    parameter int unsigned HeartbeatDivW     = 27
 ) (
     input  logic  clk_i,
     input  logic  rst_ni,
 
-    output logic  clk_out_o,
+    output logic  heartbeat_o,
 
     output logic  end_o,
 
@@ -68,13 +69,12 @@ module friscv_chip_soc import vernii_pkg::*; #(
     output logic [NumGpios-1:0] gpio_a_oe_o
 );
 
-// Output clock as heartbeat, do not use as real clock
-logic [6:0] clk_div;
+logic [HeartbeatDivW-1:0] heartbeat_cnt;
 always_ff @(posedge clk_i or negedge rst_ni) begin
-    if (!rst_ni) clk_div <= '0;
-    else         clk_div <= clk_div + 1;
+    if (!rst_ni) heartbeat_cnt <= '0;
+    else         heartbeat_cnt <= heartbeat_cnt + 1;
 end
-assign clk_out_o = clk_div[6];
+assign heartbeat_o = heartbeat_cnt[HeartbeatDivW-1];
 
 localparam int unsigned HyperCfgSlv  = 0;
 localparam int unsigned NumMRegRules = 1;

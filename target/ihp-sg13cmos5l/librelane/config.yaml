@@ -87,7 +87,7 @@ PAD_EAST: [
     "gpio_a_pads\\[3\\].gpio_a_pad",     # 39  E6   PA3
     "gpio_a_pads\\[4\\].gpio_a_pad",     # 40  E7   PA4
     "vss_pads\\[1\\].vss_pad",           # 41  E8   VSS
-    clk_out_pad,                         # 42  E9   CLK_OUT
+    heartbeat_pad,                       # 42  E9   HRTBT
     "vdd_pads\\[1\\].vdd_pad",           # 43  E10  VDD
     "gpio_a_pads\\[5\\].gpio_a_pad",     # 44  E11  PA5
     "gpio_a_pads\\[6\\].gpio_a_pad",     # 45  E12  PA6

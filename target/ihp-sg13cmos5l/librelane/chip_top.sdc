@@ -199,8 +199,8 @@ set clk_core_input_ports [concat [get_ports {uart0_rx_PAD}] $BOOT_PORTS]
 set_input_delay -min 0                  -clock $clocks $clk_core_input_ports
 set_input_delay -max $input_delay_value -clock $clocks $clk_core_input_ports
 
-# Heartbeat clock and UART0 TX must drive within output_delay_value of the core clock
-set clk_core_output_ports [get_ports {clk_out_PAD uart0_tx_PAD}]
+# Heartbeat and UART0 TX must drive within output_delay_value of the core clock
+set clk_core_output_ports [get_ports {heartbeat_PAD uart0_tx_PAD}]
 set_output_delay $output_delay_value -clock $clocks $clk_core_output_ports
 
 # Same input limit for inouts (GPIO and QSPI0 IO)

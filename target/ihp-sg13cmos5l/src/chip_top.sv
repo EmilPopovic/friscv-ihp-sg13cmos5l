@@ -39,7 +39,7 @@ module chip_top #(
     `endif
     inout wire clk_PAD,
     inout wire rst_n_PAD,
-    inout wire clk_out_PAD,
+    inout wire heartbeat_PAD,
 
     // JTAG
     inout wire jtag_tck_PAD,
@@ -281,18 +281,18 @@ wire uart0_tx_CORE2PAD;
     .pad   ( uart0_tx_PAD      )
 );
 
-wire clk_out_CORE2PAD;
+wire heartbeat_CORE2PAD;
 
-// Output clock pad
-(* keep *) sg13cmos5l_IOPadOut30mA clk_out_pad (
+// Heartbeat pad
+(* keep *) sg13cmos5l_IOPadOut30mA heartbeat_pad (
     `ifdef USE_POWER_PINS
     .iovdd ( IOVDD ),
     .iovss ( IOVSS ),
     .vdd   ( VDD   ),
     .vss   ( VSS   ),
     `endif
-    .c2p   ( clk_out_CORE2PAD ),
-    .pad   ( clk_out_PAD      )
+    .c2p   ( heartbeat_CORE2PAD ),
+    .pad   ( heartbeat_PAD      )
 );
 
 ////////////////////////
@@ -484,7 +484,7 @@ end
 ) soc_inst (
     .clk_i           ( clk_PAD2CORE         ),
     .rst_ni          ( rst_n_PAD2CORE       ),
-    .clk_out_o       ( clk_out_CORE2PAD     ),
+    .heartbeat_o     ( heartbeat_CORE2PAD   ),
     .end_o           ( /* no package pin */ ),
 
     // JTAG
