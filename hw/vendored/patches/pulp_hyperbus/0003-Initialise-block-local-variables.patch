@@ -1,0 +1,31 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Emil=20Popovi=C4=87?= <mail@emilpopovic.me>
+Date: Tue, 25 Aug 2026 00:00:00 +0200
+Subject: Initialise block-local variables
+---
+ src/hyperbus_cfg_regs.sv | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/hyperbus_cfg_regs.sv b/src/hyperbus_cfg_regs.sv
+index d438007..bd9118a 100644
+--- a/src/hyperbus_cfg_regs.sv
++++ b/src/hyperbus_cfg_regs.sv
+@@ -55,6 +55,7 @@ module hyperbus_cfg_regs #(
+     // Read from register
+     always_comb begin : proc_comb_read
+         reg_data_t [NumRegs-1:0] rfield;
++        rfield = '0;
+         reg_rsp_o.rdata = '0;
+         if (sel_reg_mapped) begin
+             rfield = {
+@@ -84,6 +85,8 @@ module hyperbus_cfg_regs #(
+     always_comb begin : proc_comb_write
+         logic  chip_reg;
+         logic [$clog2(NumChips)-1:0] sel_chip;
++        chip_reg  = '0;
++        sel_chip  = '0;
+         cfg_d     = cfg_q;
+         crange_d  = crange_q;
+         if (reg_req_i.valid & reg_req_i.write & sel_reg_mapped) begin
+-- 
+2.53.0

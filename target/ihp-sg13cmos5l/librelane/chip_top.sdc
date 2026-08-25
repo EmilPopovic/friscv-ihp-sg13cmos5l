@@ -51,9 +51,6 @@ puts "\[INFO] Setting input delay to: $input_delay_value"
 
 # Set global max fanout to MAX_FANOUT_CONSTRAINT
 set_max_fanout $::env(MAX_FANOUT_CONSTRAINT) [current_design]
-# Set a default max transition of 4.0 ns for all OUTPUTS, override later
-set_max_transition 4.0 [all_outputs]
-# Set default max transition of MAX_TRANSITION_CONSTRAINT for all INTERNAL NETS
 if { [info exists ::env(MAX_TRANSITION_CONSTRAINT)] } {
     set_max_transition $::env(MAX_TRANSITION_CONSTRAINT) [current_design]
 }

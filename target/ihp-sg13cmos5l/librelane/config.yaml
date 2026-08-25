@@ -245,6 +245,11 @@ PDN_CORE_RING_HSPACING: 2
 PDN_CORE_RING_CONNECT_TO_PADS: true
 PDN_ENABLE_PINS: false
 
+# Inject IR drop at the core supply pads, formatted as x,y,size,voltage in um/V
+VSRC_LOC_FILES:
+  VDD: dir::vdd.loc
+  VSS: dir::vss.loc
+
 # Because we have multiple power pads for one power domain
 MAGIC_EXT_UNIQUE: notopports
 

@@ -55,6 +55,7 @@ module hyperbus_cfg_regs #(
     // Read from register
     always_comb begin : proc_comb_read
         reg_data_t [NumRegs-1:0] rfield;
+        rfield = '0;
         reg_rsp_o.rdata = '0;
         if (sel_reg_mapped) begin
             rfield = {
@@ -84,6 +85,8 @@ module hyperbus_cfg_regs #(
     always_comb begin : proc_comb_write
         logic  chip_reg;
         logic [$clog2(NumChips)-1:0] sel_chip;
+        chip_reg  = '0;
+        sel_chip  = '0;
         cfg_d     = cfg_q;
         crange_d  = crange_q;
         if (reg_req_i.valid & reg_req_i.write & sel_reg_mapped) begin
