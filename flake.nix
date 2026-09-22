@@ -153,32 +153,13 @@
           ihp-pdk = pkgs.fetchFromGitHub {
             owner = "IHP-GmbH";
             repo = "IHP-Open-PDK";
-            rev = "22f2a25f1734796de3debbbf29cf697cbbc54081";
+            rev = "7ef70c7e871f7c8868bf5ed7488b1837c48fc022";
             fetchSubmodules = true;
-            hash = "sha256-BUf7DgUm2mMScw524Hbnq2viHY+DMm5i68Eqqlik3g8=";
+            hash = "sha256-ebU6hOq+iG2HCXIuFVg7AbZfA5CB4Do5H4wlghGPzHA=";
           };
           ihp-sg13g2-liberty = "${ihp-pdk}/ihp-sg13g2/libs.ref/sg13g2_stdcell/lib/sg13g2_stdcell_typ_1p20V_25C.lib";
           ihp-sg13g2-sram-liberty = "${ihp-pdk}/ihp-sg13g2/libs.ref/sg13g2_sram/lib/RM_IHPSG13_1P_1024x32_c2_bm_bist_typ_1p20V_25C.lib";
-          ihp-cmos5l-pdk = pkgs.fetchFromGitHub {
-            owner = "IHP-GmbH";
-            repo = "ihp-sg13cmos5l";
-            rev = "33fd51900e07260ad0044ae4af22dd15ed10c764"; # v0.2.0
-            hash = "sha256-IhidmbbWyxWduV4ZuZSUAPN+LBl34s1l3WuVRd2AVlM=";
-          };
-          ihp-sg13cmos5l-liberty = "${ihp-cmos5l-pdk}/libs.ref/sg13cmos5l_stdcell/lib/sg13cmos5l_stdcell_typ_1p20V_25C.lib";
-          ihp-cmos5l-patches = ./target/ihp-sg13cmos5l/pdk-patches;
-          pdk-root = pkgs.runCommand "ihp-pdk-root" {
-            nativeBuildInputs = [ pkgs.gnupatch ];
-          } ''
-            mkdir -p $out
-            ln -s ${ihp-pdk}/ihp-sg13g2 $out/ihp-sg13g2
-            cp -a ${ihp-cmos5l-pdk} $out/ihp-sg13cmos5l
-            chmod -R u+w $out/ihp-sg13cmos5l
-            for p in ${ihp-cmos5l-patches}/*.patch; do
-              echo "applying $(basename $p)"
-              patch -p1 -d $out/ihp-sg13cmos5l < "$p"
-            done
-          '';
+          ihp-sg13cmos5l-liberty = "${ihp-pdk}/ihp-sg13cmos5l/libs.ref/sg13cmos5l_stdcell/lib/sg13cmos5l_stdcell_typ_1p20V_25C.lib";
         in {
           default = pkgs.mkShell {
             name = "friscv-tapeout";
@@ -186,7 +167,7 @@
             SRAM_LIBERTY = ihp-sg13g2-sram-liberty;
             LIBERTY_SG13CMOS5L = ihp-sg13cmos5l-liberty;
             LIBERTY_SG13G2 = ihp-sg13g2-liberty;
-            PDK_ROOT = "${pdk-root}";
+            PDK_ROOT = "${ihp-pdk}";
             PDK = "ihp-sg13cmos5l";
             packages = (with pkgs; [
               iverilog
