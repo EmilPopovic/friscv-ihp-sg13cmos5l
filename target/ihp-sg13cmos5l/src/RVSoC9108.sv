@@ -16,7 +16,7 @@
 `pragma diagnostic push
 `pragma diagnostic ignore="-Wunused-def"
 `pragma diagnostic ignore="-Wunconnected-inout-port"
-module chip_top #(
+module RVSoC9108 #(
     // Power/ground pads for core
     parameter int unsigned NUM_VDD_PADS = 6,
     parameter int unsigned NUM_VSS_PADS = 6,
@@ -73,28 +73,28 @@ module chip_top #(
 
 // Parameter checks
 if (NUM_VDD_PADS < 1) begin : gen_chk_has_vdd
-    $fatal(1, "chip_top: NUM_VDD_PADS must be >= 1, got %0d", NUM_VDD_PADS);
+    $fatal(1, "RVSoC9108: NUM_VDD_PADS must be >= 1, got %0d", NUM_VDD_PADS);
 end
 if (NUM_VSS_PADS < 1) begin : gen_chk_has_vss
-    $fatal(1, "chip_top: NUM_VSS_PADS must be >= 1, got %0d", NUM_VSS_PADS);
+    $fatal(1, "RVSoC9108: NUM_VSS_PADS must be >= 1, got %0d", NUM_VSS_PADS);
 end
 if (NUM_IOVDD_PADS < 1) begin : gen_chk_has_iovdd
-    $fatal(1, "chip_top: NUM_IOVDD_PADS must be >= 1, got %0d", NUM_IOVDD_PADS);
+    $fatal(1, "RVSoC9108: NUM_IOVDD_PADS must be >= 1, got %0d", NUM_IOVDD_PADS);
 end
 if (NUM_IOVSS_PADS < 1) begin : gen_chk_has_iovss
-    $fatal(1, "chip_top: NUM_IOVSS_PADS must be >= 1, got %0d", NUM_IOVSS_PADS);
+    $fatal(1, "RVSoC9108: NUM_IOVSS_PADS must be >= 1, got %0d", NUM_IOVSS_PADS);
 end
 if (NUM_GPIO_PADS > 32) begin : gen_chk_max_gpio
-    $fatal(1, "chip_top: NUM_GPIO_PADS must be <= 32, got %0d", NUM_GPIO_PADS);
+    $fatal(1, "RVSoC9108: NUM_GPIO_PADS must be <= 32, got %0d", NUM_GPIO_PADS);
 end
 if (NUM_BOOT_PADS < 1) begin : gen_chk_has_boot
-    $fatal(1, "chip_top: NUM_BOOT_PADS must be >= 1, got %0d", NUM_BOOT_PADS);
+    $fatal(1, "RVSoC9108: NUM_BOOT_PADS must be >= 1, got %0d", NUM_BOOT_PADS);
 end
 if (NUM_QSPI_CS > 3) begin : gen_chk_legal_qspi_cs
-    $fatal(1, "chip_top: NUM_QSPI_CS must be <= 3, got %0d", NUM_QSPI_CS);
+    $fatal(1, "RVSoC9108: NUM_QSPI_CS must be <= 3, got %0d", NUM_QSPI_CS);
 end
 if (NUM_HB_CS < 1 || NUM_HB_CS > 2) begin : gen_chk_legal_hb_cs
-    $fatal(1, "chip_top: NUM_HB_CS must be 1 or 2, got %0d", NUM_HB_CS);
+    $fatal(1, "RVSoC9108: NUM_HB_CS must be 1 or 2, got %0d", NUM_HB_CS);
 end
 
 ///////////////////////////////////
