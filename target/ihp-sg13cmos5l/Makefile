@@ -32,53 +32,15 @@ sources.f: ../../Bender.yml ../../Bender.lock $(wildcard src/*.sv)
 	echo "$(CURDIR)/src/stubs/tc_clk.sv" >> $@
 	echo "$(CURDIR)/src/mc_delay.sv" >> $@
 
-# sv2v front-end to produce a single Verilog file
-SV2V_DIR     = build
-SV2V_FLIST   = $(SV2V_DIR)/sv2v.f
-SV2V_OUT     = $(SV2V_DIR)/$(TOP).v
-SV2V_DEFINES = FUNCTIONAL TARGET_ASIC SYNTHESIS VERILATOR
-
-# Fix files so sv2v can parse them
-SV2V_FIX_AXI_PKG     = -e '/typedef shortint unsigned SU;/d' -e "s/return SU'(/return shortint'(/"
-SV2V_FIX_OBI_UART_RX = -E -e '/^\s*\.(FALL_THROUGH|dtype)\s*\(\),?\s*$$/d' -e '/^\s*\.ADDR_DEPTH\s*\(\)/d'
-SV2V_FIX_APB_TO_OBI  = -e '/assign obi_req_o\.rready = 1.b1;/d'
-SV2V_FIX_HB_W2PHY    = -E -e 's/for \(int ([ij])=0; \1<byte_idx_q; \1\+\+\)/for (int \1=0; \1<NumAxiBytes; \1++) if (\1<byte_idx_q)/'
-SV2V_FIX_OBI_UART_TX = -e 's/for (int i = 0; i <= word_len_bits; i = i + 1) begin/for (int i = 0; i < 8; i = i + 1) if (i <= word_len_bits) begin/'
-
-define sv2v_fix
-	@f=$$(grep -E '$(1)' $@) && [ -n "$$f" ] || { echo "ERROR: sv2v fixup: $(1) not in flist"; exit 1; }; \
-	out=$(CURDIR)/$(SV2V_DIR)/patched/$$(basename $$f); \
-	sed $(2) $$f > $$out; \
-	if cmp -s $$f $$out; then echo "ERROR: sv2v fixup for $$(basename $$f) changed nothing"; exit 1; fi; \
-	sed -i "s|^$$f$$|$$out|" $@
-endef
-
-$(SV2V_FLIST): sources.f
-	@rm -rf $(SV2V_DIR)/patched
-	@mkdir -p $(SV2V_DIR)/patched
-	grep -v -E '/src/stubs/(RM_|delay_line_|sg13cmos5l_)|/deprecated/fifo_v[12]\.sv$$' $< > $@
-	$(call sv2v_fix,/axi-[^/]*/src/axi_pkg\.sv$$,$(SV2V_FIX_AXI_PKG))
-	$(call sv2v_fix,/pulp_obi_uart/rtl/obi_uart_rx\.sv$$,$(SV2V_FIX_OBI_UART_RX))
-	$(call sv2v_fix,/obi-[^/]*/src/apb_to_obi\.sv$$,$(SV2V_FIX_APB_TO_OBI))
-	$(call sv2v_fix,/pulp_hyperbus/src/hyperbus_w2phy\.sv$$,$(SV2V_FIX_HB_W2PHY))
-	$(call sv2v_fix,/pulp_obi_uart/rtl/obi_uart_tx\.sv$$,$(SV2V_FIX_OBI_UART_TX))
-
-# Always rerun sv2v
-.PHONY: sv2v
-sv2v: $(SV2V_FLIST)
-	sv2v $$(sed -e 's/^+incdir+/-I/' -e 's/^+define+/-D/' $(SV2V_FLIST)) \
-	    $(addprefix -D,$(SV2V_DEFINES)) src/$(TOP).sv --top $(TOP) \
-	    -w $(SV2V_OUT) 2> $(SV2V_DIR)/sv2v.log || { cat $(SV2V_DIR)/sv2v.log; exit 1; }
-
 .PHONY: area
-area: sv2v
+area: sources.f
 	rm -f area.rpt
 	$(LIBRELANE) --run-tag $(AREA_RUN_TAG) --overwrite --to Yosys.Synthesis
 	netlist=$$(echo $(AREA_RUN_DIR)/*-yosys-synthesis/$(TOP).nl.v); \
 	yosys -p "read_verilog -sv $$netlist; stat $(foreach lib,$(AREA_LIBERTIES),-liberty $(lib))" | tee area.rpt
 
 .PHONY: librelane
-librelane: sv2v
+librelane: sources.f
 	$(LIBRELANE)
 
 .PHONY: check-last
@@ -96,4 +58,4 @@ librelane-klayout:
 .PHONY: clean
 clean:
 	rm -f sources.f area.rpt
-	rm -rf $(AREA_RUN_DIR) $(SV2V_DIR)
+	rm -rf $(AREA_RUN_DIR)

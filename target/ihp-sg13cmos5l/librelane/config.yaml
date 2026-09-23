@@ -25,9 +25,14 @@ meta:
 
 DESIGN_NAME: RVSoC9108
 VERILOG_FILES:
-- dir::../build/RVSoC9108.v
+- dir::../src/RVSoC9108.sv
 
-VERILOG_DEFINES: [FUNCTIONAL]
+# TARGET_ASIC swaps hw/configurable_delay.sv from a passthrough to the hardened delay_line_D4_O1_6P000 macro
+VERILOG_DEFINES: [FUNCTIONAL, TARGET_ASIC]
+
+# Enable plugin for better SystemVerilog support
+USE_SLANG: true
+SLANG_ARGUMENTS: ['--keep-hierarchy', '-F', 'ref::$DESIGN_DIR/../sources.f']
 
 # Ignore spurious warnings from linter/Yosys
 RUN_LINTER: false
@@ -265,16 +270,16 @@ MACROS:
       "*_slow_1p08V_125C":
         - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_512x32_c2_bm_bist_slow_1p08V_125C.lib
     instances:
-      soc_inst.i_vernii_soc.i_mem_hub.gen_ocm_llc.ocm_llc.gen_ways[0].way_sram.genblk2.gen_512x32.gen_cuts[0].i_cut:
+      soc_inst.i_vernii_soc.i_mem_hub.gen_ocm_llc.ocm_llc.gen_ways[0].way_sram.gen_512x32.gen_cuts[0].i_cut:
         location: [336.0, 550.36]
         orientation: N
-      soc_inst.i_vernii_soc.i_mem_hub.gen_ocm_llc.ocm_llc.gen_ways[1].way_sram.genblk2.gen_512x32.gen_cuts[0].i_cut:
+      soc_inst.i_vernii_soc.i_mem_hub.gen_ocm_llc.ocm_llc.gen_ways[1].way_sram.gen_512x32.gen_cuts[0].i_cut:
         location: [1347.36, 550.36]
         orientation: N
-      soc_inst.i_vernii_soc.i_mem_hub.gen_ocm_llc.ocm_llc.gen_ways[2].way_sram.genblk2.gen_512x32.gen_cuts[0].i_cut:
+      soc_inst.i_vernii_soc.i_mem_hub.gen_ocm_llc.ocm_llc.gen_ways[2].way_sram.gen_512x32.gen_cuts[0].i_cut:
         location: [336.0, 752.36]
         orientation: FS
-      soc_inst.i_vernii_soc.i_mem_hub.gen_ocm_llc.ocm_llc.gen_ways[3].way_sram.genblk2.gen_512x32.gen_cuts[0].i_cut:
+      soc_inst.i_vernii_soc.i_mem_hub.gen_ocm_llc.ocm_llc.gen_ways[3].way_sram.gen_512x32.gen_cuts[0].i_cut:
         location: [1347.36, 752.36]
         orientation: FS
   RM_IHPSG13_1P_64x64_c2_bm_bist:
@@ -293,7 +298,7 @@ MACROS:
       "*_slow_1p08V_125C":
         - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_64x64_c2_bm_bist_slow_1p08V_125C.lib
     instances:
-      soc_inst.i_vernii_soc.i_mem_hub.gen_ocm_llc.ocm_llc.gen_tag_sram.tag_sram.genblk2.genblk1.genblk1.gen_64x64.i_cut:
+      soc_inst.i_vernii_soc.i_mem_hub.gen_ocm_llc.ocm_llc.gen_tag_sram.tag_sram.gen_64x64.i_cut:
         location: [657.76, 336.0]
         orientation: FS
   # HyperBus PHY delay line, 6 ns full scale at 0.375 ns/step
@@ -317,7 +322,7 @@ MACROS:
         location: [1501.76, 366.66]
         orientation: N
       # CK
-      soc_inst.i_hyperbus.genblk1.genblk1.i_delay_tx_clk_90.i_delay.i_delay_line:
+      soc_inst.i_hyperbus.genblk1.i_delay_tx_clk_90.i_delay.i_delay_line:
         location: [1603.52, 366.66]
         orientation: N
 
