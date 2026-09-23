@@ -35,7 +35,7 @@ endmodule
     .A_BIST_WEN   (  1'b0 ), \
     .A_BIST_REN   (  1'b0 ), \
     .A_BIST_EN    (  1'b0 ), \
-    .A_DLY        (  1'b0 )
+    .A_DLY        (  1'b1 )
 
 `define IHP13_TC_SRAM_512x32_TIEOFF \
     .A_BIST_CLK   (  1'b0 ), \
@@ -46,7 +46,7 @@ endmodule
     .A_BIST_WEN   (  1'b0 ), \
     .A_BIST_REN   (  1'b0 ), \
     .A_BIST_EN    (  1'b0 ), \
-    .A_DLY        (  1'b0 )
+    .A_DLY        (  1'b1 )
 
 `define IHP13_TC_SRAM_256x32_TIEOFF \
     .A_BIST_CLK   (  1'b0 ), \
@@ -57,7 +57,7 @@ endmodule
     .A_BIST_WEN   (  1'b0 ), \
     .A_BIST_REN   (  1'b0 ), \
     .A_BIST_EN    (  1'b0 ), \
-    .A_DLY        (  1'b0 )
+    .A_DLY        (  1'b1 )
 
 `define IHP13_TC_SRAM_64x64_TIEOFF \
     .A_BIST_CLK   (  1'b0 ), \
@@ -68,7 +68,7 @@ endmodule
     .A_BIST_WEN   (  1'b0 ), \
     .A_BIST_REN   (  1'b0 ), \
     .A_BIST_EN    (  1'b0 ), \
-    .A_DLY        (  1'b0 )
+    .A_DLY        (  1'b1 )
 
 `pragma diagnostic push
 `pragma diagnostic ignore="-Wunused-parameter"
