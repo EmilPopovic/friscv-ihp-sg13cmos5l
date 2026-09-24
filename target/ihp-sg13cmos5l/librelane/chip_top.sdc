@@ -240,70 +240,86 @@ set_false_path -hold   -from [get_clocks $clock_port] -to [get_clocks jtag_tck]
 # Max slew for HyperBus pads
 set HYP_MAX_SLEW 1.5
 
-# DDR data window, ideal center is a quarter period, so we leave HYP_MAX_SLEW of margin on both sides for slew
-set HYP_DDR_MAX [expr {$TCK_SYS / 4 - $HYP_MAX_SLEW}]
-set HYP_DDR_MIN [expr {$TCK_SYS / 4 + $HYP_MAX_SLEW}]
+# DDR windows: setup/hold to CK and read data skew to RWDS, from the HyperRAM
+# datasheet (ISSI IS67WVH32M8DBLL-200, Table 10.3, 3.0 V)
+set HYP_TIS  0.5
+set HYP_TIH  0.5
+set HYP_TDSS 0.4
+# Board skew and input threshold budget, revisit once the board is laid out
+set HYP_SKEW 0.25
+set HYP_DDR_TX_SU [expr {$HYP_TIS + $HYP_SKEW}]
+set HYP_DDR_TX_HO [expr {$HYP_TIH + $HYP_SKEW}]
+set HYP_DDR_RX    [expr {$HYP_TDSS + $HYP_SKEW}]
 
 # Edge-shift corrections for DDR
 set HYP_EDGE_FULL $TCK_SYS
 set HYP_EDGE_HALF [expr {$TCK_SYS / 2}]
 
-# One delay line step
-set HYP_DLY_STEP 0.375
-
 # Reset values of t_tx_clk_delay / t_rx_clk_delay (vendor patch 0004)
 set HYP_TX_CODE 9
 set HYP_RX_CODE 12
 
-# Measured delay line taps, not in order because it is bit-reversed in hardware
+# Measured delay per code {fast typ slow} x {rise fall}, bit-reversed in hardware
 set HYP_DLY_TAPS {
-    { 0 0.670}  { 8 0.844}  { 4 1.033}  {12 1.556}
-    { 2 1.911}  {10 2.085}  { 6 2.713}  {14 2.969}
-    { 1 3.341}  { 9 3.338}  { 5 4.047}  {13 4.043}
-    { 3 4.686}  {11 4.682}  { 7 5.549}  {15 5.607}
+    { 0 {0.471 0.537 0.694 0.808 1.085 1.246}}
+    { 1 {2.317 2.414 3.381 3.604 5.342 5.720}}
+    { 2 {1.330 1.408 1.947 2.105 3.069 3.318}}
+    { 3 {3.243 3.360 4.724 5.012 7.473 7.979}}
+    { 4 {0.722 0.792 1.058 1.188 1.663 1.854}}
+    { 5 {2.804 2.913 4.087 4.347 6.464 6.911}}
+    { 6 {1.883 1.984 2.749 2.963 4.341 4.690}}
+    { 7 {3.836 3.966 5.583 5.916 8.840 9.437}}
+    { 8 {0.592 0.670 0.870 1.008 1.364 1.561}}
+    { 9 {2.316 2.414 3.377 3.604 5.339 5.720}}
+    {10 {1.451 1.542 2.122 2.306 3.349 3.636}}
+    {11 {3.243 3.359 4.720 5.012 7.470 7.979}}
+    {12 {1.085 1.172 1.584 1.755 2.498 2.757}}
+    {13 {2.803 2.913 4.083 4.347 6.461 6.911}}
+    {14 {2.063 2.157 3.007 3.221 4.754 5.106}}
+    {15 {3.880 4.012 5.643 5.985 8.937 9.544}}
 }
 
-##########################
-# Delay line programming #
-##########################
-
-proc hyp_dly {code} {
+proc hyp_dly {code corner edge} {
     global HYP_DLY_TAPS
     foreach entry $HYP_DLY_TAPS {
-        if { [lindex $entry 0] == $code } { return [lindex $entry 1] }
+        if { [lindex $entry 0] == $code } {
+            set i [expr {2 * [lsearch {fast typ slow} $corner] + ($edge eq "fall")}]
+            return [lindex $entry 1 $i]
+        }
     }
     error "HyperBus: no delay-line entry for code $code"
 }
 
-set HYP_TX_TGT_DLY [hyp_dly $HYP_TX_CODE]
-set HYP_RX_TGT_DLY [hyp_dly $HYP_RX_CODE]
+set HYP_TX_TGT_DLY [expr {max([hyp_dly $HYP_TX_CODE typ rise], [hyp_dly $HYP_TX_CODE typ fall])}]
+set HYP_RX_TGT_DLY [expr {max([hyp_dly $HYP_RX_CODE typ rise], [hyp_dly $HYP_RX_CODE typ fall])}]
 
-puts "\[INFO] HyperBus delay-line targets: TX $HYP_TX_TGT_DLY ns (t_tx_clk_delay=$HYP_TX_CODE), RX $HYP_RX_TGT_DLY ns (t_rx_clk_delay=$HYP_RX_CODE) (TCK_SYS $TCK_SYS)"
+puts "\[INFO] HyperBus delay lines: TX code $HYP_TX_CODE ($HYP_TX_TGT_DLY ns typ), RX code $HYP_RX_CODE ($HYP_RX_TGT_DLY ns typ) (TCK_SYS $TCK_SYS)"
 
 # Get corner names from STA
 set hyp_corners {}
 catch { foreach c [sta::corners] { lappend hyp_corners [$c name] } }
 
-# For each delay line, replace the macro's assigned delay with the target delay
-foreach dline [list $HYP_TX_DLINE $HYP_RX_DLINE] tgt [list $HYP_TX_TGT_DLY $HYP_RX_TGT_DLY] {
+# For each delay line, replace the macro's assigned delay with the code's delay per corner
+foreach dline [list $HYP_TX_DLINE $HYP_RX_DLINE] code [list $HYP_TX_CODE $HYP_RX_CODE] {
     set dly_from [hyp_pin1 "$dline/clk_i"]
     set dly_to   [hyp_pin1 "$dline/clk_o*"]
 
     # Fallback to typical corner if no corners are defined
     if { [llength $hyp_corners] == 0 } {
         puts "\[WARNING] HyperBus: no named corners, pinning delay line to typ only"
-        set_assigned_delay -cell -from $dly_from -to $dly_to $tgt
+        set_assigned_delay -cell -rise -from $dly_from -to $dly_to [hyp_dly $code typ rise]
+        set_assigned_delay -cell -fall -from $dly_from -to $dly_to [hyp_dly $code typ fall]
     } else {
-        # Constrain fast to a lower delay, slow to a higher delay, typical to the target
         foreach cname $hyp_corners {
             if { [string match "*fast*" $cname] } {
-                set dly [expr {$tgt - $HYP_DLY_STEP}]
+                set c fast
             } elseif { [string match "*slow*" $cname] } {
-                set dly [expr {$tgt + $HYP_DLY_STEP}]
+                set c slow
             } else {
-                set dly $tgt
+                set c typ
             }
-            set_assigned_delay -cell -corner $cname -from $dly_from -to $dly_to $dly
+            set_assigned_delay -cell -rise -corner $cname -from $dly_from -to $dly_to [hyp_dly $code $c rise]
+            set_assigned_delay -cell -fall -corner $cname -from $dly_from -to $dly_to [hyp_dly $code $c fall]
         }
     }
 
@@ -327,10 +343,10 @@ set_multicycle_path -hold  0 -to $HYP_CK90_ENDS
 #######################
 
 # DQ output window for both edges relative to HyperBus clock pad
-set_output_delay -max -add_delay             -clock [clk1 hb_ck_int] -reference_pin $HYP_OUT_COUT [expr {$HYP_DDR_MAX + $HYP_EDGE_FULL}] $HYP_DQ_IN
-set_output_delay -max -add_delay -clock_fall -clock [clk1 hb_ck_int] -reference_pin $HYP_OUT_COUT [expr {$HYP_DDR_MAX + $HYP_EDGE_FULL}] $HYP_DQ_IN
-set_output_delay -min -add_delay             -clock [clk1 hb_ck_int] -reference_pin $HYP_OUT_COUT $HYP_DDR_MIN                           $HYP_DQ_IN
-set_output_delay -min -add_delay -clock_fall -clock [clk1 hb_ck_int] -reference_pin $HYP_OUT_COUT $HYP_DDR_MIN                           $HYP_DQ_IN
+set_output_delay -max -add_delay             -clock [clk1 hb_ck_int] -reference_pin $HYP_OUT_COUT [expr {$HYP_DDR_TX_SU + $HYP_EDGE_FULL}] $HYP_DQ_IN
+set_output_delay -max -add_delay -clock_fall -clock [clk1 hb_ck_int] -reference_pin $HYP_OUT_COUT [expr {$HYP_DDR_TX_SU + $HYP_EDGE_FULL}] $HYP_DQ_IN
+set_output_delay -min -add_delay             -clock [clk1 hb_ck_int] -reference_pin $HYP_OUT_COUT [expr {$HYP_EDGE_HALF - $HYP_DDR_TX_HO}] $HYP_DQ_IN
+set_output_delay -min -add_delay -clock_fall -clock [clk1 hb_ck_int] -reference_pin $HYP_OUT_COUT [expr {$HYP_EDGE_HALF - $HYP_DDR_TX_HO}] $HYP_DQ_IN
 
 # Allow for a small mismatch between RWDS and CK
 set HYP_PAD_MISMATCH 0.3
@@ -338,10 +354,10 @@ set HYP_RWDS_OUT     [concat [hyp_pin1 "hb_rwds_pad/c2p"] [hyp_pin1 "hb_rwds_pad
 set HYP_OUT_COUT_PRE [hyp_pin1 "hb_ck_pad/c2p"]
 
 # Same for DDR constraints for RWDS with the mismatch
-set_output_delay -max -add_delay             -clock [clk1 hb_ck_int] -reference_pin $HYP_OUT_COUT_PRE [expr {$HYP_DDR_MAX + $HYP_PAD_MISMATCH + $HYP_EDGE_FULL}] $HYP_RWDS_OUT
-set_output_delay -max -add_delay -clock_fall -clock [clk1 hb_ck_int] -reference_pin $HYP_OUT_COUT_PRE [expr {$HYP_DDR_MAX + $HYP_PAD_MISMATCH + $HYP_EDGE_FULL}] $HYP_RWDS_OUT
-set_output_delay -min -add_delay             -clock [clk1 hb_ck_int] -reference_pin $HYP_OUT_COUT_PRE [expr {$HYP_DDR_MIN + $HYP_PAD_MISMATCH}]                  $HYP_RWDS_OUT
-set_output_delay -min -add_delay -clock_fall -clock [clk1 hb_ck_int] -reference_pin $HYP_OUT_COUT_PRE [expr {$HYP_DDR_MIN + $HYP_PAD_MISMATCH}]                  $HYP_RWDS_OUT
+set_output_delay -max -add_delay             -clock [clk1 hb_ck_int] -reference_pin $HYP_OUT_COUT_PRE [expr {$HYP_DDR_TX_SU + $HYP_PAD_MISMATCH + $HYP_EDGE_FULL}] $HYP_RWDS_OUT
+set_output_delay -max -add_delay -clock_fall -clock [clk1 hb_ck_int] -reference_pin $HYP_OUT_COUT_PRE [expr {$HYP_DDR_TX_SU + $HYP_PAD_MISMATCH + $HYP_EDGE_FULL}] $HYP_RWDS_OUT
+set_output_delay -min -add_delay             -clock [clk1 hb_ck_int] -reference_pin $HYP_OUT_COUT_PRE [expr {$HYP_EDGE_HALF - $HYP_DDR_TX_HO + $HYP_PAD_MISMATCH}] $HYP_RWDS_OUT
+set_output_delay -min -add_delay -clock_fall -clock [clk1 hb_ck_int] -reference_pin $HYP_OUT_COUT_PRE [expr {$HYP_EDGE_HALF - $HYP_DDR_TX_HO + $HYP_PAD_MISMATCH}] $HYP_RWDS_OUT
 
 # CS is launched on the falling core edge, keep it checked
 set_false_path -setup -rise_from [get_clocks $clock_port] -fall_to [get_clocks hb_ck_int]
@@ -365,11 +381,11 @@ set_multicycle_path -hold  1 -to $HYP_OUT_RST
 # DQ and RWDS inputs #
 ######################
 
-# Constrain both input edges to RWDS
-set_input_delay -max -add_delay             -clock [clk1 hb_rwds] -network_latency_included [expr {$HYP_DDR_MAX + $HYP_EDGE_HALF}] $HYP_DQ_IN
-set_input_delay -max -add_delay -clock_fall -clock [clk1 hb_rwds] -network_latency_included [expr {$HYP_DDR_MAX + $HYP_EDGE_HALF}] $HYP_DQ_IN
-set_input_delay -min -add_delay             -clock [clk1 hb_rwds] -network_latency_included $HYP_DDR_MIN                           $HYP_DQ_IN
-set_input_delay -min -add_delay -clock_fall -clock [clk1 hb_rwds] -network_latency_included $HYP_DDR_MIN                           $HYP_DQ_IN
+# Read data is edge-aligned to RWDS, each edge captures its own byte through the RX delay line
+set_input_delay -max -add_delay             -clock [clk1 hb_rwds] -network_latency_included [expr {$HYP_DDR_RX + $HYP_EDGE_FULL}] $HYP_DQ_IN
+set_input_delay -max -add_delay -clock_fall -clock [clk1 hb_rwds] -network_latency_included [expr {$HYP_DDR_RX + $HYP_EDGE_FULL}] $HYP_DQ_IN
+set_input_delay -min -add_delay             -clock [clk1 hb_rwds] -network_latency_included [expr {$HYP_EDGE_HALF - $HYP_DDR_RX}] $HYP_DQ_IN
+set_input_delay -min -add_delay -clock_fall -clock [clk1 hb_rwds] -network_latency_included [expr {$HYP_EDGE_HALF - $HYP_DDR_RX}] $HYP_DQ_IN
 
 set_false_path -setup -rise_from [get_clocks hb_rwds] -fall_to [get_clocks hb_rwds]
 set_false_path -setup -fall_from [get_clocks hb_rwds] -rise_to [get_clocks hb_rwds]
