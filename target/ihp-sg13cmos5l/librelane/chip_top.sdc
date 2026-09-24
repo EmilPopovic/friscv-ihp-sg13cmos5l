@@ -127,8 +127,8 @@ proc clk1 {name} {
 set TCK_SYS [expr {1.0 * $::env(CLOCK_PERIOD)}]
 
 # Paths of delay lines producing the shifted clock
-set HYP_TX_DLINE "*i_delay_tx_clk_90.i_delay.i_delay_line"
-set HYP_RX_DLINE "*i_delay_rx_rwds_90.i_delay.i_delay_line"
+set HYP_TX_DLINE "*i_delay_tx_clk_90/i_delay.i_delay_line"
+set HYP_RX_DLINE "*i_delay_rx_rwds_90/i_delay.i_delay_line"
 
 # Bus port groups, pad-side
 set GPIO_PORTS [bus_ports gpio_a_PAD 8]
@@ -333,7 +333,7 @@ foreach dline [list $HYP_TX_DLINE $HYP_RX_DLINE] tgt [list $HYP_TX_TGT_DLY $HYP_
 # Clock the shifted pins from the internal hb_ck_int
 set HYP_CK90_ENDS [all_registers -clock [get_clocks hb_ck_int] -data_pins]
 # Gated by the internal gate of the PHY
-lappend HYP_CK90_ENDS {*}[hyp_pin1 "*i_hyper_ck_gating.i_clkgate/GATE"]
+lappend HYP_CK90_ENDS {*}[hyp_pin1 "*i_clock_diff_out/i_hyper_ck_gating.i_clkgate/GATE"]
 set_multicycle_path -setup 0 -to $HYP_CK90_ENDS
 set_multicycle_path -hold  0 -to $HYP_CK90_ENDS
 
@@ -358,8 +358,9 @@ set_output_delay -max -add_delay -clock_fall -clock [clk1 hb_ck_int] -reference_
 set_output_delay -min -add_delay             -clock [clk1 hb_ck_int] -reference_pin $HYP_OUT_COUT_PRE [expr {$HYP_DDR_MIN + $HYP_PAD_MISMATCH}]                  $HYP_RWDS_OUT
 set_output_delay -min -add_delay -clock_fall -clock [clk1 hb_ck_int] -reference_pin $HYP_OUT_COUT_PRE [expr {$HYP_DDR_MIN + $HYP_PAD_MISMATCH}]                  $HYP_RWDS_OUT
 
+# CS is launched on the falling core edge, keep it checked
 set_false_path -setup -rise_from [get_clocks $clock_port] -fall_to [get_clocks hb_ck_int]
-set_false_path -setup -fall_from [get_clocks $clock_port] -rise_to [get_clocks hb_ck_int]
+set_false_path -setup -fall_from [get_clocks $clock_port] -through [concat $HYP_DQ_IN $HYP_RWDS_OUT] -rise_to [get_clocks hb_ck_int]
 
 # No hold check for output enable pins
 set_false_path -hold -through $HYP_OUT_DOEN

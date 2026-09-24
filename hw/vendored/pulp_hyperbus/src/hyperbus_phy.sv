@@ -7,8 +7,9 @@
 // Thomas Benz <tbenz@iis.ee.ethz.ch>
 // Paul Scheffler <paulsc@iis.ee.ethz.ch>
 
+`include "common_cells/assertions.svh"
+
 module hyperbus_phy import hyperbus_pkg::*; #(
-    parameter int unsigned IsClockODelayed = -1,
     parameter int unsigned NumChips         = 2,
     parameter int unsigned NumPhys          = -1,
     parameter int unsigned TimerWidth       = 16,
@@ -67,6 +68,7 @@ module hyperbus_phy import hyperbus_pkg::*; #(
     logic [TimerWidth-1:0]  timer_d,    timer_q;
     hyper_tf_t              tf_d,       tf_q;
     logic [NumChips-1:0]    cs_d,       cs_q;
+    logic                   add_latency_d, add_latency_q;
 
     // Whether B response is pending
     logic b_pending_q;
@@ -114,7 +116,6 @@ module hyperbus_phy import hyperbus_pkg::*; #(
     // =================
 
     hyperbus_trx #(
-        .IsClockODelayed( IsClockODelayed   ),
         .NumChips       ( NumChips          ),
         .RxFifoLogDepth ( RxFifoLogDepth    ),
         .SyncStages     ( SyncStages        )
@@ -123,22 +124,21 @@ module hyperbus_phy import hyperbus_pkg::*; #(
         .clk_i_90,
         .rst_ni,
         .test_mode_i,
-        .cs_i               ( cs_q                  ),
-        .cs_ena_i           ( trx_cs_ena            ),
-        .rwds_sample_o      ( trx_rwds_sample       ),
-        .rwds_sample_ena_i  ( trx_rwds_sample_ena   ),
-        .tx_clk_delay_i     ( cfg_i.t_tx_clk_delay  ),
-        .tx_clk_ena_i       ( trx_clk_ena           ),
-        .tx_data_i          ( trx_tx_data           ),
-        .tx_data_oe_i       ( trx_tx_data_oe        ),
-        .tx_rwds_i          ( trx_tx_rwds           ),
-        .tx_rwds_oe_i       ( trx_tx_rwds_oe        ),
-        .rx_clk_delay_i     ( cfg_i.t_rx_clk_delay  ),
-        .rx_clk_set_i       ( trx_rx_clk_set        ),
-        .rx_clk_reset_i     ( trx_rx_clk_reset      ),
-        .rx_data_o          ( trx_rx_data           ),
-        .rx_valid_o         ( trx_rx_valid          ),
-        .rx_ready_i         ( trx_rx_ready          ),
+        .cs_i               ( cs_q                        ),
+        .cs_ena_i           ( trx_cs_ena                  ),
+        .rwds_sample_o      ( trx_rwds_sample             ),
+        .rwds_sample_ena_i  ( trx_rwds_sample_ena         ),
+        .tx_clk_ena_i       ( trx_clk_ena                 ),
+        .tx_data_i          ( trx_tx_data                 ),
+        .tx_data_oe_i       ( trx_tx_data_oe              ),
+        .tx_rwds_i          ( trx_tx_rwds                 ),
+        .tx_rwds_oe_i       ( trx_tx_rwds_oe              ),
+        .rx_clk_delay_i     ( cfg_i.t_rx_clk_delay        ),
+        .rx_clk_set_i       ( trx_rx_clk_set              ),
+        .rx_clk_reset_i     ( trx_rx_clk_reset            ),
+        .rx_data_o          ( trx_rx_data                 ),
+        .rx_valid_o         ( trx_rx_valid                ),
+        .rx_ready_i         ( trx_rx_ready                ),
         .hyper_cs_no,
         .hyper_ck_o,
         .hyper_ck_no,
@@ -204,8 +204,8 @@ module hyperbus_phy import hyperbus_pkg::*; #(
     // Suspend clock one cycle for every stall caused by upstream.
     // This ensures that a sufficiently large RX FIFO will not overflow.
     assign ctl_rclk_ena     = ~(rx_valid_o & ~rx_ready_i);
-    // Disable incoming RWDS clock enable once all words received
-    assign trx_rx_clk_reset = b_pending_clear;
+    // Disable incoming RWDS capture once all launched read words have drained.
+    assign trx_rx_clk_reset = (state_q != Read) & (r_outstand_q == '0);
 
     // Counter for outstanding R responses
     assign r_outstand_dec   = rx_valid_o & rx_ready_i;
@@ -221,7 +221,7 @@ module hyperbus_phy import hyperbus_pkg::*; #(
 
     // Auxiliary control signals
     assign ctl_write_zero_lat   = tf_q.address_space & tf_q.write;
-    // cfg_i.latency_addentional overwrites the trx_rwds_sample. Be careful.
+    // cfg_i.en_latency_additional overwrites the sampled RWDS value.
     assign ctl_add_latency      = trx_rwds_sample | cfg_i.en_latency_additional;
 
     assign ctl_tf_burst_last    = (tf_q.burst == 1) || (tf_q.burst == phys_in_use);
@@ -249,6 +249,7 @@ module hyperbus_phy import hyperbus_pkg::*; #(
         timer_d = timer_q - 1;
         tf_d    = tf_q;
         cs_d    = cs_q;
+        add_latency_d = add_latency_q;
         // Tri-state control of dq and rwds
         trx_tx_rwds_oe = 1'b0;
         trx_tx_data_oe = 1'b0;
@@ -269,13 +270,32 @@ module hyperbus_phy import hyperbus_pkg::*; #(
                 if (trans_valid_i & ~b_pending_q & r_outstand_q == '0) begin
                     tf_d    = trans_i;
                     cs_d    = trans_cs_i;
-                    // Send 3 CA words (t_CSS respected through clock delay)
-                    timer_d = 2;
-                    state_d = SendCA;
-                    // Enable output driver (needs to be enabled one cycle
-                    // earlier since tri-state enables of IO pads are quite
-                    // slow compared to the data pins)
+                    add_latency_d = 1'b0;
+
+                    if(cfg_i.csn_to_ck_cycles != 0) begin
+                        // assert CS but delay hyper_ck to allow more time
+                        // for memory to drive RWDS (to satisfy t_DSV)
+                        state_d = DelayCK;
+                        timer_d = cfg_i.csn_to_ck_cycles -1;
+                    end else begin
+                        // max throughput when memory RWDS signal arrives early
+                        state_d = SendCA;
+                        // Send 3 CA words (t_CSS respected through clock delay)
+                        timer_d = 2;
+                    end
+
+                    // Enable output driver (needs to be enabled at least
+                    // one cycle earlier since tri-state enables of IO pads
+                    // are quite slow compared to the data pins)
                     trx_tx_data_oe = 1'b1;
+                end
+            end
+            DelayCK: begin
+                trx_clk_ena = 1'b0;
+                trx_rwds_sample_ena = ~ctl_write_zero_lat;
+                if (ctl_timer_zero) begin
+                    timer_d = 2; // Send 3 CA words
+                    state_d = SendCA;
                 end
             end
             SendCA: begin
@@ -288,7 +308,8 @@ module hyperbus_phy import hyperbus_pkg::*; #(
                         timer_d = cfg_i.t_burst_max;
                         state_d = Write;
                     end else begin
-                        timer_d = TimerWidth'(cfg_i.t_latency_access) << ctl_add_latency;
+                        timer_d = TimerWidth'(cfg_i.t_latency_access);
+                        add_latency_d = ctl_add_latency;
                         state_d = WaitLatAccess;
                     end
                 end
@@ -296,18 +317,48 @@ module hyperbus_phy import hyperbus_pkg::*; #(
             WaitLatAccess: begin
                 trx_clk_ena = 1'b1;
                 trx_tx_data_oe = 1'b1;
-                // Substract cycle for last CA and another for state delay
+                // Keep sampling until the cycle before the normal-latency decision.
+                // The FFed sample is then visible when ctl_timer_two is evaluated.
+                trx_rwds_sample_ena = ~ctl_write_zero_lat & (timer_q > 2);
+                // The additional-latency decision is latched at the end of CA so
+                // later RWDS changes cannot erase it before the FSM decision.
+                if (~add_latency_q) begin
+                    // Substract cycle for last CA and another for state delay
+                    if(ctl_timer_two) begin
+                        timer_d = cfg_i.t_burst_max;
+                        // Switch to write or read phase and already start
+                        // turnaround of tri-state driver (depending on latency
+                        // config and if read or write transaction).
+                        if (tf_q.write) begin
+                            state_d = Write;
+                            trx_tx_data_oe = 1'b1;
+                            // For zero latency writes, we must not drive the RWDS
+                            // signal (see specs page 9). Depending on the latency
+                            // mode we thus drive only the DQ signals or DQ + RWDS.
+                            trx_tx_rwds_oe = ~ctl_write_zero_lat;
+                        end else begin
+                            state_d = Read;
+                            trx_tx_data_oe = 1'b0;
+                            trx_tx_rwds_oe = 1'b0;
+                        end
+                    end
+                end else if (ctl_timer_one) begin
+                    // instead of going to 0, add another latency count
+                    state_d = WaitAddLatAccess;
+                    timer_d = TimerWidth'(cfg_i.t_latency_access);
+                    add_latency_d = 1'b0;
+                end
+            end
+            WaitAddLatAccess: begin
+                // Same as WaitLatAccess but without possibility
+                // of adding another latency count
+                trx_clk_ena = 1'b1;
+                trx_tx_data_oe = 1'b1;
                 if (ctl_timer_two) begin
                     timer_d = cfg_i.t_burst_max;
-                    // Switch to write or read phase and already start
-                    // turnaround of tri-state driver (depending on latency
-                    // config and if read or write transaction).
                     if (tf_q.write) begin
                         state_d = Write;
                         trx_tx_data_oe = 1'b1;
-                        // For zero latency writes, we must not drive the RWDS
-                        // signal (see specs page 9). Depending on the latency
-                        // mode we thus drive only the DQ signals or DQ + RWDS.
                         trx_tx_rwds_oe = ~ctl_write_zero_lat;
                     end else begin
                         state_d = Read;
@@ -388,12 +439,20 @@ module hyperbus_phy import hyperbus_pkg::*; #(
             timer_q <= StartupCycles;
             tf_q    <= hyper_tf_t'{burst_type: 1'b1, default:'0};
             cs_q    <= '0;
+            add_latency_q <= 1'b0;
         end else begin
             state_q <= state_d;
             timer_q <= timer_d;
             tf_q    <= tf_d;
             cs_q    <= cs_d;
+            add_latency_q <= add_latency_d;
         end
     end
+
+    `ASSERT(RxCaptureResetOnlyWhenDrained, trx_rx_clk_reset |->
+        (state_q != Read && r_outstand_q == '0))
+    `ASSERT(RxCaptureActiveDuringRead, state_q == Read |-> !trx_rx_clk_reset)
+    `ASSERT(RxCaptureResetAfterDrain,
+        (r_outstand_dec && r_outstand_q == 1 && state_q != Read) |=> trx_rx_clk_reset)
 
 endmodule

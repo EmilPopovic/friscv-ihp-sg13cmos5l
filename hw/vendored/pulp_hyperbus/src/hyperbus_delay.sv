@@ -5,21 +5,23 @@
 // Thomas Benz <paulsc@iis.ee.ethz.ch>
 // Paul Scheffler <paulsc@iis.ee.ethz.ch>
 
+(* no_ungroup *)
+(* no_boundary_optimization *)
+(* keep_hierarchy = "yes" *)
 module hyperbus_delay (
     input  logic        in_i,
-    input  logic [3:0]  delay_i,
+    input  logic [7:0]  delay_i,
     output logic        out_o
 );
 
+    // 16 taps: the delay_line_D4_O1_6P000 macro has a 4-bit select, so
+    // bits 7:4 of the tap registers are ignored
     configurable_delay #(
       .NUM_STEPS(16)
     ) i_delay (
-        .clk_i      ( in_i      ),
-        `ifndef TARGET_ASIC
-        .enable_i   ( 1'b1      ),
-        `endif
-        .delay_i    ( delay_i   ),
-        .clk_o      ( out_o     )
+        .clk_i      ( in_i         ),
+        .delay_i    ( delay_i[3:0] ),
+        .clk_o      ( out_o        )
     );
 
 endmodule : hyperbus_delay

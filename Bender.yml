@@ -16,7 +16,7 @@ vendor_package:
     target_dir: "hw/vendored/pulp_hyperbus"
     upstream:
       git: "https://github.com/pulp-platform/hyperbus.git"
-      rev: "2a14bd8f9a985b488ee23d240764f52f129f7729"
+      rev: "e21a9ce901db111a84334dae39cf1c7c17f587bf"
     patch_dir: "hw/vendored/patches/pulp_hyperbus"
 
 sources:

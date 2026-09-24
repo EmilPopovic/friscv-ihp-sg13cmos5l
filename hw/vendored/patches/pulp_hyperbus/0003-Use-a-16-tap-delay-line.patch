@@ -1,0 +1,39 @@
+From dee33bc3245d8ac5f3453962d878d05d66861d4f Mon Sep 17 00:00:00 2001
+From: Matej Jurasic <matej.jurasic@fer.hr>
+Date: Thu, 24 Sep 2026 21:09:43 +0200
+Subject: [PATCH] Use a 16-tap delay line
+
+Upstream now expects a 32-tap line. The delay_line_D4_O1_6P000 macro
+has 16 taps with a 4-bit select, as modelled in chip_top.sdc.
+---
+ src/hyperbus_delay.sv | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
+
+diff --git a/src/hyperbus_delay.sv b/src/hyperbus_delay.sv
+index 00ea849..cbeb172 100644
+--- a/src/hyperbus_delay.sv
++++ b/src/hyperbus_delay.sv
+@@ -14,16 +14,13 @@ module hyperbus_delay (
+     output logic        out_o
+ );
+ 
+-    // The standard delay line is expected to have 32 taps with ~78ps per tap
+-    // This conforms to the Xilinx IDELAYE2 with a 200MHz reference clock
+-    // The total delay range is thus ~2.5ns
+-    // Additional delay can be added for debug purposes,
+-    // the upper 3 bits are reserved for this optional additional delay
++    // 16 taps: the delay_line_D4_O1_6P000 macro has a 4-bit select, so
++    // bits 7:4 of the tap registers are ignored
+     configurable_delay #(
+-      .NUM_STEPS(32)
++      .NUM_STEPS(16)
+     ) i_delay (
+         .clk_i      ( in_i         ),
+-        .delay_i    ( delay_i[4:0] ),
++        .delay_i    ( delay_i[3:0] ),
+         .clk_o      ( out_o        )
+     );
+ 
+-- 
+2.55.0
+

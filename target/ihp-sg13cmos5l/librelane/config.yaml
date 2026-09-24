@@ -318,11 +318,11 @@ MACROS:
         - dir::../src/mc_delay/views/delay_line_D4_O1_6P000.lib
     instances:
       # RWDS
-      soc_inst.i_hyperbus.i_phy.genblk1.i_phy.i_trx.i_delay_rx_rwds_90.i_delay.i_delay_line:
+      soc_inst.i_hyperbus.i_phy.genblk2.i_phy.i_trx.i_delay_rx_rwds_90/i_delay.i_delay_line:
         location: [1501.76, 366.66]
         orientation: N
       # CK
-      soc_inst.i_hyperbus.genblk1.i_delay_tx_clk_90.i_delay.i_delay_line:
+      soc_inst.i_hyperbus.i_phy.clock_generator.i_delay_tx_clk_90/i_delay.i_delay_line:
         location: [1603.52, 366.66]
         orientation: N
 

@@ -20,7 +20,8 @@ module hyperbus_axi #(
     parameter type         hyper_tx_t    = logic,
     parameter type         hyper_rx_t    = logic,
     parameter type         rule_t        = logic,
-    parameter int unsigned AxiLogDepth   = 3
+    parameter int unsigned AxiLogDepth   = 3,
+    parameter int unsigned AxiWLogDepth  = 4
 ) (
     input  logic                    clk_i,
     input  logic                    rst_ni,
@@ -307,7 +308,11 @@ module hyperbus_axi #(
     assign trans_o.write            = rr_out_req_write;
     assign trans_o.burst_type       = 1'b1;             // Wrapping bursts not (yet) supported
     assign trans_o.address_space    = addr_space_i;
-    assign trans_o.address          = ( (rr_out_req_ax.addr & ~32'(32'hFFFF_FFFF << addr_mask_msb_i)) >> ( NumPhys ) ) << ( (NumPhys==2) & ~phys_in_use_i );
+    assign trans_o.address          = (NumPhys == 2) ?
+                                      (phys_in_use_i ?
+                                       ((rr_out_req_ax.addr & ((32'b1 << addr_mask_msb_i) - 1)) >> 2) :
+                                       (((rr_out_req_ax.addr & ((32'b1 << addr_mask_msb_i) - 1)) >> 2) << 1)) :
+                                      ((rr_out_req_ax.addr & ((32'b1 << addr_mask_msb_i) - 1)) >> 1);
 
     // Convert burst length from decremented, unaligned beats to non-decremented, aligned 16-bit words
     always_comb begin
@@ -419,9 +424,9 @@ module hyperbus_axi #(
     assign w_data_fifo_in.user = ser_out_req.w.user;
 
     stream_fifo #(
-        .FALL_THROUGH ( 1'b0           ),
-        .T            ( axi_w_chan_t   ),
-        .DEPTH        ( 2**AxiLogDepth )
+        .FALL_THROUGH ( 1'b0            ),
+        .T            ( axi_w_chan_t    ),
+        .DEPTH        ( 2**AxiWLogDepth )
         ) wchan_stream_fifo (
         .clk_i,
         .rst_ni,

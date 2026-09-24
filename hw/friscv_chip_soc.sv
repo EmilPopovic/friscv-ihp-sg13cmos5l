@@ -175,10 +175,12 @@ vernii_soc #(
 localparam int unsigned HyperNumPhys    = 1;
 localparam int unsigned HyperMinFreqMHz = 40;
 
-// Requests past the mask alias onto low addresses instead of faulting
+// Requests past the mask alias onto low addresses instead of faulting; one
+// clock between CS# and CK leaves tDSV margin for the latency RWDS sample
 function automatic hyperbus_pkg::hyper_cfg_t hyper_rst_cfg();
     hyper_rst_cfg = hyperbus_pkg::gen_RstCfg(HyperNumPhys, HyperMinFreqMHz);
     hyper_rst_cfg.address_mask_msb = 5'($clog2(MemSize));
+    hyper_rst_cfg.csn_to_ck_cycles = 4'd1;
 endfunction
 
 `pragma diagnostic push
@@ -187,7 +189,7 @@ hyperbus #(
     .NumChips        ( MemChips                ),
     .NumPhys         ( HyperNumPhys            ),
     .RstCfg          ( hyper_rst_cfg()         ),
-    .IsClockODelayed ( HyperClockDelayed       ),
+    .UsePhyClkDivider( !HyperClockDelayed      ),
     .AxiAddrWidth    ( AddrWidth               ),
     .AxiDataWidth    ( DataWidth               ),
     .AxiIdWidth      ( AxiIdWidth              ),
@@ -207,7 +209,10 @@ hyperbus #(
     .MinFreqMHz      ( HyperMinFreqMHz         ),
     .RstChipBase     ( MemBase                 ),
     .RstChipSpace    ( MemSize                 ),
-    .AxiLogDepth     ( 1                       )
+    .RxFifoLogDepth  ( 2                       ),
+    .TxFifoLogDepth  ( 2                       ),
+    .AxiLogDepth     ( 1                       ),
+    .AxiWLogDepth    ( 1                       )
 ) i_hyperbus (
     .clk_phy_i       ( clk_i                    ),
     .rst_phy_ni      ( hyper_rstn_rep[0]        ),

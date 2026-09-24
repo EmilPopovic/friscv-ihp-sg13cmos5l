@@ -1,0 +1,77 @@
+From 115dfc99cf646690e96a8431f15e7c80953fe555 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Emil=20Popovi=C4=87?= <mail@emilpopovic.me>
+Date: Thu, 24 Sep 2026 21:09:19 +0200
+Subject: [PATCH] Parameterize AXI FIFO depths
+
+The AXI channel FIFOs (8) and the write data FIFO (16) are hardcoded.
+Add AxiLogDepth and AxiWLogDepth, defaulting to the current depths, so
+integrators with a single-outstanding master can shrink them.
+---
+ src/hyperbus.sv     |  6 +++++-
+ src/hyperbus_axi.sv | 12 +++++++-----
+ 2 files changed, 12 insertions(+), 6 deletions(-)
+
+diff --git a/src/hyperbus.sv b/src/hyperbus.sv
+index da287fa..82a4b52 100644
+--- a/src/hyperbus.sv
++++ b/src/hyperbus.sv
+@@ -30,6 +30,8 @@ module hyperbus #(
+     // The below have sensible defaults, but should be set on integration!
+     parameter int unsigned  RxFifoLogDepth   = 3,
+     parameter int unsigned  TxFifoLogDepth   = 3,
++    parameter int unsigned  AxiLogDepth      = 3,        // AXI channel FIFOs
++    parameter int unsigned  AxiWLogDepth     = 4,        // AXI write data FIFO
+     parameter logic [RegDataWidth-1:0]  RstChipBase  = 'h0,      // Base address for all chips
+     parameter logic [RegDataWidth-1:0]  RstChipSpace = 'h1_0000, // 64 KiB: Current maximum HyperBus device size
+     parameter hyperbus_pkg::hyper_cfg_t RstCfg       = hyperbus_pkg::gen_RstCfg(NumPhys,MinFreqMHz),
+@@ -151,7 +153,9 @@ module hyperbus #(
+         .NumPhys        ( NumPhys           ),
+         .hyper_rx_t     ( hyper_rx_t        ),
+         .hyper_tx_t     ( hyper_tx_t        ),
+-        .rule_t         ( axi_rule_t        )
++        .rule_t         ( axi_rule_t        ),
++        .AxiLogDepth    ( AxiLogDepth       ),
++        .AxiWLogDepth   ( AxiWLogDepth      )
+     ) i_axi_slave (
+         .clk_i           ( clk_sys_i            ),
+         .rst_ni          ( rst_sys_ni           ),
+diff --git a/src/hyperbus_axi.sv b/src/hyperbus_axi.sv
+index 78b3c7d..0311514 100644
+--- a/src/hyperbus_axi.sv
++++ b/src/hyperbus_axi.sv
+@@ -19,7 +19,9 @@ module hyperbus_axi #(
+     parameter int unsigned NumPhys       = -1,
+     parameter type         hyper_tx_t    = logic,
+     parameter type         hyper_rx_t    = logic,
+-    parameter type         rule_t        = logic
++    parameter type         rule_t        = logic,
++    parameter int unsigned AxiLogDepth   = 3,
++    parameter int unsigned AxiWLogDepth  = 4
+ ) (
+     input  logic                    clk_i,
+     input  logic                    rst_ni,
+@@ -170,7 +172,7 @@ module hyperbus_axi #(
+     // ============================
+ 
+     axi_fifo #(
+-        .Depth       ( 8                  ),
++        .Depth       ( 2**AxiLogDepth     ),
+         .FallThrough ( 1'b0               ),
+         .aw_chan_t   ( axi_fifo_aw_chan_t ),
+         .w_chan_t    ( axi_fifo_w_chan_t  ),
+@@ -422,9 +424,9 @@ module hyperbus_axi #(
+     assign w_data_fifo_in.user = ser_out_req.w.user;
+ 
+     stream_fifo #(
+-        .FALL_THROUGH ( 1'b0         ),
+-        .T            ( axi_w_chan_t ),
+-        .DEPTH        ( 16            )
++        .FALL_THROUGH ( 1'b0            ),
++        .T            ( axi_w_chan_t    ),
++        .DEPTH        ( 2**AxiWLogDepth )
+         ) wchan_stream_fifo (
+         .clk_i,
+         .rst_ni,
+-- 
+2.55.0
+

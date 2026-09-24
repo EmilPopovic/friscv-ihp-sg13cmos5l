@@ -10,17 +10,18 @@ package hyperbus_pkg;
 
     // configuration type
     typedef struct packed {
-        logic [3:0]     t_latency_access;
-        logic           en_latency_additional;
-        logic [15:0]    t_burst_max;
-        logic [3:0]     t_read_write_recovery;
-        logic [3:0]     t_rx_clk_delay;
-        logic [3:0]     t_tx_clk_delay;
-        logic [4:0]     address_mask_msb;
-        logic           address_space;
-        logic           phys_in_use;
-        logic           which_phy;
-        logic [3:0]     t_csh_cycles; //add an configurable Tcsh for high freq operation(200MHz Hyperram)
+        logic [3:0]      t_latency_access;
+        logic            en_latency_additional;
+        logic [15:0]     t_burst_max;
+        logic [3:0]      t_read_write_recovery;
+        logic [7:0]      t_rx_clk_delay;
+        logic [7:0]      t_tx_clk_delay;
+        logic [4:0]      address_mask_msb;
+        logic            address_space;
+        logic            phys_in_use;
+        logic            which_phy;
+        logic [3:0]      t_csh_cycles; // configurable t_CSH for high-frequency operation (200 MHz HyperRAM)
+        logic [3:0]      csn_to_ck_cycles; // delay hyper_ck after CS is asserted (more time for t_DSV)
     } hyper_cfg_t;
 
     typedef struct packed {
@@ -40,8 +41,10 @@ package hyperbus_pkg;
     typedef enum logic[3:0] {
         Startup,
         Idle,
+        DelayCK,
         SendCA,
         WaitLatAccess,
+        WaitAddLatAccess,
         Read,
         Write,
         WaitXfer,
@@ -60,21 +63,22 @@ package hyperbus_pkg;
 
     // Register reset values
     function automatic hyper_cfg_t gen_RstCfg(input int unsigned NumPhys, input int unsigned MinFreqMhz);
-        // MinFreqMHz = 100 is the spec conform version and should not be changed
-        // It can be lowered if this frequency is not reachable in operation (may not with with certain HyperBus devices)
+        // MinFreqMHz = 100 is spec-compliant and should not be changed.
+        // It can be lowered if this frequency is not reachable in operation (this may not work with certain HyperBus devices).
         // >200 is outside the spec and is unlikely to work with any HyperBus devices
         automatic hyper_cfg_t cfg = hyper_cfg_t'{
             t_latency_access:           'h6,
             en_latency_additional:      'b0,
             t_burst_max:                ((MinFreqMhz*35)/10), // t_{csm}: At lowest legal clock (100 MHz) 3.5us (0.5us safety margin)
             t_read_write_recovery:      'h6,
-            t_rx_clk_delay:             'h8,
-            t_tx_clk_delay:             'h5,
-            address_mask_msb:           'd25,                // 26 bit addresses = 2^6*2^20B == 64 MB per chip (biggest availale as of now)
+            t_rx_clk_delay:             'h08,
+            t_tx_clk_delay:             'h05,
+            address_mask_msb:           'd25,                // 2^(address mask MSB) = single chip size [bytes]
             address_space:              'b0,
             phys_in_use:                NumPhys-1,
             which_phy:                  NumPhys-1,
-            t_csh_cycles:               'h1
+            t_csh_cycles:               'h1,
+            csn_to_ck_cycles:           4'h0                 // additional cycles from CS_N going low to start of hyper_ck
         };
 
         return cfg;
