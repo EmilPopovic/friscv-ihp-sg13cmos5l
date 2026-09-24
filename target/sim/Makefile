@@ -1,6 +1,6 @@
 SOC_SRAM_BASE ?= 0
 SOC_SRAM_SIZE_BYTES ?= 8192
-SOC_MEM_SIZE ?= 16777216
+SOC_MEM_SIZE ?= 33554432
 
 SOC_TOP = friscv_chip_soc
 SOC_DIR ?= obj_dir_soc

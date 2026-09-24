@@ -13,7 +13,7 @@ module friscv_chip_soc import vernii_pkg::*; #(
     parameter int unsigned OcmBase           = 32'h0000_0000,
     parameter int unsigned OcmSize           = 32'h0000_2000,
     parameter int unsigned MemBase           = 32'h8000_0000,
-    parameter int unsigned MemSize           = 32'h0100_0000,
+    parameter int unsigned MemSize           = 32'h0200_0000,
     parameter int unsigned MemChips          = 2,
     parameter int unsigned LineBytes         = 64,
     parameter int unsigned Ways              = 4,
