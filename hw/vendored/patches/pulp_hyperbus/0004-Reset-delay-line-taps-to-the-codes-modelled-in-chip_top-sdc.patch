@@ -1,14 +1,15 @@
-From b7a7c027c080fe50d5e07534d5fe2be54d9e5449 Mon Sep 17 00:00:00 2001
+From 193f56b9377fa875ea2506d4010281f047f5f481 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Emil=20Popovi=C4=87?= <mail@emilpopovic.me>
 Date: Wed, 19 Aug 2026 00:00:00 +0200
-Subject: [PATCH] Reset TX delay-line tap to the code modelled in chip_top.sdc
+Subject: [PATCH] Reset delay-line taps to TX 9 / RX 12, as modelled in
+ chip_top.sdc
 
 ---
  src/hyperbus_pkg.sv | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/src/hyperbus_pkg.sv b/src/hyperbus_pkg.sv
-index 3f97a7a..513eade 100644
+index 3f97a7a..ca067be 100644
 --- a/src/hyperbus_pkg.sv
 +++ b/src/hyperbus_pkg.sv
 @@ -71,8 +71,8 @@ package hyperbus_pkg;
@@ -17,8 +18,8 @@ index 3f97a7a..513eade 100644
              t_read_write_recovery:      'h6,
 -            t_rx_clk_delay:             'h10,
 -            t_tx_clk_delay:             'h10,
-+            t_rx_clk_delay:             'h08,
-+            t_tx_clk_delay:             'h05,
++            t_rx_clk_delay:             'h0C,
++            t_tx_clk_delay:             'h09,
              address_mask_msb:           'd25,                // 2^(address mask MSB) = single chip size [bytes]
              address_space:              'b0,
              phys_in_use:                NumPhys-1,

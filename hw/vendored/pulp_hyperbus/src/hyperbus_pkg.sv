@@ -71,8 +71,8 @@ package hyperbus_pkg;
             en_latency_additional:      'b0,
             t_burst_max:                ((MinFreqMhz*35)/10), // t_{csm}: At lowest legal clock (100 MHz) 3.5us (0.5us safety margin)
             t_read_write_recovery:      'h6,
-            t_rx_clk_delay:             'h08,
-            t_tx_clk_delay:             'h05,
+            t_rx_clk_delay:             'h0C,
+            t_tx_clk_delay:             'h09,
             address_mask_msb:           'd25,                // 2^(address mask MSB) = single chip size [bytes]
             address_space:              'b0,
             phys_in_use:                NumPhys-1,

@@ -251,11 +251,9 @@ set HYP_EDGE_HALF [expr {$TCK_SYS / 2}]
 # One delay line step
 set HYP_DLY_STEP 0.375
 
-# TX skew correction
-set HYP_TX_SKEW [expr {2 * $HYP_DLY_STEP}]
-
-# The delay of the RX tree is not 90 degrees, correct it by adding a skew to the target delay
-set HYP_RX_TREE_SKEW 2.25
+# Reset values of t_tx_clk_delay / t_rx_clk_delay (vendor patch 0004)
+set HYP_TX_CODE 9
+set HYP_RX_CODE 12
 
 # Measured delay line taps, not in order because it is bit-reversed in hardware
 set HYP_DLY_TAPS {
@@ -269,29 +267,16 @@ set HYP_DLY_TAPS {
 # Delay line programming #
 ##########################
 
-# Pick the table entry closest to the target delay, return code and delay
-proc hyp_tap {target} {
+proc hyp_dly {code} {
     global HYP_DLY_TAPS
-    set best {}
     foreach entry $HYP_DLY_TAPS {
-        set code [lindex $entry 0]
-        set dly  [lindex $entry 1]
-        set err  [expr {abs($dly - $target)}]
-        if { $best eq "" || $err < [lindex $best 2] - 0.010 } {
-            set best [list $code $dly $err]
-        }
+        if { [lindex $entry 0] == $code } { return [lindex $entry 1] }
     }
-    return [lrange $best 0 1]
+    error "HyperBus: no delay-line entry for code $code"
 }
 
-# Get and print the delay line tap values for TX and RX, software should use these at the target clock
-set HYP_TX_TAP [hyp_tap [expr {$TCK_SYS / 4.0 + $HYP_TX_SKEW}]]
-set HYP_RX_TAP [hyp_tap [expr {$TCK_SYS / 4.0 - $HYP_RX_TREE_SKEW}]]
-
-set HYP_TX_CODE    [lindex $HYP_TX_TAP 0]
-set HYP_TX_TGT_DLY [lindex $HYP_TX_TAP 1]
-set HYP_RX_CODE    [lindex $HYP_RX_TAP 0]
-set HYP_RX_TGT_DLY [lindex $HYP_RX_TAP 1]
+set HYP_TX_TGT_DLY [hyp_dly $HYP_TX_CODE]
+set HYP_RX_TGT_DLY [hyp_dly $HYP_RX_CODE]
 
 puts "\[INFO] HyperBus delay-line targets: TX $HYP_TX_TGT_DLY ns (t_tx_clk_delay=$HYP_TX_CODE), RX $HYP_RX_TGT_DLY ns (t_rx_clk_delay=$HYP_RX_CODE) (TCK_SYS $TCK_SYS)"
 
