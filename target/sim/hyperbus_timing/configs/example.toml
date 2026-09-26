@@ -1,0 +1,27 @@
+# Copyright 2026 FER, HPC Architecture and Application Research Center
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+#
+# Licensed under the Solderpad Hardware License v 2.1 (the "License");
+# you may not use this file except in compliance with the License, or,
+# at your option, the Apache License version 2.0.
+# You may obtain a copy of the License at https://solderpad.org/licenses/SHL-2.1/
+#
+# Matej Jurasić <matej.jurasic@cappig.dev>
+#
+# A second system on the same controller, before any layout exists: two PHYs,
+# 64-bit AXI at 100 MHz, the built-in pad and on-chip estimates, and a linear
+# 16-tap delay line of 0.35 ns per tap at typ. No tap pair passes at every
+# corner: the line's delay spreads 2.3x over the corners, too much for fixed
+# taps at 100 MHz.
+
+hyperbus = "../../../../hw/vendored/pulp_hyperbus"
+bender = "../../../.."
+phys = 2
+chip_size = 0x0200_0000
+axi = { data = 64 }
+rst_cfg = { csn_to_ck_cycles = 1 }
+device = "IS67WVH32M8DBLL"
+delay_line = { step_ns = [0.24, 0.35, 0.55], offset_ns = [0.4, 0.6, 0.9] }
+
+[sweep]
+n_txn = 100

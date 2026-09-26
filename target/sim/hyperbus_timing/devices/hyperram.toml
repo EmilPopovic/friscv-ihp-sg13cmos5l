@@ -1,0 +1,89 @@
+# Copyright 2026 FER, HPC Architecture and Application Research Center
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+#
+# Licensed under the Solderpad Hardware License v 2.1 (the "License");
+# you may not use this file except in compliance with the License, or,
+# at your option, the Apache License version 2.0.
+# You may obtain a copy of the License at https://solderpad.org/licenses/SHL-2.1/
+#
+# Matej Jurasić <matej.jurasic@cappig.dev>
+#
+# HyperRAM timing (ns unless noted), per part. Keys map 1:1 to hbt_mem_profile_t.
+# [defaults] applies to every part, a part overrides what it sets.
+# Add a part here, or in a system config under [device.parts.<name>].
+#
+# Sources:
+#   IS67WVH32M8DBLL / IS66WVH32M8DBLL: ISSI IS66/67WVH32M8DALL/BLL Rev A3 (06/01/2022),
+#     Table 10.3 (3.0 V read, 200 MHz column), Table 10.4 (write), CR1 (tCSM)
+#   S27KL0641 / S70KL1281: Infineon 001-97964 Rev. *N, Tables 23 and 25 (3.0 V, 100 MHz)
+
+[defaults]
+tck_min    = 10.0     # 100 MHz part
+tckhp_min  = 0.45     # CK half period, fraction of the measured period
+tcshi      = 10.0     # CS# high between transactions
+trwr       = 40.0     # read-write recovery, CS# high to end of CA1
+tcss       = 3.0      # CS# low to first CK rising edge
+tcsh       = 0.0      # last CK falling edge to CS# high
+tdsv_max   = 12.0     # CS# low to RWDS valid
+tis        = 1.0      # input setup, DQ/RWDS to CK
+tih        = 1.0      # input hold
+tacc       = 40.0     # initial access
+tckd_min   = 1.0      # CK to DQ valid
+tckd_max   = 7.0
+tckdi_min  = 0.5      # CK to DQ invalid
+tckds_min  = 1.0      # CK to RWDS valid
+tckds_max  = 7.0
+tdss       = 0.8      # RWDS edge to DQ valid/invalid, +/-
+tdsz_max   = 7.0      # CS# high to RWDS Hi-Z
+toz_max    = 7.0      # CS# high to DQ Hi-Z
+tcsm_max   = 4000.0   # CS# low maximum (industrial)
+tvcs       = 150000.0 # power-up to first access
+die_bytes  = 8388608  # linear bursts may not cross a die boundary
+chip_bytes = 8388608
+
+# 256 Mb, 3.0 V, -200 speed grade; A2 grade (-40..105 C) is "Industrial Plus": 1 us tCSM
+[parts.IS67WVH32M8DBLL]
+tck_min    = 5.0
+tcshi      = 5.0
+trwr       = 35.0
+tcsh       = 2.0
+tis        = 0.5
+tih        = 0.5
+tacc       = 35.0
+tckd_max   = 6.5
+tckds_max  = 6.5
+tdss       = 0.40
+tdsz_max   = 6.0
+toz_max    = 6.0
+tcsm_max   = 1000.0
+die_bytes  = 33554432
+chip_bytes = 33554432
+
+# Same die, industrial grade (-40..85 C): 4 us tCSM
+[parts.IS66WVH32M8DBLL]
+tck_min    = 5.0
+tcshi      = 5.0
+trwr       = 35.0
+tcsh       = 2.0
+tis        = 0.5
+tih        = 0.5
+tacc       = 35.0
+tckd_max   = 6.5
+tckds_max  = 6.5
+tdss       = 0.40
+tdsz_max   = 6.0
+toz_max    = 6.0
+tcsm_max   = 4000.0
+die_bytes  = 33554432
+chip_bytes = 33554432
+
+# 64 Mb single die
+[parts.S27KL0641]
+tckd_max   = 7.0
+tckds_max  = 7.0
+
+# 128 Mb dual die
+[parts.S70KL1281]
+tckd_max   = 8.0
+tckds_max  = 8.0
+chip_bytes = 16777216

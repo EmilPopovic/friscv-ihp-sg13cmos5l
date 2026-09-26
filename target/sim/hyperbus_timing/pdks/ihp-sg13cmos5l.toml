@@ -1,0 +1,45 @@
+# Copyright 2026 FER, HPC Architecture and Application Research Center
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+#
+# Licensed under the Solderpad Hardware License v 2.1 (the "License");
+# you may not use this file except in compliance with the License, or,
+# at your option, the Apache License version 2.0.
+# You may obtain a copy of the License at https://solderpad.org/licenses/SHL-2.1/
+#
+# Matej Jurasić <matej.jurasic@cappig.dev>
+#
+# IHP SG13CMOS5L: what `hbt char` and `hbt extract` look for. Any key can be
+# overridden in a system's [flow] section.
+
+corners = { fast = "nom_fast_1p32V_m40C", typ = "nom_typ_1p20V_25C", slow = "nom_slow_1p08V_125C" }
+rc_layer = "Metal3"
+signal_layers = ["Metal2", "Metal3"]
+clock_layers = ["Metal3", "Metal4"]
+
+pad_cells = { out = "sg13cmos5l_IOPadOut30mA", io = "sg13cmos5l_IOPadInOut30mA" }
+pad_pins = { pad = "pad", c2p = "c2p", en = "c2p_en", p2c = "p2c" }
+pad_en_active_high = true
+
+# Setup/hold of the capture flops and clock gates
+lib_check = { flop = "sg13cmos5l_dfrbpq?_1", icg = "sg13cmos5l_slgcp_1" }
+
+# Cell name globs and pins, for tracing through the netlist
+[cells]
+flop = ["*df*"]
+icg = ["*slgcp*"]
+mux = ["*mux2*"]
+inv = ["*inv*"]
+buf = ["*buf*", "*dlygate*"]
+
+[pins]
+d = "D"
+clk = "CLK"
+q = "Q"
+icg_clk = "CLK"
+icg_out = "GCLK"
+icg_en = "GATE"
+mux_in = ["A0", "A1"]
+mux_sel = "S"
+mux_out = "X"
+inv_out = "Y"
+buf_out = "X"

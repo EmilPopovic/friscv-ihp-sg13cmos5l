@@ -1,0 +1,33 @@
+# Copyright 2026 FER, HPC Architecture and Application Research Center
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+#
+# Licensed under the Solderpad Hardware License v 2.1 (the "License");
+# you may not use this file except in compliance with the License, or,
+# at your option, the Apache License version 2.0.
+# You may obtain a copy of the License at https://solderpad.org/licenses/SHL-2.1/
+#
+# Matej Jurasić <matej.jurasic@cappig.dev>
+#
+# vernii (FRISC-V SoC) on IHP sg13cmos5l, as in hw/friscv_chip_soc.sv
+
+hyperbus = "../../../../hw/vendored/pulp_hyperbus"
+bender = "../../../.."
+period_ns = 12.5
+chips = 2
+chip_size = 0x0200_0000
+reg_base = 0x5001_0000
+min_freq_mhz = 40
+axi = { id = 1 }
+params = { AxiLogDepth = 1, AxiWLogDepth = 1, RxFifoLogDepth = 2, TxFifoLogDepth = 2 }
+rst_cfg = { csn_to_ck_cycles = 1 }
+device = "IS67WVH32M8DBLL"
+
+# From `hbt char` / `hbt extract`, kept so a sweep needs neither PDK nor P&R
+delay_line = "vernii/delay_line.json"
+pads = "vernii/pads.json"
+chip = "vernii/chip_delays.json"
+
+[flow]
+pdk = "ihp-sg13cmos5l"
+run = "../../../ihp-sg13cmos5l/librelane/runs/cb8d16c"
+ports = { dq = "hb_dq_PAD[*]", rwds = "hb_rwds_PAD", ck = "hb_ck_PAD", cs = "hb_cs_PAD[*]" }
