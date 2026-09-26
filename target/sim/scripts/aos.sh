@@ -2,47 +2,26 @@
 # Copyright 2026 FER, HPC Architecture and Application Research Center
 # SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
 #
-# Fetch, build and boot apheleiaOS. The checkout and its image live in a
-# gitignored directory; an existing image is booted rather than rebuilt.
+# Licensed under the Solderpad Hardware License v 2.1 (the "License");
+# you may not use this file except in compliance with the License, or,
+# at your option, the Apache License version 2.0.
+# You may obtain a copy of the License at https://solderpad.org/licenses/SHL-2.1/
 #
-#   scripts/aos.sh      boot, building only if there is no image yet
-#   scripts/aos.sh rebuild  build again first
+# Matej Jurasić <matej.jurasic@cappig.dev>
 #
-# Needs clang, ld.lld and dtc. Everything else is passed through to run_aos.sh.
+# Build apheleiaOS if needed and boot it: scripts/aos.sh [rebuild]
 
 set -euo pipefail
-HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-cd "$HERE/.."
+cd "$(dirname "$0")/.."
 
-AOS_DIR=${AOS_DIR:-build_aos}
-AOS_REPO=${AOS_REPO:-https://github.com/cappig/apheleiaOS.git}
-SRC=$AOS_DIR/apheleiaOS
+src=${AOS_DIR:-build_aos}/apheleiaOS
+repo=${AOS_REPO:-https://github.com/cappig/apheleiaOS.git}
 
-find_image() {
-    ls "$SRC"/bin/apheleia_*_riscv_32.img 2>/dev/null | head -1
-}
+[ "${1:-}" = rebuild ] && rm -f "$src"/bin/apheleia_*_riscv_32.img
 
-if [ "${1:-}" = rebuild ]; then
-    rm -f "$SRC"/bin/apheleia_*_riscv_32.img
+if ! ls "$src"/bin/apheleia_*_riscv_32.img >/dev/null 2>&1; then
+    [ -d "$src/.git" ] || git clone --depth 1 "$repo" "$src"
+    make -C "$src" all ARCH=riscv_32 TOOLCHAIN=llvm RISCV_FRISC=true
 fi
 
-image=$(find_image || true)
-
-if [ -z "$image" ]; then
-    for tool in clang ld.lld dtc; do
-        command -v "$tool" >/dev/null ||
-            { echo "$tool is required to build apheleiaOS" >&2; exit 1; }
-    done
-
-    [ -d "$SRC/.git" ] || git clone --depth 1 "$AOS_REPO" "$SRC"
-
-    # RISCV_FRISC selects the FRISC device tree and the register stride this
-    # SoC's 16550 uses, and drops the M extension the build notes call unstable
-    make -C "$SRC" all ARCH=riscv_32 TOOLCHAIN=llvm RISCV_FRISC=true
-
-    image=$(find_image)
-    [ -n "$image" ] || { echo "build produced no image" >&2; exit 1; }
-fi
-
-echo "booting $image"
-exec "$HERE/run_aos.sh" "$image"
+exec scripts/run_aos.sh "$(ls "$src"/bin/apheleia_*_riscv_32.img | head -1)"
