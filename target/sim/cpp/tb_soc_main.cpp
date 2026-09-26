@@ -24,11 +24,10 @@ namespace {
 #endif
 
 constexpr uint32_t MEM_BASE = 0x80000000;
-constexpr uint32_t UART0_BASE = 0x10000000;
-constexpr uint32_t SCB_HBCTL = 0x40000008;
-constexpr uint32_t SCB_LLCSEL = 0x4000000C;
+constexpr uint32_t UART0_BASE = 0x03010000;
+constexpr uint32_t SCB_LLCSEL = 0x0300000C;
 constexpr uint32_t HYPER_CFG_BASE = 0x50010000;
-constexpr uint32_t SCRATCH_ADDRESS = 0x40000000;
+constexpr uint32_t SCRATCH_ADDRESS = 0x03000000;
 constexpr uint32_t PARKED = 1;
 constexpr uint32_t PASS_VALUE = 0xaabbccdd;
 constexpr uint32_t SRAM_BASE = FRISCV_SOC_SRAM_BASE;
@@ -182,7 +181,7 @@ void apply_hyperbus_config(Jtag& jtag) {
     }
 }
 
-// FRISCV_LLCSEL enables the HyperBus and marks ways as cache before the program
+// FRISCV_LLCSEL marks ways as cache before the program
 // starts, so an image linked into the cached region can run from there
 void apply_cache_config(Jtag& jtag) {
     const char* mask = std::getenv("FRISCV_LLCSEL");
@@ -191,7 +190,6 @@ void apply_cache_config(Jtag& jtag) {
         return;
     }
 
-    jtag.write_memory(SCB_HBCTL, word_bytes(1));
     jtag.write_memory(SCB_LLCSEL, word_bytes(uint32_t(std::strtoul(mask, nullptr, 0))));
 }
 
@@ -279,7 +277,7 @@ void load_command(SocTestbench& testbench, Jtag& jtag, const char* path) {
     testbench.run_cycles(RUN_CYCLES);
 }
 
-// image in the flash, PA0 high, nothing preloaded
+// image in the flash, boot select 1, nothing preloaded
 int qspiboot_command(SocTestbench& testbench, Jtag& jtag, const char* path) {
     Dut& top = testbench.top();
 
@@ -292,7 +290,7 @@ int qspiboot_command(SocTestbench& testbench, Jtag& jtag, const char* path) {
         testbench.uart().set_divisor(uint32_t(std::strtoul(div, nullptr, 0)));
     }
 
-    dut::set_strap(top, 0);
+    dut::set_boot_sel(top, 1);
     testbench.reset();
     jtag.initialize();  // the reset above took the debug module with it
 
@@ -302,14 +300,14 @@ int qspiboot_command(SocTestbench& testbench, Jtag& jtag, const char* path) {
         limit = std::strtoull(env, nullptr, 0);
     }
 
-    for (uint64_t cycle = 0; cycle < limit && !top.o_end; ++cycle) {
+    for (uint64_t cycle = 0; cycle < limit && !top.end_o; ++cycle) {
         testbench.run_cycles(1);
     }
 
     uint32_t result = read_word(jtag, SCRATCH_ADDRESS);
     unsigned long long cycles = testbench.cycles();
 
-    if (top.o_end && result == PASS_VALUE) {
+    if (top.end_o && result == PASS_VALUE) {
         std::fprintf(stderr, "PASS (%llu cycles)\n", cycles);
         return 0;
     }
@@ -338,7 +336,7 @@ int test_command(SocTestbench& testbench, Jtag& jtag, const char* path) {
         limit = std::strtoull(env, nullptr, 0);
     }
 
-    for (uint64_t cycle = 0; cycle < limit && !top.o_end; ++cycle) {
+    for (uint64_t cycle = 0; cycle < limit && !top.end_o; ++cycle) {
         testbench.run_cycles(1);
     }
 
@@ -347,7 +345,7 @@ int test_command(SocTestbench& testbench, Jtag& jtag, const char* path) {
     // From reset, so the count does not shift with debug-module traffic
     unsigned long long cycles = testbench.cycles();
 
-    if (top.o_end && result == PASS_VALUE) {
+    if (top.end_o && result == PASS_VALUE) {
         std::fprintf(stderr, "PASS (%llu cycles)\n", cycles);
         return 0;
     }

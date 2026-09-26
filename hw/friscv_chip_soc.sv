@@ -21,7 +21,8 @@ module friscv_chip_soc import vernii_pkg::*; #(
     parameter bit          HyperClockDelayed = 1'b1,
     parameter int unsigned NumGpios          = 8,
     parameter int unsigned BootSelW          = 2,
-    parameter int unsigned HeartbeatDivW     = 27
+    parameter int unsigned HeartbeatDivW     = 27,
+    parameter bit          HaltOnEnd         = 1'b0
 ) (
     input  logic  clk_i,
     input  logic  rst_ni,
@@ -123,7 +124,8 @@ vernii_soc #(
     .SramTags       ( SramTags           ),
     .BootSelW       ( BootSelW           ),
     .NumMRegRules   ( NumMRegRules       ),
-    .MRegRules      ( MRegRules          )
+    .MRegRules      ( MRegRules          ),
+    .HaltOnEnd      ( HaltOnEnd          )
 ) i_vernii_soc (
     .clk_i,
     .rst_ni,

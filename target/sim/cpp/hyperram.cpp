@@ -20,40 +20,40 @@ unsigned env_unsigned(const char* name, unsigned fallback) {
 }
 
 uint8_t hb_dq_out(const Dut& top) {
-    return uint8_t(top.o_hyper_dq);
+    return uint8_t(top.hyper_dq_o);
 }
 
 bool hb_dq_oe(const Dut& top) {
-    return top.o_hyper_dq_oe != 0;
+    return top.hyper_dq_oe_o != 0;
 }
 
 bool hb_rwds_out(const Dut& top) {
-    return top.o_hyper_rwds != 0;
+    return top.hyper_rwds_o != 0;
 }
 
 bool hb_rwds_oe(const Dut& top) {
-    return top.o_hyper_rwds_oe != 0;
+    return top.hyper_rwds_oe_o != 0;
 }
 
 bool hb_ck(const Dut& top) {
-    return top.o_hyper_ck != 0;
+    return top.hyper_ck_o != 0;
 }
 
 // Only chip 0 is modelled; HB_CS1_N drives a second device the TB does not have
 bool hb_cs_active(const Dut& top) {
-    return (top.o_hyper_csn & 1) == 0;
+    return (top.hyper_cs_no & 1) == 0;
 }
 
 bool hb_reset_n(const Dut& top) {
-    return top.o_hyper_rstn != 0;
+    return top.hyper_reset_no != 0;
 }
 
 void set_hb_dq_in(Dut& top, uint8_t value) {
-    top.i_hyper_dq = value;
+    top.hyper_dq_i = value;
 }
 
 void set_hb_rwds_in(Dut& top, bool value) {
-    top.i_hyper_rwds = value ? 1 : 0;
+    top.hyper_rwds_i = value ? 1 : 0;
 }
 
 }  // namespace

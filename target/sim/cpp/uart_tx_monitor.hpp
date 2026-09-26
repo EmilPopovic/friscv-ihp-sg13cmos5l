@@ -1,6 +1,6 @@
 #pragma once
 
-// Decodes o_uart_tx so simulation can see what software prints. 8N1 only.
+// Decodes uart0_tx_o so simulation can see what software prints. 8N1 only.
 // Stays quiet until given the 16550 divisor, which fixes the bit period.
 class UartTxMonitor {
   public:

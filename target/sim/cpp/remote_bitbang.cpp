@@ -115,16 +115,16 @@ RemoteBitbang::RemoteBitbang(SocTestbench& testbench)
 void RemoteBitbang::set_pins(char command) {
     unsigned pins = unsigned(command - '0');
 
-    top_.i_jtag_tck = (pins >> 2) & 1;
-    top_.i_jtag_tms = (pins >> 1) & 1;
-    top_.i_jtag_tdi = pins & 1;
+    top_.jtag_tck_i = (pins >> 2) & 1;
+    top_.jtag_tms_i = (pins >> 1) & 1;
+    top_.jtag_tdi_i = pins & 1;
     testbench_.run_cycles(JTAG_CYCLES);
 }
 
 void RemoteBitbang::reset(char command) {
     bool system_reset = command == 's' || command == 'u';
 
-    top_.i_rstn = !system_reset;
+    top_.rst_ni = !system_reset;
     testbench_.run_cycles(JTAG_CYCLES);
 }
 
@@ -177,7 +177,7 @@ void RemoteBitbang::serve(uint16_t port) {
             if (command >= '0' && command <= '7') {
                 set_pins(command);
             } else if (command == 'R') {
-                response.push_back(top_.o_jtag_tdo ? '1' : '0');
+                response.push_back(dut::jtag_tdo(top_) ? '1' : '0');
             } else if (command >= 'r' && command <= 'u') {
                 reset(command);
             } else if (command == 'Q') {
