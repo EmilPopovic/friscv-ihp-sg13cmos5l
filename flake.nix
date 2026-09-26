@@ -173,6 +173,7 @@
               iverilog
               verilator
               bender
+              python3
               ngspice
               gtkwave
               klayout
