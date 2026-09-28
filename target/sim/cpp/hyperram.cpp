@@ -42,21 +42,12 @@ bool hb_ck(const Dut& top) {
     return top.hyper_ck_o != 0;
 }
 
-// Only chip 0 is modelled; HB_CS1_N drives a second device the TB does not have
-bool hb_cs_active(const Dut& top) {
-    return (top.hyper_cs_no & 1) == 0;
+bool hb_cs_active(const Dut& top, unsigned cs) {
+    return ((top.hyper_cs_no >> cs) & 1) == 0;
 }
 
 bool hb_reset_n(const Dut& top) {
     return top.hyper_reset_no != 0;
-}
-
-void set_hb_dq_in(Dut& top, uint8_t value) {
-    top.hyper_dq_i = value;
-}
-
-void set_hb_rwds_in(Dut& top, bool value) {
-    top.hyper_rwds_i = value ? 1 : 0;
 }
 
 }  // namespace
@@ -64,24 +55,21 @@ void set_hb_rwds_in(Dut& top, bool value) {
 HyperramTiming HyperramTiming::from_env() {
     HyperramTiming timing;
 
-    timing.latency       = env_unsigned("FRISCV_HRAM_LATENCY", timing.latency);
-    timing.fixed         = env_unsigned("FRISCV_HRAM_FIXED", 0) != 0;
-    timing.refresh_every = env_unsigned("FRISCV_HRAM_REFRESH_EVERY", 0);
-    timing.t_csm         = env_unsigned("FRISCV_HRAM_TCSM", 0);
-    timing.strict        = env_unsigned("FRISCV_HRAM_STRICT", 1) != 0;
+    timing.latency       = env_unsigned("VERNII_HRAM_LATENCY", timing.latency);
+    timing.fixed         = env_unsigned("VERNII_HRAM_FIXED", 0) != 0;
+    timing.refresh_every = env_unsigned("VERNII_HRAM_REFRESH_EVERY", 0);
+    timing.t_csm         = env_unsigned("VERNII_HRAM_TCSM", 0);
+    timing.strict        = env_unsigned("VERNII_HRAM_STRICT", 1) != 0;
 
     if (timing.latency < 2) {
-        throw std::runtime_error("FRISCV_HRAM_LATENCY must be at least 2");
+        throw std::runtime_error("VERNII_HRAM_LATENCY must be at least 2");
     }
 
     return timing;
 }
 
-Hyperram::Hyperram(Dut& top)
-    : top_(top), memory_(0, MEMORY_SIZE), timing_(HyperramTiming::from_env()) {
-    set_hb_dq_in(top_, 0);
-    set_hb_rwds_in(top_, false);
-}
+Hyperram::Hyperram(Dut& top, unsigned cs, uint32_t size)
+    : top_(top), cs_(cs), memory_(0, size), timing_(HyperramTiming::from_env()) {}
 
 void Hyperram::preload(uint32_t address, const std::vector<uint8_t>& data) {
     for (size_t offset = 0; offset < data.size(); ++offset) {
@@ -104,19 +92,18 @@ void Hyperram::begin_transaction() {
     cs_edges_ = 0;
     ++transactions_;
 
-    // Devices raise RWDS through the command phase on a refresh collision;
-    // the controller doubles t_latency_access from it
     additional_latency_ = timing_.fixed ||
                           (timing_.refresh_every != 0 &&
                            transactions_ % timing_.refresh_every == 0);
 
-    set_hb_rwds_in(top_, additional_latency_);
+    rwds_en_ = true;
+    rwds_ = additional_latency_;
 }
 
 void Hyperram::end_transaction() {
     phase_ = Phase::Idle;
-    set_hb_dq_in(top_, 0);
-    set_hb_rwds_in(top_, false);
+    dq_en_ = false;
+    rwds_en_ = false;
 }
 
 void Hyperram::violation(const char* what, unsigned expected, unsigned actual) {
@@ -159,7 +146,8 @@ void Hyperram::finish_command() {
         throw std::runtime_error("HyperRAM address is out of range");
     }
 
-    set_hb_rwds_in(top_, false);
+    rwds_ = false;
+    rwds_en_ = read_;
     phase_ = Phase::Wait;
 }
 
@@ -180,8 +168,9 @@ void Hyperram::drive_read_data(bool rising_edge) {
         throw std::runtime_error("HyperRAM read is out of range");
     }
 
-    set_hb_dq_in(top_, memory_.read_byte(byte_address));
-    set_hb_rwds_in(top_, rising_edge);
+    dq_en_ = true;
+    dq_ = memory_.read_byte(byte_address);
+    rwds_ = rising_edge;
 
     if (!rising_edge) {
         address_ += 2;
@@ -207,7 +196,7 @@ void Hyperram::sample_write_data(bool rising_edge) {
 void Hyperram::update() {
     bool clock = hb_ck(top_);
 
-    if (!hb_reset_n(top_) || !hb_cs_active(top_)) {
+    if (!hb_reset_n(top_) || !hb_cs_active(top_, cs_)) {
         end_transaction();
         clock_ = clock;
         return;

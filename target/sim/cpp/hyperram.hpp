@@ -10,7 +10,7 @@
 
 #include "dut.hpp"
 
-// FRISCV_HRAM_<FIELD> overrides each field, so sweeps need no rebuild
+// VERNII_HRAM_<FIELD> overrides each field, so sweeps need no rebuild
 struct HyperramTiming {
     unsigned latency = 6;
     bool     fixed = false;
@@ -20,19 +20,24 @@ struct HyperramTiming {
 
     static HyperramTiming from_env();
 
-    // Edges from the last command byte to the controller's turnaround,
-    // measured against pulp_hyperbus for t_latency_access 3..7
+    // Edges from the last command byte to the controller's turnaround
     unsigned latency_edges(bool additional) const {
         return 2 * (latency << (additional ? 1 : 0)) - 3;
     }
 };
 
+// One device on one chip select. Instead of driving pins, it reports what it would drive.
 class Hyperram {
   public:
-    explicit Hyperram(Dut& top);
+    Hyperram(Dut& top, unsigned cs, uint32_t size);
 
     void update();
     void preload(uint32_t address, const std::vector<uint8_t>& data);
+
+    bool driving_dq() const { return dq_en_; }
+    uint8_t dq() const { return dq_; }
+    bool driving_rwds() const { return rwds_en_; }
+    bool rwds() const { return rwds_; }
 
   private:
     enum class Phase {
@@ -43,7 +48,6 @@ class Hyperram {
         Write,
     };
 
-    static constexpr uint32_t MEMORY_SIZE = 0x10000000;
     static constexpr unsigned COMMAND_BYTES = 6;
     static constexpr unsigned TURNAROUND_EDGES = 2;
 
@@ -57,6 +61,7 @@ class Hyperram {
     void sample_write_data(bool rising_edge);
 
     Dut& top_;
+    unsigned cs_;
     PagedMem memory_;
     HyperramTiming timing_;
     Phase phase_ = Phase::Idle;
@@ -70,4 +75,8 @@ class Hyperram {
     bool additional_latency_ = false;
     bool read_ = false;
     bool clock_ = false;
+    bool dq_en_ = false;
+    uint8_t dq_ = 0;
+    bool rwds_en_ = false;
+    bool rwds_ = false;
 };
