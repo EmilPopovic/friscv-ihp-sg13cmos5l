@@ -1,10 +1,13 @@
+// Copyright 2026 FER, HPC Architecture and Application Research Center
+// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+
 #pragma once
 
 #include <cstdint>
 
-#include "Vfriscv_chip_soc.h"
+#include "Vchip_soc.h"
 
-using Dut = Vfriscv_chip_soc;
+using Dut = Vchip_soc;
 
 namespace dut {
 
@@ -32,8 +35,8 @@ inline bool qspi_sck(const Dut& top) {
     return top.qspi0_sck_o != 0;
 }
 
-inline bool qspi_selected(const Dut& top) {
-    return (top.qspi0_cs_o & 1) == 0;
+inline bool qspi_selected(const Dut& top, unsigned cs) {
+    return ((top.qspi0_cs_o >> cs) & 1) == 0;
 }
 
 inline bool qspi_mosi(const Dut& top) {

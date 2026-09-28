@@ -1,10 +1,13 @@
+// Copyright 2026 FER, HPC Architecture and Application Research Center
+// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+
 #include "soc_memory.hpp"
 
 #include <stdexcept>
 
-#include "Vfriscv_chip_soc___024root.h"
+#include "Vchip_soc___024root.h"
 
-using DutRoot = Vfriscv_chip_soc___024root;
+using DutRoot = Vchip_soc___024root;
 
 #include "elf_loader.hpp"
 
@@ -27,10 +30,10 @@ uint32_t& sram_word(Dut& top, uint32_t index) {
     DutRoot& root = *top.rootp;
 
     uint32_t* const way_words[WAYS] = {
-        &root.friscv_chip_soc__DOT__i_vernii_soc__DOT__i_mem_hub__DOT__gen_ocm_llc__DOT__ocm_llc__DOT__gen_ways__BRA__0__KET____DOT__way_sram__DOT__sram[0],
-        &root.friscv_chip_soc__DOT__i_vernii_soc__DOT__i_mem_hub__DOT__gen_ocm_llc__DOT__ocm_llc__DOT__gen_ways__BRA__1__KET____DOT__way_sram__DOT__sram[0],
-        &root.friscv_chip_soc__DOT__i_vernii_soc__DOT__i_mem_hub__DOT__gen_ocm_llc__DOT__ocm_llc__DOT__gen_ways__BRA__2__KET____DOT__way_sram__DOT__sram[0],
-        &root.friscv_chip_soc__DOT__i_vernii_soc__DOT__i_mem_hub__DOT__gen_ocm_llc__DOT__ocm_llc__DOT__gen_ways__BRA__3__KET____DOT__way_sram__DOT__sram[0],
+        &root.chip_soc__DOT__i_vernii_soc__DOT__i_mem_hub__DOT__gen_ocm_llc__DOT__ocm_llc__DOT__gen_ways__BRA__0__KET____DOT__way_sram__DOT__sram[0],
+        &root.chip_soc__DOT__i_vernii_soc__DOT__i_mem_hub__DOT__gen_ocm_llc__DOT__ocm_llc__DOT__gen_ways__BRA__1__KET____DOT__way_sram__DOT__sram[0],
+        &root.chip_soc__DOT__i_vernii_soc__DOT__i_mem_hub__DOT__gen_ocm_llc__DOT__ocm_llc__DOT__gen_ways__BRA__2__KET____DOT__way_sram__DOT__sram[0],
+        &root.chip_soc__DOT__i_vernii_soc__DOT__i_mem_hub__DOT__gen_ocm_llc__DOT__ocm_llc__DOT__gen_ways__BRA__3__KET____DOT__way_sram__DOT__sram[0],
     };
 
     if (index >= WAYS * WAY_WORDS) {

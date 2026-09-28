@@ -1,3 +1,6 @@
+// Copyright 2026 FER, HPC Architecture and Application Research Center
+// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+
 #include "soc_testbench.hpp"
 
 namespace {
@@ -23,10 +26,16 @@ SocTestbench::~SocTestbench() {
     top_.final();
 }
 
+void SocTestbench::drive_miso() {
+    // The line idles high while the flash is deselected
+    dut::qspi_miso(top_, flash_.driving() ? flash_.miso() : true);
+}
+
 void SocTestbench::eval() {
     top_.eval();
     ext_mem_.update();
     flash_.update();
+    drive_miso();
     top_.eval();
 }
 

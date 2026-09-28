@@ -30,10 +30,15 @@
             inherit system;
             overlays = [ nix-eda.overlays.default ];
           };
-          openroad = librelane.packages.${system}.openroad
-            or librelane.legacyPackages.${system}.openroad;
-          librelane-pkg = librelane.packages.${system}.librelane
-            or librelane.packages.${system}.default;
+          librelane-pkgs = librelane.legacyPackages.${system}.extend (final: prev: {
+            openroad = prev.openroad.overrideAttrs (old: {
+              patches = old.patches ++ [
+                ./nix/patches/openroad/grt_maze3d_underflow.patch
+              ];
+            });
+          });
+          openroad = librelane-pkgs.openroad;
+          librelane-pkg = librelane-pkgs.python3.pkgs.librelane;
           librelane-manual-pdk = pkgs.symlinkJoin {
             name = "librelane-manual-pdk";
             paths = [ librelane-pkg ];

@@ -1,0 +1,88 @@
+Backport of The-OpenROAD-Project/OpenROAD#11404 (c751cdc, 2026-09-14) onto
+dcf3613 (2026-02-17, the rev pinned by librelane): when the 3D maze router
+runs out of candidates, keep the edge's original route and warn instead of
+aborting with GRT-0183 "heap underflow during 3D maze routing".
+
+diff --git a/src/grt/src/fastroute/src/maze3D.cpp b/src/grt/src/fastroute/src/maze3D.cpp
+index 79873df91..d45385a95 100644
+--- a/src/grt/src/fastroute/src/maze3D.cpp
++++ b/src/grt/src/fastroute/src/maze3D.cpp
+@@ -726,6 +726,7 @@ void FastRouteCore::mazeRouteMSMDOrder3D(int expand,
+   }
+ 
+   const int endIND = tree_order_pv_.size() * 0.9;
++  int recovered_nets = 0;
+ 
+   for (int orderIndex = 0; orderIndex < endIND; orderIndex++) {
+     const int netID = tree_order_pv_[orderIndex].treeIndex;
+@@ -751,6 +752,7 @@ void FastRouteCore::mazeRouteMSMDOrder3D(int expand,
+     auto& treeedges = sttrees_[netID].edges;
+     auto& treenodes = sttrees_[netID].nodes;
+     const int origEng = enlarge;
++    bool recovered_edge = false;
+ 
+     for (int edgeID = 0; edgeID < sttrees_[netID].num_edges(); edgeID++) {
+       TreeEdge* treeedge = &(treeedges[edgeID]);
+@@ -824,6 +826,9 @@ void FastRouteCore::mazeRouteMSMDOrder3D(int expand,
+         pop_heap2_3D_[i - &d2_3D_[0][0][0]] = true;
+       }
+ 
++      // Track searches that cannot reach the destination subtree.
++      bool heap_underflow = false;
++
+       while (pop_heap2_3D_[ind1]
+              == false)  // stop until the grid position been popped out from
+                         // both src_heap_3D and dest_heap_3D
+@@ -1151,10 +1156,9 @@ void FastRouteCore::mazeRouteMSMDOrder3D(int expand,
+         }
+ 
+         if (src_heap_3D_.empty()) {
+-          logger_->error(GRT,
+-                         183,
+-                         "Net {}: heap underflow during 3D maze routing.",
+-                         nets_[netID]->getName());
++          // Recover the original route below instead of aborting.
++          heap_underflow = true;
++          break;
+         }
+         // update ind1 for next loop
+         ind1 = (src_heap_3D_[0] - &d1_3D_[0][0][0]);
+@@ -1163,6 +1167,20 @@ void FastRouteCore::mazeRouteMSMDOrder3D(int expand,
+       for (auto& i : dest_heap_3D_) {
+         pop_heap2_3D_[i - &d2_3D_[0][0][0]] = false;
+       }
++
++      if (heap_underflow) {
++        debugPrint(logger_,
++                   GRT,
++                   "maze_3d",
++                   1,
++                   "Net {}: no 3D maze path found for edge {}; "
++                   "recovering original route.",
++                   nets_[netID]->getName(),
++                   edgeID);
++        recoverEdge(netID, edgeID);
++        recovered_edge = true;
++        continue;
++      }
+       // get the new route for the edge and store it in gridsX[] and
+       // gridsY[] temporarily
+ 
+@@ -1576,6 +1594,17 @@ void FastRouteCore::mazeRouteMSMDOrder3D(int expand,
+       }
+       setTreeNodesVariables(netID);
+     }
++    if (recovered_edge) {
++      recovered_nets++;
++    }
++  }
++
++  if (recovered_nets > 0) {
++    logger_->warn(GRT,
++                  183,
++                  "Kept original routes for edges of {} nets because the 3D "
++                  "maze router found no legal path.",
++                  recovered_nets);
+   }
+ }
+ 

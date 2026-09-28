@@ -6,10 +6,10 @@
 // at your option, the Apache License version 2.0.
 // You may obtain a copy of the License at https://solderpad.org/licenses/SHL-2.1/
 //
-// Emil Popović <mail@emilpopovic.me>
-// Matej Jurasić <matej.jurasic@cappig.dev>
+// Emil Popovic <mail@emilpopovic.me>
+// Matej Jurasic <matej.jurasic@cappig.dev>
 
-module friscv_chip_soc import vernii_pkg::*; #(
+module chip_soc import vernii_pkg::*; #(
     parameter int unsigned OcmBase           = 32'h0000_0000,
     parameter int unsigned OcmSize           = 32'h0000_2000,
     parameter int unsigned MemBase           = 32'h8000_0000,
@@ -43,7 +43,7 @@ module friscv_chip_soc import vernii_pkg::*; #(
     output logic  jtag_tdo_o,
     output logic  jtag_tdo_oe_o,
 
-    // QSPI0; SCK and the chip selects are always driven
+    // QSPI0
     output logic       qspi0_sck_o,
     output logic [2:0] qspi0_cs_o,
     input  logic [3:0] qspi0_sd_i,
@@ -61,10 +61,10 @@ module friscv_chip_soc import vernii_pkg::*; #(
     output logic [MemChips-1:0] hyper_cs_no,
     output logic                hyper_reset_no,
 
-    // Boot mode select, static straps on dedicated pins
+    // Boot mode select
     input  logic [BootSelW-1:0] boot_sel_i,
 
-    // GPIO Port A, PA0..PA(NumGpios-1)
+    // GPIO Port A
     input  logic [NumGpios-1:0] gpio_a_i,
     output logic [NumGpios-1:0] gpio_a_o,
     output logic [NumGpios-1:0] gpio_a_oe_o
@@ -227,7 +227,7 @@ hyperbus #(
     .reg_rsp_o       ( m_reg_rsp[HyperCfgSlv]   ),
     .hyper_cs_no,
     .hyper_ck_o,
-    .hyper_ck_no     ( /* unused */             ),  // single-ended for 3 V parts
+    .hyper_ck_no     ( /* unused */             ),  // single-ended for 3.0 V parts
     .hyper_rwds_o,
     .hyper_rwds_i,
     .hyper_rwds_oe_o,

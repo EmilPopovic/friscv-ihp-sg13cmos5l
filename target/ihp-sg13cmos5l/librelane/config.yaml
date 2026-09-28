@@ -6,7 +6,7 @@
 # at your option, the Apache License version 2.0.
 # You may obtain a copy of the License at https://solderpad.org/licenses/SHL-2.1/
 #
-# Emil Popović <mail@emilpopovic.me>
+# Emil Popovic <mail@emilpopovic.me>
 
 # Based on https://github.com/IHP-GmbH/ihp-sg13cmos5l-librelane-template/blob/main/librelane/config.yaml
 
@@ -22,6 +22,8 @@ meta:
     # Disable KLayout antenna check
     KLayout.Antenna: null
     Checker.KLayoutAntenna: null
+    # Do one more repair design pass to fix remaining max-slew
+    +OpenROAD.ResizerTimingPostGRT: OpenROAD.RepairDesignPostGRT
 
 DESIGN_NAME: RVSoC9108
 VERILOG_FILES:
@@ -41,21 +43,12 @@ ERROR_ON_SYNTH_CHECKS: false
 # Slightly smaller file sizes
 PRIMARY_GDSII_STREAMOUT_TOOL: klayout
 
-# 12.5 ns = 80.00 MHz
-CLOCK_PERIOD: 12.5
+# Stock PDK fill + gap fill for M2 and M4
+# Stock script does not fill enough for density DRCs
+KLAYOUT_FILLER_SCRIPT: dir::fill/filler.py
 
-# Keep part of the hierarchy for debugging and librelane-image target
-# SYNTH_KEEP_HIERARCHY_INSTANCES: [
-#     '*vernii_soc*/i_cpu',     # CPU
-#     '*vernii_soc*/i_dmi',     # JTAG
-#     '*vernii_soc*/i_dm',      # DM
-#     '*vernii_soc*/i_aclint',  # ACLINT
-#     '*vernii_soc*/i_plic',    # PLIC
-#     '*vernii_soc*/i_gpio_a',  # GPIO A
-#     '*vernii_soc*/i_qspi0',   # QSPI0
-#     '*vernii_soc*/i_uart0',   # UART0
-#     '*vernii_soc*/i_scb'      # SCB
-# ]
+# 13.33 ns = 75.00 MHz
+CLOCK_PERIOD: 13.33
 
 # Specify the pad instances for the padring
 PAD_SOUTH: [
@@ -161,6 +154,20 @@ CORE_AREA: [336, 336, 1764, 1764]
 FP_MACRO_HORIZONTAL_HALO: 5
 FP_MACRO_VERTICAL_HALO: 5
 
+# No cells next to Metal2 PDN straps added in pdn_cfg.tcl
+FP_OBSTRUCTIONS:
+- [  369.65,   344.82,   374.85,   504.02]
+- [  369.65,   994.82,   374.85,  1754.02]
+- [  569.65,   444.82,   574.85,   504.02]
+- [  569.65,   994.82,   574.85,  1754.02]
+- [  769.65,   444.82,   774.85,  1754.02]
+- [  969.65,   444.82,   974.85,  1754.02]
+- [ 1169.65,   444.82,  1174.85,  1754.02]
+- [ 1369.65,   344.82,  1374.85,   504.02]
+- [ 1369.65,   994.82,  1374.85,  1754.02]
+- [ 1569.65,   344.82,  1574.85,   504.02]
+- [ 1569.65,   994.82,  1574.85,  1754.02]
+
 # Keep signal routing off the SRAM macro power stripes
 # Do not use GRT_MACRO_EXTENSION for this
 ROUTING_OBSTRUCTIONS:
@@ -177,8 +184,8 @@ ROUTING_OBSTRUCTIONS:
 - ["Metal4",   1347.36,  752.36, 1764.00,  943.70]
 - ["TopMetal1",1347.36,  752.36, 1764.00,  943.70]
 # gen_tag_sram
-- ["Metal4",    657.76,  336.00, 1442.24,  400.36]
-- ["TopMetal1", 657.76,  336.00, 1442.24,  400.36]
+- ["Metal4",    557.76,  336.00, 1342.24,  400.36]
+- ["TopMetal1", 557.76,  336.00, 1342.24,  400.36]
 
 PL_TARGET_DENSITY_PCT: 70
 GRT_ALLOW_CONGESTION: true
@@ -199,7 +206,7 @@ TIME_DERATING_CONSTRAINT: 2
 
 DESIGN_REPAIR_MAX_WIRE_LENGTH: 800
 CTS_CLK_MAX_WIRE_LENGTH: 300
-GRT_DESIGN_REPAIR_MAX_WIRE_LENGTH: 600
+GRT_DESIGN_REPAIR_MAX_WIRE_LENGTH: 450
 WIRE_LENGTH_THRESHOLD: 2500
 
 DESIGN_REPAIR_REMOVE_BUFFERS: false
@@ -220,6 +227,8 @@ RUN_POST_GRT_RESIZER_TIMING: true
 CTS_APPLY_NDR: none
 
 # PDN
+# librelane PDN + M2 strap pair every 200 um between M4 straps
+PDN_CFG: dir::pdn_cfg.tcl
 PDN_CORE_RING: True
 
 # Override bondpad name
@@ -254,6 +263,7 @@ VSRC_LOC_FILES:
 MAGIC_EXT_UNIQUE: notopports
 
 MACROS:
+  # OCM ways SRAM macros
   RM_IHPSG13_1P_512x32_c2_bm_bist:
     gds:
       - pdk_dir::libs.ref/sg13cmos5l_sram/gds/RM_IHPSG13_1P_512x32_c2_bm_bist.gds
@@ -270,18 +280,23 @@ MACROS:
       "*_slow_1p08V_125C":
         - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_512x32_c2_bm_bist_slow_1p08V_125C.lib
     instances:
+      # Way 0
       soc_inst.i_vernii_soc.i_mem_hub.gen_ocm_llc.ocm_llc.gen_ways[0].way_sram.gen_512x32.gen_cuts[0].i_cut:
         location: [336.0, 550.36]
         orientation: N
+      # Way 1
       soc_inst.i_vernii_soc.i_mem_hub.gen_ocm_llc.ocm_llc.gen_ways[1].way_sram.gen_512x32.gen_cuts[0].i_cut:
         location: [1347.36, 550.36]
         orientation: N
+      # Way 2
       soc_inst.i_vernii_soc.i_mem_hub.gen_ocm_llc.ocm_llc.gen_ways[2].way_sram.gen_512x32.gen_cuts[0].i_cut:
         location: [336.0, 752.36]
         orientation: FS
+      # Way 3
       soc_inst.i_vernii_soc.i_mem_hub.gen_ocm_llc.ocm_llc.gen_ways[3].way_sram.gen_512x32.gen_cuts[0].i_cut:
         location: [1347.36, 752.36]
         orientation: FS
+  # Tag SRAM macro
   RM_IHPSG13_1P_64x64_c2_bm_bist:
     gds:
       - pdk_dir::libs.ref/sg13cmos5l_sram/gds/RM_IHPSG13_1P_64x64_c2_bm_bist.gds
@@ -298,12 +313,11 @@ MACROS:
       "*_slow_1p08V_125C":
         - pdk_dir::libs.ref/sg13cmos5l_sram/lib/RM_IHPSG13_1P_64x64_c2_bm_bist_slow_1p08V_125C.lib
     instances:
+      # Shifted left so that the right side has more space to route for SRAM and HyperBus
       soc_inst.i_vernii_soc.i_mem_hub.gen_ocm_llc.ocm_llc.gen_tag_sram.tag_sram.gen_64x64.i_cut:
-        location: [657.76, 336.0]
+        location: [557.76, 336.0]
         orientation: FS
-  # HyperBus PHY delay line, 6 ns full scale at 0.375 ns/step
-  # Ported from cheshire-ihp130-o to CMOS5L
-  # Only tt corner characterized, all point at it, similar to Basilisk
+  # HyperBus PHY delay line
   delay_line_D4_O1_6P000:
     gds:
       - dir::../src/mc_delay/views/delay_line_D4_O1_6P000.gds

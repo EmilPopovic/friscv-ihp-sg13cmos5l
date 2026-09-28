@@ -6,10 +6,8 @@
 // at your option, the Apache License version 2.0.
 // You may obtain a copy of the License at https://solderpad.org/licenses/SHL-2.1/
 //
-// Emil Popović <mail@emilpopovic.me>
-// Matej Jurasić <matej.jurasic@cappig.dev>
-
-// Based on https://github.com/IHP-GmbH/ihp-sg13cmos5l-librelane-template/blob/main/src/chip_top.sv
+// Emil Popovic <mail@emilpopovic.me>
+// Matej Jurasic <matej.jurasic@cappig.dev>
 
 `default_nettype none
 
@@ -477,7 +475,7 @@ end
 
 `pragma diagnostic push
 `pragma diagnostic ignore="-Wempty-output-connection"
-(* keep *) friscv_chip_soc #(
+(* keep *) chip_soc #(
     .NumGpios ( NUM_GPIO_PADS ),
     .BootSelW ( NUM_BOOT_PADS ),
     .MemChips ( NUM_HB_CS     )

@@ -6,7 +6,7 @@
 // at your option, the Apache License version 2.0.
 // You may obtain a copy of the License at https://solderpad.org/licenses/SHL-2.1/
 //
-// Emil Popović <mail@emilpopovic.me>
+// Emil Popovic <mail@emilpopovic.me>
 
 // Based on https://github.com/pulp-platform/cheshire-ihp130-o/blob/main/target/ihp13/src/tc_sram.sv
 
