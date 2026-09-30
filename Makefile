@@ -2,6 +2,26 @@
 sim:
 	make -C target/sim all
 
+.PHONY: run-chip
+run-chip:
+	make -C target/sim test
+
+.PHONY: run-soc
+run-soc:
+	make -C target/sim test-soc
+
+.PHONY: run-gls
+run-gls:
+	make -C target/sim gls
+
+.PHONY: run-jtag
+run-jtag:
+	make -C target/sim jtag
+
+.PHONY: run-debug
+run-debug:
+	make -C target/sim debug
+
 .PHONY: report-area
 report-area:
 	make -C target/ihp-sg13cmos5l area

@@ -47,21 +47,11 @@ direnv allow
 
 The first activation downloads the prebuilt tools (a few minutes). After that, `cd`-ing into the repo puts every tool on your `PATH` automatically.
 
-## Simulation
-
-`make sim` builds a chip-level Verilator model of `chip_soc` with C++ models for the HyperRAM, the QSPI flash and the UART.
-
-```bash
-make sim
-./target/sim/obj_dir_soc/friscv_soc test <program.elf>
-./target/sim/obj_dir_soc/friscv_soc qspiboot <image.bin>
-```
-
 ## Repository layout
 
 - `hw/` - `chip_soc` and the vendored PULP HyperBus.
 - `target/ihp-sg13cmos5l/` - synthesis, LibreLane flow, pad ring, PDK cells.
-- `target/sim/` - chip-level C++/Verilator simulation harness.
+- `target/sim/` - Verilator and Icarus simulation harness, directed tests.
 - `target/xilinx/pynq-z2/` - FPGA counterpart of the chip.
 - `docs/` - design notes.
 - `flake.nix` - Nix toolchain definition.
