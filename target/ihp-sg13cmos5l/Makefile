@@ -39,13 +39,40 @@ area: sources.f
 	netlist=$$(echo $(AREA_RUN_DIR)/*-yosys-synthesis/$(TOP).nl.v); \
 	yosys -p "read_verilog -sv $$netlist; stat $(foreach lib,$(AREA_LIBERTIES),-liberty $(lib))" | tee area.rpt
 
+IO_CDL = build/sg13cmos5l_io.cdl
+
+# Apply IO CDL patch to fix LVS
+$(IO_CDL): ${PDK_ROOT}/${PDK}/libs.ref/sg13cmos5l_io/cdl/sg13cmos5l_io.cdl patches/sg13cmos5l_io.cdl.patch
+	mkdir -p $(@D)
+	cp $< $@
+	chmod u+w $@
+	patch -s $@ patches/sg13cmos5l_io.cdl.patch
+
 .PHONY: librelane
-librelane: sources.f
+librelane: sources.f $(IO_CDL)
 	$(LIBRELANE)
+	$(MAKE) release
+
+RUN ?= $(lastword $(sort $(wildcard librelane/runs/RUN_*)))
+RUN_DIR = $(if $(wildcard $(RUN)/resolved.json),$(RUN),librelane/runs/$(RUN))
+RELEASE_DIR = release
+
+.PHONY: release
+release: $(IO_CDL)
+	rm -f $(RELEASE_DIR)/$(TOP).gds $(RELEASE_DIR)/$(TOP).cdl $(RELEASE_DIR)/run.txt
+	@test -f $(RUN_DIR)/final/cdl/$(TOP).cdl || \
+		{ echo "$(RUN_DIR) has no final/cdl, resume it with -F OpenROAD.WriteCDL"; exit 1; }
+	mkdir -p $(RELEASE_DIR)
+	cp $(RUN_DIR)/final/gds/$(TOP).gds $(RELEASE_DIR)/
+	awk 'toupper($$1) == ".SUBCKT" { skip = ($$2 in seen); seen[$$2] = 1 } !skip; toupper($$1) == ".ENDS" { skip = 0 }' \
+		$(RUN_DIR)/final/cdl/$(TOP).cdl \
+		$$(jq -r '.CELL_CDLS[], .PAD_CDLS[], .EXTRA_CDLS[]' $(RUN_DIR)/resolved.json) \
+		> $(RELEASE_DIR)/$(TOP).cdl
+	echo $(abspath $(RUN_DIR)) > $(RELEASE_DIR)/run.txt
 
 .PHONY: check-last
 check-last:
-	python3 signoff_report.py
+	python3 scripts/check_slew.py $(RUN_DIR)
 
 .PHONY: librelane-openroad
 librelane-openroad:

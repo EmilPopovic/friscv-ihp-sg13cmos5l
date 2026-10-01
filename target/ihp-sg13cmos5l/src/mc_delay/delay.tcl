@@ -1,10 +1,21 @@
+# Copyright 2026 FER, HPC Architecture and Application Research Center
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+#
+# Licensed under the Solderpad Hardware License v 2.1 (the "License");
+# you may not use this file except in compliance with the License, or,
+# at your option, the Apache License version 2.0.
+# You may obtain a copy of the License at https://solderpad.org/licenses/SHL-2.1/
+#
+# Emil Popovic <mail@emilpopovic.me>
+#
+#   Adapted from ETH Zurich and University of Bologna
+#
 # Copyright 2023 ETH Zurich and University of Bologna.
 # Solderpad Hardware License, Version 0.51, see LICENSE for details.
 # SPDX-License-Identifier: SHL-0.51
 #
 # Authors:
 #  - Thomas Benz <tbenz@iis.ee.ethz.ch>
-#  - Emil Popović <mail@emilpopovic.me>
 
 # ToDo: Timing should be on point, it fixes slack too much
 #       -> check window-constraint, maybe add hold-margin and relax slack-margin?
@@ -168,4 +179,5 @@ write_def out/$DESIGN_NAME.def
 write_verilog out/$DESIGN_NAME.v
 write_sdf out/$DESIGN_NAME.sdf
 write_sdc out/$DESIGN_NAME.sdc
+write_cdl -include_fillers -masters ${pdk_dir}/cdl/sg13cmos5l_stdcell.cdl out/$DESIGN_NAME.cdl
 # write_spef out/$DESIGN_NAME.spef

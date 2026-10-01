@@ -61,7 +61,7 @@ def pad_signal(pin: str):
 
 
 def main() -> int:
-    here = pathlib.Path(__file__).resolve().parent
+    here = pathlib.Path(__file__).resolve().parent.parent
     run = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else newest_run(here / "librelane" / "runs")
 
     sta_steps = sorted(run.glob(STA_STEP_GLOB))

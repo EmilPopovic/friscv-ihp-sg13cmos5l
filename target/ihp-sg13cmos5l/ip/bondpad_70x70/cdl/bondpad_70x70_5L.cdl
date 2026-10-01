@@ -1,0 +1,3 @@
+* Metal-only bondpad, no devices
+.SUBCKT bondpad_70x70_5L pad
+.ENDS

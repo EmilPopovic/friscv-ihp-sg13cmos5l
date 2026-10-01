@@ -24,6 +24,8 @@ meta:
     Checker.KLayoutAntenna: null
     # Do one more repair design pass to fix remaining max-slew
     +OpenROAD.ResizerTimingPostGRT: OpenROAD.RepairDesignPostGRT
+    # Chip CDL for KLayout LVS
+    -Misc.ReportManufacturability: OpenROAD.WriteCDL
 
 DESIGN_NAME: RVSoC9108
 VERILOG_FILES:
@@ -42,6 +44,11 @@ ERROR_ON_SYNTH_CHECKS: false
 
 # Slightly smaller file sizes
 PRIMARY_GDSII_STREAMOUT_TOOL: klayout
+
+# Macro GDS files have their own std cell names, by default KLayout mangles them
+# to avoid conflicts, which breaks LVS. This disables mangling, make sure that cells
+# that have the same name are actually the same cell.
+KLAYOUT_CONFLICT_RESOLUTION: SkipNewCell
 
 # Stock PDK fill + gap fill for M2 and M4
 # Stock script does not fill enough for density DRCs
@@ -240,6 +247,15 @@ EXTRA_GDS:
 
 EXTRA_LEFS:
 - dir::../ip/bondpad_70x70/lef/bondpad_70x70_5L.lef
+
+PAD_CDLS:
+- dir::../build/sg13cmos5l_io.cdl
+
+EXTRA_CDLS:
+- pdk_dir::libs.ref/sg13cmos5l_sram/cdl/RM_IHPSG13_1P_512x32_c2_bm_bist.cdl
+- pdk_dir::libs.ref/sg13cmos5l_sram/cdl/RM_IHPSG13_1P_64x64_c2_bm_bist.cdl
+- dir::../src/mc_delay/views/delay_line_D4_O1_6P000.cdl
+- dir::../ip/bondpad_70x70/cdl/bondpad_70x70_5L.cdl
 
 IGNORE_DISCONNECTED_MODULES:
 - bondpad_70x70_5L

@@ -5,3 +5,4 @@ result-*
 .bender/
 sources.f
 __pycache__/
+/target/ihp-sg13cmos5l/release/

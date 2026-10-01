@@ -147,7 +147,7 @@ fi
 if [ "${1:-}" = install ]; then
     echo "== install =="
     mkdir -p views
-    for ext in abst.lef lib def v sdf sdc gds; do
+    for ext in abst.lef lib def v sdf sdc cdl gds; do
         cp -v "out/$DESIGN.$ext" "views/$DESIGN.$ext"
     done
 fi

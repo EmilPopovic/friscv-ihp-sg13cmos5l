@@ -186,6 +186,7 @@
               netgen
               openocd
               uv
+              jq
               haskellPackages.sv2v
             ]) ++ [
               mise
