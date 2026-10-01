@@ -59,11 +59,12 @@ RELEASE_DIR = release
 
 .PHONY: release
 release: $(IO_CDL)
-	rm -f $(RELEASE_DIR)/$(TOP).gds $(RELEASE_DIR)/$(TOP).cdl $(RELEASE_DIR)/run.txt
+	rm -f $(RELEASE_DIR)/$(TOP).gds $(RELEASE_DIR)/$(TOP).gds.gz $(RELEASE_DIR)/$(TOP).cdl $(RELEASE_DIR)/run.txt
 	@test -f $(RUN_DIR)/final/cdl/$(TOP).cdl || \
 		{ echo "$(RUN_DIR) has no final/cdl, resume it with -F OpenROAD.WriteCDL"; exit 1; }
 	mkdir -p $(RELEASE_DIR)
 	cp $(RUN_DIR)/final/gds/$(TOP).gds $(RELEASE_DIR)/
+	gzip -9 -n -k $(RELEASE_DIR)/$(TOP).gds
 	awk 'toupper($$1) == ".SUBCKT" { skip = ($$2 in seen); seen[$$2] = 1 } !skip; toupper($$1) == ".ENDS" { skip = 0 }' \
 		$(RUN_DIR)/final/cdl/$(TOP).cdl \
 		$$(jq -r '.CELL_CDLS[], .PAD_CDLS[], .EXTRA_CDLS[]' $(RUN_DIR)/resolved.json) \
