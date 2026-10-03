@@ -1,5 +1,3 @@
-IOPadInOut30mA: ptap1 belongs to XR0, not to the XI3 clamp call. Matches sg13g2_io.cdl.
-
 --- a/sg13cmos5l_io.cdl
 +++ b/sg13cmos5l_io.cdl
 @@ -557,8 +557,8 @@

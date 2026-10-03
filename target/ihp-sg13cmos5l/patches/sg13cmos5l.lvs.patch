@@ -1,0 +1,66 @@
+--- a/sg13cmos5l.lvs
++++ b/sg13cmos5l.lvs
+@@ -547,6 +547,13 @@
+                            end
+ 
+   # === Aligns the extracted netlist vs. the schematic ===
++  ['sg13cmos5l_IOPad*', 'sg13cmos5l_Corner', 'sg13cmos5l_Filler*', 'RM_IHPSG13_1P_*'].each do |c|
++    [c, c.upcase].uniq.each do |pattern|
++      logger.info("Black-boxing #{pattern}")
++      blank_circuit(pattern)
++    end
++  end
++
+   logger.info('Starting SG13CMOS5L LVS Alignment')
+   align
+ 
+@@ -575,6 +582,49 @@
+   max_res(1e9)
+   min_caps(1e-18)
+ 
++  pad_ring = /^sg13cmos5l_(IOPad|Corner|Filler)/i
++  rail_of = ->(name) { b = name.sub(/\$\d+$/, ''); b.empty? ? 'vss' : b.downcase }
++  pin_named = ->(c, name) { found = nil; c.each_pin { |p| found ||= p if p.expanded_name.casecmp?(name) }; found }
++  net_named = ->(c, name) { found = nil; c.each_net { |n| found ||= n if n.expanded_name.casecmp?(name) }; found }
++  instances = lambda do |nl, circuit|
++    subs = []
++    nl.each_circuit { |parent| parent.each_subcircuit { |sc| subs << [parent, sc] if sc.circuit_ref.name.casecmp?(circuit.name) } }
++    subs
++  end
++  add_pin = lambda do |sc, name|
++    rail = rail_of.(name)
++    rp = pin_named.(sc, rail)
++    np = sc.create_pin(name)
++    sc.connect_pin(np.id, rp ? sc.net_for_pin(rp.id) : sc.create_net(name))
++    instances.(schematic, sc).each do |parent, inst|
++      net = rp ? inst.net_for_pin(rp.id) : net_named.(parent, rail)
++      raise "schematic #{parent.name}: no net #{rail} for #{sc.name}.#{name}" unless net
++      inst.connect_pin(np.id, net)
++    end
++    logger.info("schematic #{sc.name}: added pin #{name} on #{rp ? "pin #{rp.expanded_name}" : "parent net #{rail}"}")
++  end
++
++  layout_cells = []
++  netlist.each_circuit { |c| layout_cells << c if c.name =~ pad_ring }
++  layout_cells.each do |lc|
++    sc = schematic.circuit_by_name(lc.name)
++    raise "no schematic circuit for #{lc.name}" unless sc
++    lnames = []
++    lc.each_pin { |p| lnames << p.expanded_name }
++    snames = []
++    sc.each_pin { |p| snames << p.expanded_name }
++    lnames.reject { |n| snames.any? { |s| s.casecmp?(n) } }.each { |n| add_pin.(sc, n) }
++    snames.reject { |n| lnames.any? { |l| l.casecmp?(n) } }.each do |n|
++      sp = pin_named.(sc, n)
++      instances.(schematic, sc).each do |parent, inst|
++        net = inst.net_for_pin(sp.id)
++        raise "schematic #{parent.name}: #{sc.name}.#{n} is on #{net && net.expanded_name}, not #{n}" unless net.nil? || net.expanded_name.casecmp?(n)
++        inst.disconnect_pin(sp.id)
++      end
++      logger.info("schematic #{sc.name}: floated pin #{n}, absent from layout")
++    end
++  end
++
+   # === COMPARISON ===
+   if IGNORE_TOP_PORTS_MISMATCH
+     logger.info('Starting SG13CMOS5L LVS Comparison')

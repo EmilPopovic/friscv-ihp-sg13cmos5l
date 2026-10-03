@@ -71,6 +71,55 @@ release: $(IO_CDL)
 		> $(RELEASE_DIR)/$(TOP).cdl
 	echo $(abspath $(RUN_DIR)) > $(RELEASE_DIR)/run.txt
 
+define require_release
+	@test -f $(RELEASE_DIR)/$(TOP).gds -a -f $(RELEASE_DIR)/$(TOP).cdl || \
+		{ echo "no release in $(RELEASE_DIR), run make release first"; exit 1; }
+endef
+
+.PHONY: signoff
+signoff: release
+	$(MAKE) check-last
+	$(MAKE) drc
+	$(MAKE) lvs
+	@echo "SIGNOFF PASSED: $$(cat $(RELEASE_DIR)/run.txt)"
+
+PDK_DRC_DIR = ${PDK_ROOT}/${PDK}/libs.tech/klayout/tech/drc
+DRC_RUN_DIR = build/drc_run
+
+.PHONY: drc
+drc:
+	$(require_release)
+	rm -rf $(DRC_RUN_DIR)
+	mkdir -p $(DRC_RUN_DIR)
+	-python3 $(PDK_DRC_DIR)/run_drc.py --run_mode=deep --mp=8 --topcell=$(TOP) \
+		--precheck_drc --disable_extra_rules \
+		--path=$(RELEASE_DIR)/$(TOP).gds --run_dir=$(DRC_RUN_DIR)
+	grep -q 'KLayout DRC Check Passed' $(DRC_RUN_DIR)/drc_run_*.log
+
+PDK_LVS_DIR = ${PDK_ROOT}/${PDK}/libs.tech/klayout/tech/lvs
+LVS_DECK = build/lvs/sg13cmos5l.lvs
+LVS_RUN_DIR = build/lvs_run
+
+$(LVS_DECK): $(PDK_LVS_DIR)/sg13cmos5l.lvs patches/sg13cmos5l.lvs.patch
+	rm -rf $(@D)
+	cp -rL $(PDK_LVS_DIR) $(@D)
+	chmod -R u+w $(@D)
+	patch -s $@ patches/sg13cmos5l.lvs.patch
+
+.PHONY: lvs
+lvs: $(LVS_DECK)
+	$(require_release)
+	rm -rf $(LVS_RUN_DIR)
+	mkdir -p $(LVS_RUN_DIR)/extract $(LVS_RUN_DIR)/blackbox
+	python3 $(PDK_LVS_DIR)/run_lvs.py --run_mode=deep --topcell=$(TOP) \
+		--layout=$(RELEASE_DIR)/$(TOP).gds --netlist=$(RELEASE_DIR)/$(TOP).cdl \
+		--run_dir=$(LVS_RUN_DIR)/extract
+	python3 $(<D)/run_lvs.py --run_mode=deep --topcell=$(TOP) \
+		--layout=$(RELEASE_DIR)/$(TOP).gds --netlist=$(RELEASE_DIR)/$(TOP).cdl \
+		--layout_netlist=$(LVS_RUN_DIR)/extract/$(TOP)_extracted.cir \
+		--run_dir=$(LVS_RUN_DIR)/blackbox
+	grep -q 'Netlists match' $(LVS_RUN_DIR)/blackbox/$(TOP).log
+
 .PHONY: check-last
 check-last:
 	python3 scripts/check_slew.py $(RUN_DIR)
