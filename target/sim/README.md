@@ -46,9 +46,11 @@ make test      # chip build, with seeds 1 2 3
 make test-soc  # same on the SoC build
 make -C tests run SIM=<binary> SEEDS=1
 make -C tests run -j8 PROGRESS=60  # in parallel, progress every minute
+make -C tests act-elfs             # build the act tests
+make -C tests act SIM=<binary> SEEDS=1 -j8
 ```
 
-Test sources come from Vernii's `verif/directed`, and `hb_mem.S` and `gpio_loop.S` come from here. Logs go to `tests/build/<test>.<seed>.log`.
+Test sources come from Vernii's `verif/directed`, and `hb_mem.S` and `gpio_loop.S` come from here. The act tests use Vernii's config at the riscv-arch-test commit Vernii pins, built in `tests/act/`. Logs go to `tests/build/<test>.<seed>.log`.
 
 ## HyperRAM model
 
@@ -63,10 +65,14 @@ done
 ## Gate-level simulation
 
 ```bash
-make test-gls  # newest librelane run, seed 1
+make test-gls                # newest librelane run, directed and act tests
+make test-gls GLS_TESTS=act  # only the act tests
+make test-gls GLS_TESTS=run  # only the directed tests
 make gls NETLIST=<path>/RVSoC9108.nl.v
 vvp -n -M obj_dir_gls -m vernii obj_dir_gls/gls.vvp test <program.elf>
 ```
+
+Logs go to `tests/build_gls/<test>.1.log`.
 
 ## Debugging
 

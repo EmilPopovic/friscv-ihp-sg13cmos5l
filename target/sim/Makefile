@@ -163,8 +163,12 @@ $(B)/%.elf: $(DIRECTED)/%.S $(DIRECTED)/link.ld | $(B)
 test-soc: soc
 	$(MAKE) -C tests run SIM=$(CURDIR)/$(SOC_BIN)
 
+# run for the directed tests, act for the act tests
+GLS_TESTS ?= run act
+
 test-gls: gls
-	$(MAKE) -C tests run -j$(shell nproc) SIM="$(GLS_SIM)" SEEDS=1 B=build_gls PROGRESS=600
+	$(if $(filter act,$(GLS_TESTS)),$(MAKE) -C tests act-elfs)
+	$(MAKE) -C tests $(GLS_TESTS) -j$(shell nproc) SIM="$(GLS_SIM)" SEEDS=1 B=build_gls PROGRESS=600
 
 jtag: $(SIM_BIN)
 	@test -n "$(ELF)" || { echo "usage: make jtag ELF=<program.elf> [SIM=chip|soc]" >&2; exit 1; }

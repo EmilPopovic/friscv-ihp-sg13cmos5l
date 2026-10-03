@@ -3,3 +3,4 @@ obj_dir_*/
 sources.f
 chip_sources.f
 tests/build*/
+tests/act/

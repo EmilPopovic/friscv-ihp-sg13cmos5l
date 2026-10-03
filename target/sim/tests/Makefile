@@ -74,16 +74,48 @@ ARGS_sd_boot       = qspiboot $(B)/sdflash.bin
 
 TESTS = $(EXT_TESTS) $(OCM_TESTS) uart_boot uart_boot_bs3 sd_boot
 
+# Act tests with Vernii's config, at the riscv-arch-test commit Vernii pins
+ACT_MAKEFILE = $(VERNII_DIR)/verif/riscv-arch-test/Makefile
+ACT_CONFIG   = $(VERNII_DIR)/verif/riscv-arch-test/config/cores/friscv/friscv-soc
+ACT_REPO     = $(shell sed -n 's/^ACT_REPO *:= *//p' $(ACT_MAKEFILE))
+ACT_REF      = $(shell sed -n 's/^ACT_REF *:= *//p' $(ACT_MAKEFILE))
+ACT_EXCLUDE  = $(shell sed -n 's/^ACT_EXCLUDE_EXTENSIONS *?= *//p' $(ACT_MAKEFILE))
+ACT_ROOT     = $(CURDIR)/act/riscv-arch-test
+
+ACT_ELFS  = $(sort $(shell find $(ACT_ROOT)/work/friscv-soc/elfs -name '*.elf' 2>/dev/null))
+ACT_TESTS = $(basename $(notdir $(ACT_ELFS)))
+
+define act_test
+ENV_$(basename $(notdir $(1)))  = VERNII_LLCSEL=0xf
+ARGS_$(basename $(notdir $(1))) = test $(1)
+endef
+$(foreach e,$(ACT_ELFS),$(eval $(call act_test,$(e))))
+
+$(ACT_ROOT)/.git:
+	git init -q $(ACT_ROOT)
+	git -C $(ACT_ROOT) remote add origin $(ACT_REPO)
+	git -C $(ACT_ROOT) fetch -q --depth 1 origin $(ACT_REF)
+	git -C $(ACT_ROOT) checkout -q --detach FETCH_HEAD
+
+act-elfs: $(ACT_ROOT)/.git
+	rm -rf $(ACT_ROOT)/config/cores/friscv/friscv-soc $(ACT_ROOT)/work/friscv-soc
+	mkdir -p $(ACT_ROOT)/config/cores/friscv/friscv-soc
+	cp $(ACT_CONFIG)/* $(ACT_ROOT)/config/cores/friscv/friscv-soc/
+	mise trust -q $(ACT_ROOT)/.mise.toml
+	UV_LINK_MODE=copy CONFIG_FILES=config/cores/friscv/friscv-soc/test_config.yaml \
+		EXCLUDE_EXTENSIONS=$(ACT_EXCLUDE) $(MAKE) -C $(ACT_ROOT) --jobs $(shell nproc)
+
 # One log per test and seed, run with -j to run them in parallel. With PROGRESS=<seconds>,
 # print how far each test is that often.
-RUNS = $(foreach s,$(SEEDS),$(foreach t,$(TESTS),$(B)/$(t).$(s).log))
+RUNS     = $(foreach s,$(SEEDS),$(foreach t,$(TESTS),$(B)/$(t).$(s).log))
+ACT_RUNS = $(foreach s,$(SEEDS),$(foreach t,$(ACT_TESTS),$(B)/$(t).$(s).log))
 PROGRESS ?=
 
 verdict = { grep -E '^(PASS|FAIL)' $(1) || tail -1 $(1); } | tail -1
 check   = fail=0; for log in $(1); do $(call verdict,$$log) | grep -q '^PASS' || fail=1; done; \
           exit $$fail
 
-$(RUNS): $(B)/%.log: all
+$(RUNS) $(ACT_RUNS): $(B)/%.log: all
 	@t=$(basename $*); seed=$(subst .,,$(suffix $*));                                  \
 	printf '%-14s running\n' "$$t";                                                    \
 	env VERNII_TEST_CYCLES=$(CYCLES) VERNII_FLOAT_SEED=$$seed VERNII_PROGRESS=$(PROGRESS) \
@@ -102,7 +134,11 @@ $(RUNS): $(B)/%.log: all
 run: $(RUNS)
 	@$(call check,$(RUNS))
 
+act: $(ACT_RUNS)
+	@test -n "$(ACT_RUNS)" || { echo "no act tests, build them with make act-elfs" >&2; exit 1; }
+	@$(call check,$(ACT_RUNS))
+
 clean:
 	rm -rf $(B)
 
-.PHONY: all run clean $(RUNS)
+.PHONY: all run act act-elfs clean $(RUNS) $(ACT_RUNS)
