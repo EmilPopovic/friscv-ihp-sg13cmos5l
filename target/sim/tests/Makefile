@@ -74,18 +74,33 @@ ARGS_sd_boot       = qspiboot $(B)/sdflash.bin
 
 TESTS = $(EXT_TESTS) $(OCM_TESTS) uart_boot uart_boot_bs3 sd_boot
 
-# One log per test and seed, run with -j to run them in parallel
+# One log per test and seed, run with -j to run them in parallel. With PROGRESS=<seconds>,
+# print how far each test is that often.
 RUNS = $(foreach s,$(SEEDS),$(foreach t,$(TESTS),$(B)/$(t).$(s).log))
+PROGRESS ?=
+
+verdict = { grep -E '^(PASS|FAIL)' $(1) || tail -1 $(1); } | tail -1
+check   = fail=0; for log in $(1); do $(call verdict,$$log) | grep -q '^PASS' || fail=1; done; \
+          exit $$fail
 
 $(RUNS): $(B)/%.log: all
-	@t=$(basename $*); seed=$(subst .,,$(suffix $*));                         \
-	env VERNII_TEST_CYCLES=$(CYCLES) VERNII_FLOAT_SEED=$$seed $(ENV_$(basename $*)) \
-	    $(SIM) $(ARGS_$(basename $*)) +verilator+rand+reset+2 +verilator+seed+$$seed \
-	    > $@ 2>&1;                                                            \
-	printf '%-14s seed %-3s %s\n' "$$t" "$$seed" "$$(tail -1 $@)"
+	@t=$(basename $*); seed=$(subst .,,$(suffix $*));                                  \
+	printf '%-14s running\n' "$$t";                                                    \
+	env VERNII_TEST_CYCLES=$(CYCLES) VERNII_FLOAT_SEED=$$seed VERNII_PROGRESS=$(PROGRESS) \
+	    $(ENV_$(basename $*)) $(SIM) $(ARGS_$(basename $*))                            \
+	    +verilator+rand+reset+2 +verilator+seed+$$seed > $@ 2>&1 &                     \
+	sim=$$!; n=0;                                                                      \
+	while kill -0 $$sim 2>/dev/null; do                                                \
+	    sleep 1; n=$$((n + 1));                                                        \
+	    if [ -n "$(PROGRESS)" ] && [ $$((n % $(PROGRESS))) -eq 0 ]; then               \
+	        p=$$(grep '^progress' $@ | tail -1 | cut -c11-);                           \
+	        [ -z "$$p" ] || printf '%-14s %s\n' "$$t" "$$p";                           \
+	    fi;                                                                            \
+	done;                                                                              \
+	printf '%-14s %s\n' "$$t" "$$($(call verdict,$@))"
 
 run: $(RUNS)
-	@fail=0; for log in $(RUNS); do tail -1 $$log | grep -q '^PASS' || fail=1; done; exit $$fail
+	@$(call check,$(RUNS))
 
 clean:
 	rm -rf $(B)

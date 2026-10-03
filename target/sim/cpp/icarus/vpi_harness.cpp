@@ -186,12 +186,9 @@ int finish(int code) {
         }
     }
 
-    // The verdict stays the last line
     if (x && code == 0) {
         std::fprintf(stderr, "FAIL (X on pads)\n");
         code = 1;
-    } else if (dq->data_x_count) {
-        std::fprintf(stderr, code == 0 ? "PASS\n" : "FAIL\n");
     }
 
     std::fflush(stderr);

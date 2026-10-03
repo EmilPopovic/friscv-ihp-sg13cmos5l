@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <cstdlib>
 #include <stdexcept>
 
 #include "verilated.h"
@@ -25,6 +26,12 @@ SocTestbench::SocTestbench()
       flash_(top_),
       sd_(top_) {
     sd_.fill_test_pattern(SD_PATTERN_BLOCKS);
+
+    start_ = last_progress_ = std::chrono::steady_clock::now();
+
+    if (const char* seconds = std::getenv("VERNII_PROGRESS")) {
+        progress_seconds_ = std::atof(seconds);
+    }
 
     // Assertions wait until reset
     Verilated::assertOn(false);
@@ -180,8 +187,6 @@ void SocTestbench::reset() {
 }
 
 void SocTestbench::run_cycles(uint64_t count) {
-    cycles_ += count;
-
     for (uint64_t i = 0; i < count; ++i) {
         uart_.sample(top_.uart0_tx_o);
         top_.uart0_rx_i = uart_rx_.drive();
@@ -197,5 +202,35 @@ void SocTestbench::run_cycles(uint64_t count) {
         advance(time_);
         top_.clk_i = 0;
         eval();
+
+        ++cycles_;
+        report_progress();
     }
+}
+
+double SocTestbench::rate() const {
+    std::chrono::duration<double> elapsed = std::chrono::steady_clock::now() - start_;
+    return elapsed.count() > 0 ? cycles_ / elapsed.count() : 0;
+}
+
+// Every VERNII_PROGRESS seconds, on its own line
+void SocTestbench::report_progress() {
+    if (progress_seconds_ <= 0 || cycles_ % 4096 != 0) {
+        return;
+    }
+
+    auto now = std::chrono::steady_clock::now();
+
+    if (std::chrono::duration<double>(now - last_progress_).count() < progress_seconds_) {
+        return;
+    }
+
+    // Break a UART line once
+    bool mid_line = !uart_.at_line_start();
+
+    std::fprintf(stderr, "%sprogress: %llu cycles, %.0f Hz\n",
+                 mid_line && !line_broken_ ? "\n" : "", (unsigned long long)cycles_, rate());
+
+    line_broken_ = mid_line;
+    last_progress_ = now;
 }

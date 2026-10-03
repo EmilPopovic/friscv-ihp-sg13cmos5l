@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <cstdint>
 #include <vector>
 
@@ -44,6 +45,7 @@ class SocTestbench {
     void reset();
     void run_cycles(uint64_t count);
     uint64_t cycles() const { return cycles_; }
+    double rate() const;  // cycles per second
 
     // Pads the chip driving lines at the same time
     uint32_t contention() const { return contention_; }
@@ -54,6 +56,7 @@ class SocTestbench {
     void drive_miso();
     void drive_hyperbus();
     void check_contention();
+    void report_progress();
     uint32_t next_float();
 
     Dut top_;
@@ -67,4 +70,9 @@ class SocTestbench {
     uint32_t float_state_ = 1;
     uint32_t contention_ = 0;
     bool models_on_ = false;
+
+    std::chrono::steady_clock::time_point start_;
+    std::chrono::steady_clock::time_point last_progress_;
+    double progress_seconds_ = 0;
+    bool line_broken_ = false;
 };

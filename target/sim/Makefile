@@ -160,12 +160,11 @@ test: chip
 $(B)/%.elf: $(DIRECTED)/%.S $(DIRECTED)/link.ld | $(B)
 	$(CROSS)gcc $(CFLAGS) -T $(DIRECTED)/link.ld -o $@ $<
 
-
 test-soc: soc
 	$(MAKE) -C tests run SIM=$(CURDIR)/$(SOC_BIN)
 
 test-gls: gls
-	$(MAKE) -C tests run -j$(shell nproc) SIM="$(GLS_SIM)" SEEDS=1 B=build_gls
+	$(MAKE) -C tests run -j$(shell nproc) SIM="$(GLS_SIM)" SEEDS=1 B=build_gls PROGRESS=600
 
 jtag: $(SIM_BIN)
 	@test -n "$(ELF)" || { echo "usage: make jtag ELF=<program.elf> [SIM=chip|soc]" >&2; exit 1; }

@@ -26,6 +26,7 @@ obj_dir_chip/chip_sim server [port]             # remote bitbang for OpenOCD
 | -------- | ------- | ----------- |
 | `VERNII_TEST_CYCLES` | 10000000 | Cycle limit for `test`, `qspiboot`, `uartboot` |
 | `VERNII_FLOAT_SEED` | 1 | Seed for what floating pads read |
+| `VERNII_PROGRESS` | | Seconds between progress lines |
 | `VERNII_LLCSEL` | | LLC ways used as cache |
 | `VERNII_UART_DIV` | | UART divisor |
 | `VERNII_FLASH` | | Flash image for programs that drive flash themselves |
@@ -44,7 +45,7 @@ obj_dir_chip/chip_sim server [port]             # remote bitbang for OpenOCD
 make test      # chip build, with seeds 1 2 3
 make test-soc  # same on the SoC build
 make -C tests run SIM=<binary> SEEDS=1
-make -C tests run -j8  # in parallel
+make -C tests run -j8 PROGRESS=60  # in parallel, progress every minute
 ```
 
 Test sources come from Vernii's `verif/directed`, and `hb_mem.S` and `gpio_loop.S` come from here. Logs go to `tests/build/<test>.<seed>.log`.

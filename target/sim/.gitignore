@@ -2,4 +2,4 @@ obj_dir_*/
 *.vcd
 sources.f
 chip_sources.f
-tests/build/
+tests/build*/

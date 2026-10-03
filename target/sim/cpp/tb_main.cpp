@@ -359,7 +359,7 @@ int run_to_end(SocTestbench& testbench, Jtag& jtag) {
 
     // Print pass if the DUT ended, the result is PASS_VALUE, and there was no pad contention
     if (ended && result == PASS_VALUE && contention == 0) {
-        std::fprintf(stderr, "PASS (%llu cycles)\n", cycles);
+        std::fprintf(stderr, "PASS (%llu cycles, %.0f Hz)\n", cycles, testbench.rate());
         return 0;
     }
 
@@ -372,7 +372,8 @@ int run_to_end(SocTestbench& testbench, Jtag& jtag) {
     }
 
     // Print fail and the why string
-    std::fprintf(stderr, "FAIL (scratch=0x%08x, %llu cycles%s)\n", result, cycles, why.c_str());
+    std::fprintf(stderr, "FAIL (scratch=0x%08x, %llu cycles, %.0f Hz%s)\n", result, cycles,
+                 testbench.rate(), why.c_str());
     return 1;
 }
 
