@@ -12,7 +12,7 @@ run-soc:
 
 .PHONY: run-gls
 run-gls:
-	make -C target/sim gls
+	make -C target/sim test-gls
 
 .PHONY: run-jtag
 run-jtag:

@@ -148,6 +148,11 @@ void SocTestbench::eval() {
 
 // Advance time to the next event for timing simulation
 void SocTestbench::advance(uint64_t time) {
+#ifdef FRISCV_DUT_ICARUS
+    // vvp stops here at the latest
+    top_.set_horizon(time);
+#endif
+
     while (top_.eventsPending() && top_.nextTimeSlot() < time) {
         top_.contextp()->time(top_.nextTimeSlot());
         eval();
@@ -163,9 +168,11 @@ void SocTestbench::reset() {
     }
 
     top_.rst_ni = 0;
+    top_.jtag_trst_ni = 0;
     run_cycles(RESET_CYCLES);
 
     top_.rst_ni = 1;
+    top_.jtag_trst_ni = 1;
     run_cycles(RESET_CYCLES);
 
     models_on_ = true;

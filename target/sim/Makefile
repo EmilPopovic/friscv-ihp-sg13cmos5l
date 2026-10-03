@@ -13,7 +13,6 @@ GLS_DIR  ?= obj_dir_gls
 
 SOC_BIN  = $(SOC_DIR)/friscv_soc
 CHIP_BIN = $(CHIP_DIR)/chip_sim
-GLS_BIN  = $(GLS_DIR)/gls.vvp
 
 # Which build to do (chip/soc/debug)
 SIM ?= chip
@@ -45,12 +44,15 @@ $(SOC_DIR) $(CHIP_DIR) $(GLS_DIR) $(SHARED_DIR):
 $(SHARED_DIR)/%: $(VERNII_SIM)/cpp/% | $(SHARED_DIR)
 	cp $< $@
 
+HARNESS_DEFS = \
+	-DFRISCV_SOC_SRAM_BASE=$(SOC_SRAM_BASE)             \
+	-DFRISCV_SOC_SRAM_SIZE_BYTES=$(SOC_SRAM_SIZE_BYTES) \
+	-DFRISCV_MEM_CHIP_BYTES=$(SOC_MEM_SIZE)             \
+	-DFRISCV_CLK_PERIOD_PS=$(CLK_PERIOD_PS)
+
 VERILATOR_CPP_FLAGS = \
-	-CFLAGS -I$(CURDIR)/cpp -CFLAGS -I$(abspath $(SHARED_DIR))  \
-	-CFLAGS -DFRISCV_SOC_SRAM_BASE=$(SOC_SRAM_BASE)             \
-	-CFLAGS -DFRISCV_SOC_SRAM_SIZE_BYTES=$(SOC_SRAM_SIZE_BYTES) \
-	-CFLAGS -DFRISCV_MEM_CHIP_BYTES=$(SOC_MEM_SIZE)             \
-	-CFLAGS -DFRISCV_CLK_PERIOD_PS=$(CLK_PERIOD_PS)
+	-CFLAGS -I$(CURDIR)/cpp -CFLAGS -I$(abspath $(SHARED_DIR)) \
+	$(addprefix -CFLAGS ,$(HARNESS_DEFS))
 
 #############
 # SoC build #
@@ -121,19 +123,31 @@ chip: $(CHIP_BIN)
 # Gate level #
 ##############
 
-# Icarus 4-state sim on the final netlist
-GLS_SOURCES = rtl/tb_gls.sv rtl/bondpad_70x70_5L.v rtl/delay_line_sim.sv $(PDK_SIM_MODELS)
+# The harness runs in vvp as a VPI module
+GLS_VVP = $(GLS_DIR)/gls.vvp
+GLS_VPI = $(GLS_DIR)/vernii.vpi
+GLS_SIM = vvp -n -M $(CURDIR)/$(GLS_DIR) -m vernii $(CURDIR)/$(GLS_VVP)
 
-$(GLS_BIN): $(GLS_SOURCES) $(NETLIST) | $(GLS_DIR)
+GLS_CPP = cpp/icarus/vpi_harness.cpp $(HARNESS_CPP)
+GLS_HPP = $(wildcard cpp/icarus/*.h) $(HARNESS_HPP)
+
+GLS_SOURCES = rtl/tb_gls.sv rtl/tb_chip_nl.sv rtl/bondpad_70x70_5L.v rtl/delay_line_sim.sv \
+	$(PDK_SIM_MODELS) $(NETLIST)
+
+$(GLS_VPI): $(GLS_CPP) $(GLS_HPP) $(SHARED_CPP) $(SHARED_HPP) | $(GLS_DIR)
+	$(CXX) -std=c++17 -O2 -fPIC $(filter -I%,$(shell iverilog-vpi --cflags))  \
+		-Icpp/icarus -Icpp -I$(SHARED_DIR) -DFRISCV_DUT_CHIP -DFRISCV_DUT_ICARUS \
+		$(HARNESS_DEFS) -Dmain=harness_main $(GLS_CPP) $(SHARED_CPP)          \
+		$(shell iverilog-vpi --ldflags) $(shell iverilog-vpi --ldlibs) -lpthread -o $@
+
+$(GLS_VVP): $(GLS_SOURCES) | $(GLS_DIR)
 	@test -n "$(NETLIST)" || { echo "no netlist; pass NETLIST=<RVSoC9108.nl.v>" >&2; exit 1; }
-	iverilog -g2012 -o $@ -s tb_gls $(GLS_SOURCES) $(NETLIST) 2>&1 \
+	iverilog -g2012 -o $@ -s tb_gls $(GLS_SOURCES) 2>&1 \
 		| grep -v 'sorry: ifnone with an edge-sensitive path' || true
 	@test -f $@
-
-gls: $(GLS_BIN)
 	@echo "netlist: $(NETLIST)"
-	vvp -n $(GLS_BIN) $(GLS_ARGS) | tee $(GLS_DIR)/gls.log
-	@grep -q '^PASS' $(GLS_DIR)/gls.log
+
+gls: $(GLS_VVP) $(GLS_VPI)
 
 ###################
 # Tests and tools #
@@ -149,6 +163,9 @@ $(B)/%.elf: $(DIRECTED)/%.S $(DIRECTED)/link.ld | $(B)
 
 test-soc: soc
 	$(MAKE) -C tests run SIM=$(CURDIR)/$(SOC_BIN)
+
+test-gls: gls
+	$(MAKE) -C tests run -j$(shell nproc) SIM="$(GLS_SIM)" SEEDS=1 B=build_gls
 
 jtag: $(SIM_BIN)
 	@test -n "$(ELF)" || { echo "usage: make jtag ELF=<program.elf> [SIM=chip|soc]" >&2; exit 1; }
@@ -167,4 +184,4 @@ clean:
 
 all: soc chip
 
-.PHONY: all soc chip gls test test-soc jtag debug clean
+.PHONY: all soc chip gls test test-soc test-gls jtag debug clean

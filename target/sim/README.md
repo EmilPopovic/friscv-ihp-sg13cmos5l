@@ -6,7 +6,7 @@ One C++ harness is used for three builds.
 | ------ | --------- | --- | ----------- |
 | `make chip` | Verilator `--timing` | `RVSoC9108` behind `rtl/tb_chip.sv` with the PDK pad, SRAM, and cell models | Regression (`make test`) |
 | `make soc` | Verilator | `chip_soc` without pad ring | For ACTs, HyperRAM sweeps, debugging (`make test-soc`) |
-| `make gls` | Icarus, 4-state | Final netlist behind `rtl/tb_gls.sv` | Smoke test for what is being taped out |
+| `make gls` | Icarus, 4-state | Final netlist behind `rtl/tb_gls.sv` | Regression on what is being taped out (`make test-gls`) |
 
 ## Commands
 
@@ -44,6 +44,7 @@ obj_dir_chip/chip_sim server [port]             # remote bitbang for OpenOCD
 make test      # chip build, with seeds 1 2 3
 make test-soc  # same on the SoC build
 make -C tests run SIM=<binary> SEEDS=1
+make -C tests run -j8  # in parallel
 ```
 
 Test sources come from Vernii's `verif/directed`, and `hb_mem.S` and `gpio_loop.S` come from here. Logs go to `tests/build/<test>.<seed>.log`.
@@ -61,8 +62,9 @@ done
 ## Gate-level simulation
 
 ```bash
-make gls  # newest librelane run
+make test-gls  # newest librelane run, seed 1
 make gls NETLIST=<path>/RVSoC9108.nl.v
+vvp -n -M obj_dir_gls -m vernii obj_dir_gls/gls.vvp test <program.elf>
 ```
 
 ## Debugging

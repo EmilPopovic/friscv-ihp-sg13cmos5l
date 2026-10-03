@@ -61,30 +61,33 @@ $(B)/sd_payload.img: $(DIRECTED)/sd_payload.S | $(B)
 
 all: $(ELFS) $(BINS)
 
-# One line per test and seed
-define run_one
-	printf '%-14s seed %-3s ' "$(1)" "$(2)";                        \
-	if env VERNII_TEST_CYCLES=$(CYCLES) VERNII_FLOAT_SEED=$(2) $(3) \
-	   $(SIM) $(4) +verilator+rand+reset+2 +verilator+seed+$(2)     \
-	   > $(B)/$(1).$(2).log 2>&1; then                              \
-	    tail -1 $(B)/$(1).$(2).log;                                 \
-	else                                                            \
-	    tail -1 $(B)/$(1).$(2).log; fail=1;                         \
-	fi;
-endef
+# Environment and arguments of each test
+$(foreach t,$(EXT_TESTS),$(eval ENV_$(t) = VERNII_LLCSEL=0xf)$(eval ARGS_$(t) = test $(B)/$(t).elf))
+$(foreach t,$(OCM_TESTS),$(eval ENV_$(t) = VERNII_LLCSEL=0)$(eval ARGS_$(t) = test $(B)/$(t).elf))
 
-run: all
-	@fail=0; \
-	for seed in $(SEEDS); do \
-	    $(foreach t,$(EXT_TESTS),$(call run_one,$(t),$$seed,VERNII_LLCSEL=0xf,test $(B)/$(t).elf)) \
-	    $(foreach t,$(OCM_TESTS),$(call run_one,$(t),$$seed,VERNII_LLCSEL=0,test $(B)/$(t).elf)) \
-	    $(call run_one,uart_boot,$$seed,,uartboot $(B)/uart_stage.bin) \
-	    $(call run_one,uart_boot_bs3,$$seed,VERNII_BOOT_SEL=3,uartboot $(B)/uart_stage.bin) \
-	    $(call run_one,sd_boot,$$seed,VERNII_SD_IMAGE=$(B)/sd_payload.img,qspiboot $(B)/sdflash.bin) \
-	done; \
-	exit $$fail
+ENV_uart_boot      =
+ARGS_uart_boot     = uartboot $(B)/uart_stage.bin
+ENV_uart_boot_bs3  = VERNII_BOOT_SEL=3
+ARGS_uart_boot_bs3 = uartboot $(B)/uart_stage.bin
+ENV_sd_boot        = VERNII_SD_IMAGE=$(B)/sd_payload.img
+ARGS_sd_boot       = qspiboot $(B)/sdflash.bin
+
+TESTS = $(EXT_TESTS) $(OCM_TESTS) uart_boot uart_boot_bs3 sd_boot
+
+# One log per test and seed, run with -j to run them in parallel
+RUNS = $(foreach s,$(SEEDS),$(foreach t,$(TESTS),$(B)/$(t).$(s).log))
+
+$(RUNS): $(B)/%.log: all
+	@t=$(basename $*); seed=$(subst .,,$(suffix $*));                         \
+	env VERNII_TEST_CYCLES=$(CYCLES) VERNII_FLOAT_SEED=$$seed $(ENV_$(basename $*)) \
+	    $(SIM) $(ARGS_$(basename $*)) +verilator+rand+reset+2 +verilator+seed+$$seed \
+	    > $@ 2>&1;                                                            \
+	printf '%-14s seed %-3s %s\n' "$$t" "$$seed" "$$(tail -1 $@)"
+
+run: $(RUNS)
+	@fail=0; for log in $(RUNS); do tail -1 $$log | grep -q '^PASS' || fail=1; done; exit $$fail
 
 clean:
 	rm -rf $(B)
 
-.PHONY: all run clean
+.PHONY: all run clean $(RUNS)
