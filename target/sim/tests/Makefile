@@ -129,7 +129,10 @@ $(RUNS) $(ACT_RUNS): $(B)/%.log: all
 	        [ -z "$$p" ] || printf '%-14s %s\n' "$$t" "$$p";                           \
 	    fi;                                                                            \
 	done;                                                                              \
-	printf '%-14s %s\n' "$$t" "$$($(call verdict,$@))"
+	v=$$($(call verdict,$@)); w=$${v%%[ (]*}; r=$${v#"$$w"};                           \
+	case "$$w" in PASS) c=32;; FAIL) c=31;; *) c=;; esac;                              \
+	[ -t 1 ] && [ -n "$$c" ] && w="\033[$${c}m$$w\033[0m";                             \
+	printf "%-14s $$w%s\n" "$$t" "$$r"
 
 run: $(RUNS)
 	@$(call check,$(RUNS))
